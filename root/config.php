@@ -38,6 +38,14 @@ define('SMTP_FROM_NAME', 'DMARC Dashboard');
 define('APP_NAME', 'DMARC Dashboard');
 define('APP_VERSION', '1.0.0');
 
+// IMAP settings for email ingestion
+define('IMAP_HOST', 'imap.example.com');
+define('IMAP_PORT', 993);
+define('IMAP_USERNAME', 'dmarc@example.com');
+define('IMAP_PASSWORD', 'password');
+define('IMAP_MAILBOX', 'INBOX');
+define('IMAP_SSL', true);
+
 
 // Validate required configuration constants
 $required_constants = ['DB_HOST', 'DB_USER', 'DB_NAME'];

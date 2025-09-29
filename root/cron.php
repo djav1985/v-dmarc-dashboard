@@ -24,6 +24,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Core\ErrorManager;
 use App\Utilities\DataRetention;
+use App\Services\ImapIngestionService;
 
 // Apply configured runtime limits after loading settings
 ini_set('max_execution_time', (string) (defined('CRON_MAX_EXECUTION_TIME') ? CRON_MAX_EXECUTION_TIME : 0));
@@ -37,6 +38,7 @@ ErrorManager::handle(function () {
     $validJobTypes = [
         'daily',   // Runs once per day
         'hourly',  // Runs once per hour
+        'imap',    // Process IMAP emails
     ];
 
     // The job type is provided as the first CLI argument. Defaults to
@@ -93,6 +95,25 @@ if (!in_array($jobType, $validJobTypes)) {
             echo "Running hourly DMARC Dashboard tasks...\n";
             // Future: Email ingestion, report processing, etc.
             echo "No hourly tasks configured yet.\n";
+            break;
+            
+        case 'imap':
+            // Process IMAP emails for DMARC reports
+            echo "Processing IMAP emails for DMARC reports...\n";
+            try {
+                $imapService = new ImapIngestionService();
+                $results = $imapService->processReports();
+                
+                echo "Email processing completed:\n";
+                echo "- Reports processed: {$results['processed']}\n";
+                echo "- Errors: {$results['errors']}\n";
+                
+                foreach ($results['messages'] as $message) {
+                    echo "- $message\n";
+                }
+            } catch (Exception $e) {
+                echo "Error during IMAP processing: " . $e->getMessage() . "\n";
+            }
             break;
             
         default:

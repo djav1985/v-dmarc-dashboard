@@ -45,6 +45,10 @@ class Router
             // DMARC Dashboard specific routes
             $r->addRoute('GET', '/upload', [\App\Controllers\UploadController::class, 'handleRequest']);
             $r->addRoute('POST', '/upload', [\App\Controllers\UploadController::class, 'handleSubmission']);
+            
+            // IMAP Email Ingestion routes
+            $r->addRoute('GET', '/imap', [\App\Controllers\ImapController::class, 'handleRequest']);
+            $r->addRoute('POST', '/imap', [\App\Controllers\ImapController::class, 'handleSubmission']);
         });
     }
 

@@ -41,6 +41,9 @@
             <a class="btn btn-link" href="/upload">
                 <i class="icon icon-upload"></i> Upload
             </a>
+            <a class="btn btn-link" href="/imap">
+                <i class="icon icon-mail"></i> IMAP
+            </a>
         </section>
         <section class="navbar-section">
             <div class="dropdown dropdown-right">

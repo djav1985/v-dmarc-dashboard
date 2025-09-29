@@ -1,16 +1,15 @@
 {
-  "name": "appsbyv/name",
-  "description": "blah",
+  "name": "appsbyv/dmarc-dashboard",
+  "description": "Self-hosted DMARC Dashboard for email authentication monitoring",
   "license": "MIT",
   "type": "project",
   "require": {
     "php": "^8.0",
+    "ext-imap": "*",
     "phpmailer/phpmailer": "^6.10.0",
     "doctrine/dbal": "^3.10.0",
     "nikic/fast-route": "^v1.3.0",
     "respect/validation": "*"
-    
-    
   },
   "autoload": {
     "psr-4": {
