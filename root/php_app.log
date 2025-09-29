@@ -1,0 +1,4 @@
+[2025-09-29 06:47:18] [error]: Error checking blacklist status: An exception occurred in the driver: SQLSTATE[HY000] [2002] No such file or directory
+[2025-09-29 06:47:18] [exception]: Uncaught Exception: An exception occurred in the driver: SQLSTATE[HY000] [2002] No such file or directory in /home/runner/work/v-dmarc-dashboard/v-dmarc-dashboard/root/vendor/doctrine/dbal/src/Driver/API/MySQL/ExceptionConverter.php on line 112
+[2025-09-29 06:50:17] [error]: Error checking blacklist status: An exception occurred in the driver: SQLSTATE[HY000] [2002] No such file or directory
+[2025-09-29 06:50:17] [exception]: Uncaught Exception: An exception occurred in the driver: SQLSTATE[HY000] [2002] No such file or directory in /home/runner/work/v-dmarc-dashboard/v-dmarc-dashboard/root/vendor/doctrine/dbal/src/Driver/API/MySQL/ExceptionConverter.php on line 112

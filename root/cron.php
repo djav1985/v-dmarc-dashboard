@@ -23,6 +23,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Core\ErrorManager;
+use App\Utilities\DataRetention;
 
 // Apply configured runtime limits after loading settings
 ini_set('max_execution_time', (string) (defined('CRON_MAX_EXECUTION_TIME') ? CRON_MAX_EXECUTION_TIME : 0));
@@ -51,10 +52,49 @@ if (!in_array($jobType, $validJobTypes)) {
     switch ($jobType) {
         case 'daily':
             // Add tasks that should run once per day
+            echo "Running daily DMARC Dashboard maintenance tasks...\n";
+            
+            // Clean up old reports based on retention settings
+            if (DataRetention::isCleanupNeeded()) {
+                echo "Starting data cleanup...\n";
+                $cleanupResults = DataRetention::cleanupOldReports();
+                
+                echo "Cleanup completed:\n";
+                echo "- Aggregate reports deleted: {$cleanupResults['aggregate_reports_deleted']}\n";
+                echo "- Forensic reports deleted: {$cleanupResults['forensic_reports_deleted']}\n";
+                echo "- TLS reports deleted: {$cleanupResults['tls_reports_deleted']}\n";
+                
+                if (!empty($cleanupResults['errors'])) {
+                    echo "Cleanup errors:\n";
+                    foreach ($cleanupResults['errors'] as $error) {
+                        echo "- {$error}\n";
+                    }
+                }
+            } else {
+                echo "No cleanup needed at this time.\n";
+            }
+            
+            // Display storage statistics
+            $stats = DataRetention::getStorageStats();
+            echo "\nStorage Statistics:\n";
+            echo "- Total domains: {$stats['total_domains']}\n";
+            echo "- Aggregate reports: {$stats['aggregate_reports_count']}\n";
+            echo "- Forensic reports: {$stats['forensic_reports_count']}\n";
+            echo "- TLS reports: {$stats['tls_reports_count']}\n";
+            
+            if ($stats['oldest_aggregate_report']) {
+                echo "- Oldest report: " . date('Y-m-d', $stats['oldest_aggregate_report']) . "\n";
+                echo "- Newest report: " . date('Y-m-d', $stats['newest_aggregate_report']) . "\n";
+            }
             break;
+            
         case 'hourly':
             // Add tasks that should run once per hour
+            echo "Running hourly DMARC Dashboard tasks...\n";
+            // Future: Email ingestion, report processing, etc.
+            echo "No hourly tasks configured yet.\n";
             break;
+            
         default:
             die(1);
     }

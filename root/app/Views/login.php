@@ -20,7 +20,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>APP NAME</title>
+    <title><?= defined('APP_NAME') ? APP_NAME : 'DMARC Dashboard' ?></title>
     <!-- External CSS for styling -->
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
     <link rel="stylesheet" href="/assets/css/login.css">
