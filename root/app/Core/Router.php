@@ -64,6 +64,14 @@ class Router
             // Domain Groups management
             $r->addRoute('GET', '/domain-groups', [\App\Controllers\DomainGroupsController::class, 'handleRequest']);
             $r->addRoute('POST', '/domain-groups', [\App\Controllers\DomainGroupsController::class, 'handleSubmission']);
+            
+            // Alerting system
+            $r->addRoute('GET', '/alerts', [\App\Controllers\AlertController::class, 'handleRequest']);
+            $r->addRoute('POST', '/alerts', [\App\Controllers\AlertController::class, 'handleSubmission']);
+            
+            // Reports management and PDF generation
+            $r->addRoute('GET', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleRequest']);
+            $r->addRoute('POST', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleSubmission']);
         });
     }
 

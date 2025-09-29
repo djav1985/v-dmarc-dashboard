@@ -47,6 +47,12 @@
             <a class="btn btn-link mx-1" href="/domain-groups">
                 <i class="icon icon-people"></i> Groups
             </a>
+            <a class="btn btn-link mx-1" href="/alerts">
+                <i class="icon icon-flag"></i> Alerts
+            </a>
+            <a class="btn btn-link mx-1" href="/reports-management">
+                <i class="icon icon-bookmark"></i> Reports
+            </a>
             <a class="btn btn-link mx-1" href="/upload">
                 <i class="icon icon-upload"></i> Upload
             </a>
