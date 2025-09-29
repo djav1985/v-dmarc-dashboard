@@ -20,6 +20,7 @@ use App\Core\ErrorManager;
 use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\SessionManager;
+use App\Core\AuditLogger;
 use App\Helpers\MessageHelper;
 
 class LoginController extends Controller
@@ -75,6 +76,7 @@ class LoginController extends Controller
             if ($userInfo) {
                 $session->set('logged_in', true);
                 $session->set('username', $userInfo->username);
+                $session->set('user_role', $userInfo->role ?? 'viewer');
                 $session->set('user_agent', $_SERVER['HTTP_USER_AGENT']);
                 $session->set('csrf_token', bin2hex(random_bytes(32)));
                 $session->set('is_admin', $userInfo->admin);
@@ -83,6 +85,9 @@ class LoginController extends Controller
                 
                 // Update last login timestamp
                 Users::updateLastLogin($userInfo->username);
+                
+                // Log successful login
+                AuditLogger::getInstance()->logLogin($userInfo->username, true);
                 
                 header('Location: /');
                 exit();
@@ -98,6 +103,9 @@ class LoginController extends Controller
                 $error = 'Invalid username or password.';
                 ErrorManager::getInstance()->log($error);
                 MessageHelper::addMessage($error);
+                
+                // Log failed login
+                AuditLogger::getInstance()->logLogin($username, false);
             }
         }
 
@@ -111,7 +119,15 @@ class LoginController extends Controller
      */
     private static function logoutUser(): void
     {
-        SessionManager::getInstance()->destroy();
+        $session = SessionManager::getInstance();
+        $username = $session->get('username');
+        
+        // Log logout before destroying session
+        if ($username) {
+            AuditLogger::getInstance()->logLogout($username);
+        }
+        
+        $session->destroy();
         header('Location: /login');
         exit();
     }

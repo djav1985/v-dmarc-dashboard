@@ -21,3 +21,4 @@
 [2025-09-29 23:28:57] [error]: Error updating failed attempts: Attempt to read property "login_attempts" on array
 [2025-09-29 23:28:57] [exception]: Uncaught Exception: Attempt to read property "login_attempts" on array in /home/runner/work/v-dmarc-dashboard/v-dmarc-dashboard/root/app/Models/Blacklist.php on line 35
 [2025-09-29 23:29:38] [error]: Invalid username or password.
+[2025-09-29 23:34:35] [error]: Invalid username or password.
