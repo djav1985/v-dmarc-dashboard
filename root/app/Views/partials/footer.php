@@ -9,8 +9,13 @@
  * Version: 3.0.0
  *
  * File: footer.php
- * Description: V PHP Framework
+ * Description: Enhanced footer with branding support
  */
+
+use App\Core\BrandingManager;
+
+$branding = BrandingManager::getInstance();
+$brandingVars = $branding->getBrandingVars();
 ?>
 
     </main>
@@ -20,20 +25,27 @@
             <div class="columns">
                 <div class="column col-6">
                     <small class="text-gray">
-                        <i class="icon icon-mail"></i> DMARC Dashboard
-                        <span class="ml-1">- Email Authentication Monitor</span>
+                        <i class="icon icon-mail"></i> <?= htmlspecialchars($brandingVars['app_name']) ?>
+                        <?php if (!empty($brandingVars['company_name'])): ?>
+                            <span class="ml-1">- <?= htmlspecialchars($brandingVars['company_name']) ?></span>
+                        <?php else: ?>
+                            <span class="ml-1">- Email Authentication Monitor</span>
+                        <?php endif; ?>
                     </small>
                 </div>
                 <div class="column col-6 text-right">
                     <small class="text-gray">
-                        Powered by V PHP Framework
+                        <?php if (!empty($brandingVars['footer_text'])): ?>
+                            <?= htmlspecialchars($brandingVars['footer_text']) ?>
+                        <?php else: ?>
+                            Powered by V PHP Framework
+                        <?php endif; ?>
                     </small>
                 </div>
             </div>
         </div>
     </footer>
 
-    <?php App\Helpers\MessageHelper::displayAndClearMessages(); ?>
     <script src="/assets/js/footer-scripts.js"></script>
 </body>
 </html>
