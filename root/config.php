@@ -22,9 +22,9 @@ define('CRON_QUEUE_LIMIT', getenv('CRON_QUEUE_LIMIT') !== false ? (int) getenv('
 
 // MySQL Database Connection Constants
 define('DB_HOST', 'localhost'); // Database host or server
-define('DB_USER', ''); // Database username
-define('DB_PASSWORD', ''); // Database password
-define('DB_NAME', ''); // Database schema name
+define('DB_USER', 'test_user'); // Database username
+define('DB_PASSWORD', 'test_pass'); // Database password
+define('DB_NAME', 'dmarc_demo'); // Database schema name
 
 // SMTP settings for sending emails
 define('SMTP_HOST', 'smtp.example.com');

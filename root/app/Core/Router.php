@@ -30,10 +30,9 @@ class Router
     private function __construct()
     {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $r): void {
-            // Redirect the root URL to the dashboard
+            // Root route shows landing page
             $r->addRoute('GET', '/', function (): void {
-                header('Location: /dashboard');
-                exit();
+                require __DIR__ . '/../Views/index.php';
             });
             
             // Authentication routes
@@ -55,6 +54,16 @@ class Router
             $r->addRoute('GET', '/domains', [\App\Controllers\DomainController::class, 'handleRequest']);
             $r->addRoute('POST', '/domains', [\App\Controllers\DomainController::class, 'handleSubmission']);
             $r->addRoute('GET', '/domains/{id:\d+}', [\App\Controllers\DomainController::class, 'handleRequest']);
+
+            // Upload routes
+            $r->addRoute('GET', '/upload', [\App\Controllers\UploadController::class, 'handleRequest']);
+            $r->addRoute('POST', '/upload', [\App\Controllers\UploadController::class, 'handleSubmission']);
+
+            // Demo routes (no database required)
+            $r->addRoute('GET', '/demo', [\App\Controllers\DemoController::class, 'handleRequest']);
+            $r->addRoute('POST', '/demo', [\App\Controllers\DemoController::class, 'handleSubmission']);
+            $r->addRoute('GET', '/demo/domains', [\App\Controllers\DemoController::class, 'domainsList']);
+            $r->addRoute('POST', '/demo/domains', [\App\Controllers\DemoController::class, 'handleSubmission']);
         });
     }
 
@@ -95,8 +104,8 @@ class Router
             $vars    = $routeInfo[2] ?? [];
 
             if (is_array($handler) && count($handler) === 2) {
-                // Only enforce auth for protected routes (skip for /login)
-                if ($uri !== '/login' && !str_starts_with($uri, '/api/public')) {
+                // Only enforce auth for protected routes (skip for /login and /demo)
+                if ($uri !== '/login' && !str_starts_with($uri, '/demo') && !str_starts_with($uri, '/api/public')) {
                     SessionManager::getInstance()->requireAuth();
                 }
                 [$class, $action] = $handler;
