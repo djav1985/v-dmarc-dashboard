@@ -29,37 +29,93 @@
     <title><?= defined('APP_NAME') ? APP_NAME : 'DMARC Dashboard' ?></title>
 </head>
 <body>
+    <style>
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            padding: 0.5rem 1rem;
+        }
+        .navbar-section {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-section.navbar-center {
+            flex: 1;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #495057;
+            margin-right: 2rem;
+        }
+        .nav-link {
+            padding: 0.4rem 0.8rem;
+            margin: 0 0.1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+        @media (max-width: 960px) {
+            .navbar-section.navbar-center {
+                display: none;
+            }
+            .navbar-brand {
+                margin-right: 1rem;
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 0.25rem 0.5rem;
+            }
+            .navbar-brand {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    
     <header class="navbar">
         <section class="navbar-section">
-            <a class="navbar-brand mr-2" href="/home">
+            <a class="navbar-brand" href="/home">
                 <i class="icon icon-mail mr-1 text-primary"></i>
                 DMARC Dashboard
             </a>
-            <a class="btn btn-link mx-1" href="/home">
+        </section>
+        
+        <section class="navbar-section navbar-center">
+            <a class="btn btn-link nav-link" href="/home">
                 <i class="icon icon-home"></i> Dashboard
             </a>
-            <a class="btn btn-link mx-1" href="/reports">
+            <a class="btn btn-link nav-link" href="/reports">
                 <i class="icon icon-list"></i> Reports
             </a>
-            <a class="btn btn-link mx-1" href="/analytics">
+            <a class="btn btn-link nav-link" href="/analytics">
                 <i class="icon icon-bookmark"></i> Analytics
             </a>
-            <a class="btn btn-link mx-1" href="/domain-groups">
+            <a class="btn btn-link nav-link" href="/domain-groups">
                 <i class="icon icon-people"></i> Groups
             </a>
-            <a class="btn btn-link mx-1" href="/alerts">
+            <a class="btn btn-link nav-link" href="/alerts">
                 <i class="icon icon-flag"></i> Alerts
             </a>
-            <a class="btn btn-link mx-1" href="/reports-management">
-                <i class="icon icon-bookmark"></i> Reports
+            <a class="btn btn-link nav-link" href="/reports-management">
+                <i class="icon icon-docs"></i> PDF Reports
             </a>
-            <a class="btn btn-link mx-1" href="/upload">
+            <a class="btn btn-link nav-link" href="/upload">
                 <i class="icon icon-upload"></i> Upload
             </a>
-            <a class="btn btn-link mx-1" href="/imap">
+            <a class="btn btn-link nav-link" href="/imap">
                 <i class="icon icon-mail"></i> IMAP
             </a>
         </section>
+        
         <section class="navbar-section">
             <div class="dropdown dropdown-right">
                 <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">

@@ -54,12 +54,23 @@ function getAuthResultBadge($result, $total) {
 ?>
 
 <style>
-.filter-form {
+.filter-row {
     background: #f8f9fa;
     border: 1px solid #e9ecef;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
+}
+.filter-row .columns {
+    margin-bottom: 0;
+}
+.filter-row .form-group {
+    margin-bottom: 0.5rem;
+}
+@media (min-width: 960px) {
+    .filter-row .form-group {
+        margin-bottom: 0;
+    }
 }
 .table-responsive {
     overflow-x: auto;
@@ -90,11 +101,11 @@ function getAuthResultBadge($result, $total) {
 <!-- Filter Form -->
 <div class="columns">
     <div class="column col-12">
-        <form method="POST" action="/reports" class="filter-form">
+        <form method="POST" action="/reports" class="filter-row">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             
             <div class="columns">
-                <div class="column col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="column col-6 col-md-3">
                     <div class="form-group">
                         <label class="form-label" for="domain">Domain</label>
                         <select class="form-select" id="domain" name="domain">
@@ -109,7 +120,7 @@ function getAuthResultBadge($result, $total) {
                     </div>
                 </div>
                 
-                <div class="column col-12 col-sm-6 col-md-4 col-lg-2">
+                <div class="column col-6 col-md-2">
                     <div class="form-group">
                         <label class="form-label" for="disposition">Disposition</label>
                         <select class="form-select" id="disposition" name="disposition">
@@ -118,6 +129,48 @@ function getAuthResultBadge($result, $total) {
                             <option value="quarantine" <?= $this->data['filters']['disposition'] === 'quarantine' ? 'selected' : '' ?>>Quarantine</option>
                             <option value="reject" <?= $this->data['filters']['disposition'] === 'reject' ? 'selected' : '' ?>>Reject</option>
                         </select>
+                    </div>
+                </div>
+                
+                <div class="column col-6 col-md-2">
+                    <div class="form-group">
+                        <label class="form-label" for="start_date">Start Date</label>
+                        <input type="date" class="form-input" id="start_date" name="start_date" 
+                               value="<?= htmlspecialchars($this->data['filters']['start_date']) ?>">
+                    </div>
+                </div>
+                
+                <div class="column col-6 col-md-2">
+                    <div class="form-group">
+                        <label class="form-label" for="end_date">End Date</label>
+                        <input type="date" class="form-input" id="end_date" name="end_date" 
+                               value="<?= htmlspecialchars($this->data['filters']['end_date']) ?>">
+                    </div>
+                </div>
+                
+                <div class="column col-6 col-md-2">
+                    <div class="form-group">
+                        <label class="form-label" for="per_page">Per Page</label>
+                        <select class="form-select" id="per_page" name="per_page">
+                            <option value="25" <?= $this->data['pagination']['per_page'] == 25 ? 'selected' : '' ?>>25</option>
+                            <option value="50" <?= $this->data['pagination']['per_page'] == 50 ? 'selected' : '' ?>>50</option>
+                            <option value="100" <?= $this->data['pagination']['per_page'] == 100 ? 'selected' : '' ?>>100</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="column col-6 col-md-1">
+                    <div class="form-group">
+                        <label class="form-label d-invisible d-md-block">&nbsp;</label>
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="icon icon-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
                     </div>
                 </div>
                 
