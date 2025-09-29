@@ -58,7 +58,7 @@ function getAuthResultBadge($result, $total) {
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-radius: 6px;
-    padding: 1rem;
+    padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
 .table-responsive {
@@ -94,7 +94,7 @@ function getAuthResultBadge($result, $total) {
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             
             <div class="columns">
-                <div class="column col-3">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="domain">Domain</label>
                         <select class="form-select" id="domain" name="domain">
@@ -109,7 +109,7 @@ function getAuthResultBadge($result, $total) {
                     </div>
                 </div>
                 
-                <div class="column col-2">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="disposition">Disposition</label>
                         <select class="form-select" id="disposition" name="disposition">
@@ -121,7 +121,7 @@ function getAuthResultBadge($result, $total) {
                     </div>
                 </div>
                 
-                <div class="column col-2">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="date_from">From Date</label>
                         <input type="date" class="form-input" id="date_from" name="date_from" 
@@ -129,7 +129,7 @@ function getAuthResultBadge($result, $total) {
                     </div>
                 </div>
                 
-                <div class="column col-2">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="date_to">To Date</label>
                         <input type="date" class="form-input" id="date_to" name="date_to" 
@@ -137,14 +137,14 @@ function getAuthResultBadge($result, $total) {
                     </div>
                 </div>
                 
-                <div class="column col-3">
+                <div class="column col-12 col-sm-12 col-md-8 col-lg-3">
                     <div class="form-group">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="input-group">
-                            <button type="submit" class="btn btn-primary">
+                        <label class="form-label d-invisible d-lg-block">&nbsp;</label>
+                        <div class="d-flex flex-wrap">
+                            <button type="submit" class="btn btn-primary mr-2 mb-1">
                                 <i class="icon icon-search"></i> Filter
                             </button>
-                            <a href="/reports" class="btn btn-link">Clear</a>
+                            <a href="/reports" class="btn btn-link mb-1">Clear</a>
                         </div>
                     </div>
                 </div>

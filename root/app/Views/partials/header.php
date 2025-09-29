@@ -31,23 +31,25 @@
 <body>
     <header class="navbar">
         <section class="navbar-section">
-            <a class="navbar-brand" href="/home">
+            <a class="navbar-brand mr-3" href="/home">
                 <i class="icon icon-mail mr-1 text-primary"></i>
                 DMARC Dashboard
             </a>
-            <a class="btn btn-link ml-2" href="/home">
+        </section>
+        <section class="navbar-section navbar-center">
+            <a class="btn btn-link mx-1" href="/home">
                 <i class="icon icon-home"></i> Dashboard
             </a>
-            <a class="btn btn-link" href="/reports">
+            <a class="btn btn-link mx-1" href="/reports">
                 <i class="icon icon-list"></i> Reports
             </a>
-            <a class="btn btn-link" href="/analytics">
+            <a class="btn btn-link mx-1" href="/analytics">
                 <i class="icon icon-bookmark"></i> Analytics
             </a>
-            <a class="btn btn-link" href="/upload">
+            <a class="btn btn-link mx-1" href="/upload">
                 <i class="icon icon-upload"></i> Upload
             </a>
-            <a class="btn btn-link" href="/imap">
+            <a class="btn btn-link mx-1" href="/imap">
                 <i class="icon icon-mail"></i> IMAP
             </a>
         </section>

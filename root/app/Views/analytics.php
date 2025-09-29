@@ -43,6 +43,7 @@ function getHealthBadge($category, $label) {
     border-radius: 8px;
     background: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 1.5rem;
 }
 .metric-card {
     text-align: center;
@@ -79,11 +80,23 @@ function getHealthBadge($category, $label) {
 }
 .threat-item {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
     border-bottom: 1px solid #f1f3f4;
     background: rgba(255,0,0,0.02);
+}
+.navbar-center {
+    flex: 1;
+    justify-content: center;
+}
+@media (max-width: 840px) {
+    .navbar-center {
+        display: none;
+    }
+    .navbar-brand {
+        font-size: 0.9rem;
+    }
 }
 </style>
 
@@ -107,11 +120,11 @@ function getHealthBadge($category, $label) {
 <!-- Filter Form -->
 <div class="columns">
     <div class="column col-12">
-        <form method="POST" action="/analytics" class="analytics-card p-1 mb-2">
+        <form method="POST" action="/analytics" class="analytics-card mb-2">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             
             <div class="columns">
-                <div class="column col-3">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="domain">Domain</label>
                         <select class="form-select" id="domain" name="domain">
@@ -126,7 +139,7 @@ function getHealthBadge($category, $label) {
                     </div>
                 </div>
                 
-                <div class="column col-3">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="start_date">Start Date</label>
                         <input type="date" class="form-input" id="start_date" name="start_date" 
@@ -134,7 +147,7 @@ function getHealthBadge($category, $label) {
                     </div>
                 </div>
                 
-                <div class="column col-3">
+                <div class="column col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="end_date">End Date</label>
                         <input type="date" class="form-input" id="end_date" name="end_date" 
@@ -142,14 +155,14 @@ function getHealthBadge($category, $label) {
                     </div>
                 </div>
                 
-                <div class="column col-3">
+                <div class="column col-12 col-sm-6 col-md-12 col-lg-3">
                     <div class="form-group">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="input-group">
-                            <button type="submit" class="btn btn-primary">
+                        <label class="form-label d-invisible d-sm-block">&nbsp;</label>
+                        <div class="d-flex flex-wrap">
+                            <button type="submit" class="btn btn-primary mr-2 mb-1">
                                 <i class="icon icon-search"></i> Update
                             </button>
-                            <a href="/analytics" class="btn btn-link">Reset</a>
+                            <a href="/analytics" class="btn btn-link mb-1">Reset</a>
                         </div>
                     </div>
                 </div>

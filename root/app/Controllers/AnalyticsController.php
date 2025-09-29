@@ -16,9 +16,9 @@ class AnalyticsController extends Controller
      */
     public function handleRequest(): void
     {
-        // Get date range from parameters (default to last 30 days)
-        $endDate = $_GET['end_date'] ?? date('Y-m-d');
-        $startDate = $_GET['start_date'] ?? date('Y-m-d', strtotime('-30 days'));
+        // Get date range from parameters (default to show sample data from 2023)
+        $endDate = $_GET['end_date'] ?? '2023-10-02';
+        $startDate = $_GET['start_date'] ?? '2023-09-28';
         $domain = $_GET['domain'] ?? '';
 
         // Get trend data for charts
