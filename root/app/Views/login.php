@@ -31,7 +31,7 @@
 <body>
     <div class="container grid-lg">
         <div class="columns">
-            <div class="column col-6 col-mx-auto">
+            <div class="column col-4 col-mx-auto">
                 <div class="login-container">
                     <div class="text-center mb-2">
                         <i class="icon icon-3x icon-mail text-primary mb-1"></i>
