@@ -9,7 +9,7 @@
  * Version: 3.0.0
  *
  * File: header.php
- * Description: DMARC Dashboard Header
+ * Description: DMARC Dashboard Header using Spectre.css
  */
 
 $pageTitle = $title ?? 'DMARC Dashboard';
@@ -22,109 +22,86 @@ $pageTitle = $title ?? 'DMARC Dashboard';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?> - DMARC Dashboard</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Spectre.css Framework -->
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/forms.css">
     <link rel="stylesheet" href="/assets/css/dashboard.css">
+    
+    <!-- Scripts -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="/assets/js/header-scripts.js"></script>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 </head>
-<body class="bg-light">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard">
-                <i class="fas fa-shield-alt mr-2"></i>
+<body>
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <section class="navbar-section">
+            <a class="navbar-brand mr-2" href="/dashboard">
+                <i class="icon icon-shield mr-1"></i>
                 DMARC Dashboard
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link <?= (str_contains($_SERVER['REQUEST_URI'], '/dashboard') || $_SERVER['REQUEST_URI'] === '/') ? 'active' : '' ?>" 
-                           href="/dashboard">
-                            <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+            <a class="btn btn-link" href="/dashboard">Dashboard</a>
+            <a class="btn btn-link" href="/domains">Domains</a>
+            <a class="btn btn-link" href="/reports">Reports</a>
+            <a class="btn btn-link" href="/upload">Upload</a>
+        </section>
+        <section class="navbar-section">
+            <div class="dropdown">
+                <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
+                    <i class="icon icon-people mr-1"></i>
+                    <?= htmlspecialchars($_SESSION['username'] ?? 'User') ?>
+                    <i class="icon icon-caret"></i>
+                </a>
+                <ul class="menu">
+                    <li class="menu-item">
+                        <a href="/profile" class="menu-link">
+                            <i class="icon icon-edit mr-1"></i>Profile
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], '/domains') ? 'active' : '' ?>" 
-                           href="/domains">
-                            <i class="fas fa-globe mr-1"></i>Domains
+                    <li class="menu-item">
+                        <a href="/settings" class="menu-link">
+                            <i class="icon icon-apps mr-1"></i>Settings
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], '/reports') ? 'active' : '' ?>" 
-                           href="/reports">
-                            <i class="fas fa-chart-line mr-1"></i>Reports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= str_contains($_SERVER['REQUEST_URI'], '/alerts') ? 'active' : '' ?>" 
-                           href="/alerts">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>Alerts
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
-                           data-bs-toggle="dropdown">
-                            <i class="fas fa-user mr-1"></i>
-                            <?= htmlspecialchars($_SESSION['username'] ?? 'User') ?>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/profile">
-                                <i class="fas fa-user-edit mr-2"></i>Profile
-                            </a></li>
-                            <li><a class="dropdown-item" href="/settings">
-                                <i class="fas fa-cog mr-2"></i>Settings
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form method="POST" action="/login" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                                    <button class="dropdown-item" name="logout" type="submit">
-                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
+                    <li class="divider"></li>
+                    <li class="menu-item">
+                        <form method="POST" action="/login" style="margin: 0;">
+                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                            <button class="btn btn-link menu-link" name="logout" type="submit" style="border: none; background: none; text-align: left; width: 100%;">
+                                <i class="icon icon-shutdown mr-1"></i>Logout
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>
-        </div>
-    </nav>
+        </section>
+    </header>
 
     <!-- Alert Messages -->
     <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-            <i class="fas fa-check-circle mr-2"></i>
+        <div class="toast toast-success">
+            <button class="btn btn-clear float-right" onclick="this.parentElement.style.display='none'"></button>
             <?= htmlspecialchars($_SESSION['success']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
 
     <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-            <i class="fas fa-exclamation-circle mr-2"></i>
+        <div class="toast toast-error">
+            <button class="btn btn-clear float-right" onclick="this.parentElement.style.display='none'"></button>
             <?= htmlspecialchars($_SESSION['error']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php unset($_SESSION['error']); ?>
     <?php endif; ?>
 
     <?php if (isset($_SESSION['warning'])): ?>
-        <div class="alert alert-warning alert-dismissible fade show m-3" role="alert">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
+        <div class="toast toast-warning">
+            <button class="btn btn-clear float-right" onclick="this.parentElement.style.display='none'"></button>
             <?= htmlspecialchars($_SESSION['warning']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php unset($_SESSION['warning']); ?>
     <?php endif; ?>

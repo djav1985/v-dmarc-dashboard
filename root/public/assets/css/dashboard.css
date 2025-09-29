@@ -1,64 +1,89 @@
-/* DMARC Dashboard Custom Styles */
+/* DMARC Dashboard Custom Styles for Spectre.css */
 
 /* Main layout */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
+    background-color: #f8f9fc;
 }
 
-/* Navigation */
-.navbar-brand {
+/* Navigation enhancements */
+.navbar {
+    background-color: #5755d9;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.navbar .navbar-brand {
     font-weight: 600;
     font-size: 1.25rem;
+    color: white;
 }
 
-/* Cards */
+.navbar .btn-link {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar .btn-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card enhancements */
 .card {
-    border: 0;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid #e7e9fc;
     border-radius: 0.5rem;
 }
 
 .card-header {
     background-color: #f8f9fc;
-    border-bottom: 1px solid #e3e6f0;
+    border-bottom: 1px solid #e7e9fc;
+    border-radius: 0.5rem 0.5rem 0 0;
 }
 
 /* Statistics cards */
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
+.h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
 }
 
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
+.text-primary {
+    color: #5755d9 !important;
 }
 
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
+.text-success {
+    color: #32b643 !important;
 }
 
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
+.text-warning {
+    color: #ffb700 !important;
 }
 
-/* Status badges */
-.badge {
-    font-size: 0.75rem;
-    font-weight: 500;
+.text-secondary {
+    color: #6c757d !important;
 }
 
 /* DNS Status indicators */
-.dns-status .badge {
+.dns-status .label {
     font-size: 0.6rem;
-    min-width: 20px;
-    height: 20px;
-    line-height: 1.8;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
     border-radius: 50%;
+    margin-right: 2px;
+    text-align: center;
+    display: inline-block;
 }
 
-/* Tables */
+/* Table enhancements */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
 .table th {
-    border-top: 0;
+    background-color: #f8f9fc;
+    border-bottom: 2px solid #e7e9fc;
     font-weight: 600;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -67,58 +92,157 @@ body {
 }
 
 .table-hover tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.025);
+    background-color: rgba(87, 85, 217, 0.05);
 }
 
-/* Buttons */
+/* Button enhancements */
 .btn {
     border-radius: 0.35rem;
     font-weight: 500;
 }
 
-.btn-sm {
-    font-size: 0.8rem;
+.btn-block {
+    display: block;
+    width: 100%;
 }
 
 /* Modal improvements */
-.modal-header {
-    border-bottom: 1px solid #e3e6f0;
+.modal-container {
+    max-width: 500px;
 }
 
-.modal-footer {
-    border-top: 1px solid #e3e6f0;
+.modal-header {
+    border-bottom: 1px solid #e7e9fc;
 }
 
 /* Form improvements */
-.form-control:focus {
+.form-input:focus,
+.form-select:focus {
     border-color: #bac8f3;
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(87, 85, 217, 0.25);
 }
 
-/* Alert improvements */
-.alert {
+.form-input-hint {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Toast/Alert improvements */
+.toast {
     border: 0;
     border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin: 0.5rem 0;
 }
 
-.alert-dismissible .btn-close {
-    padding: 0.75rem 1rem;
+.toast-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #32b643;
 }
 
-/* Domain status indicators */
-.domain-status {
-    display: inline-flex;
-    gap: 2px;
+.toast-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #e85c75;
 }
 
-.domain-status .badge {
-    width: 18px;
-    height: 18px;
-    line-height: 1.2;
-    font-size: 10px;
-    font-weight: bold;
+.toast-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffb700;
+}
+
+/* Empty state improvements */
+.empty {
     text-align: center;
-    border-radius: 3px;
+    padding: 2rem 1rem;
+}
+
+.empty-icon .icon {
+    font-size: 4rem;
+    color: #bcc3ce;
+}
+
+.empty-title {
+    color: #5a5c69;
+    margin: 1rem 0 0.5rem;
+}
+
+.empty-subtitle {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+/* Tile improvements */
+.tile {
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.tile-content {
+    flex: 1;
+}
+
+.tile-title {
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+.tile-subtitle {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.tile-action {
+    flex: none;
+}
+
+/* Label/Badge improvements */
+.label {
+    font-weight: 500;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+.label-success {
+    background-color: #32b643;
+    color: white;
+}
+
+.label-warning {
+    background-color: #ffb700;
+    color: #212529;
+}
+
+.label-error {
+    background-color: #e85c75;
+    color: white;
+}
+
+.label-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.label-rounded {
+    border-radius: 1rem;
+}
+
+/* Policy status colors */
+.policy-none {
+    background-color: #e85c75;
+    color: white;
+}
+
+.policy-quarantine {
+    background-color: #ffb700;
+    color: #212529;
+}
+
+.policy-reject {
+    background-color: #32b643;
+    color: white;
 }
 
 /* Loading states */
@@ -145,56 +269,65 @@ body {
     }
 }
 
-/* Policy status colors */
-.policy-none {
-    background-color: #dc3545;
-    color: white;
+/* Flexbox utilities */
+.d-flex {
+    display: flex;
 }
 
-.policy-quarantine {
-    background-color: #ffc107;
-    color: #212529;
+.flex-1 {
+    flex: 1;
 }
 
-.policy-reject {
-    background-color: #28a745;
-    color: white;
+/* Utility classes */
+.mr-1 {
+    margin-right: 0.25rem;
 }
 
-/* DNS record status indicators */
-.dns-indicator {
-    display: inline-flex;
-    gap: 1px;
+.mr-2 {
+    margin-right: 0.5rem;
 }
 
-.dns-indicator .badge {
-    width: 16px;
-    height: 16px;
-    font-size: 9px;
-    line-height: 1.4;
-    padding: 0;
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.float-right {
+    float: right;
+}
+
+.text-center {
     text-align: center;
-    border-radius: 2px;
+}
+
+.text-right {
+    text-align: right;
 }
 
 /* Responsive improvements */
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .btn-group-sm .btn {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.7rem;
-    }
-    
-    .table-responsive {
-        font-size: 0.9rem;
-    }
-    
-    .dns-indicator {
+@media (max-width: 840px) {
+    .navbar .navbar-section {
         flex-direction: column;
-        gap: 1px;
+    }
+    
+    .columns .column {
+        margin-bottom: 1rem;
+    }
+    
+    .h2 {
+        font-size: 2rem;
+    }
+    
+    .dns-status .label {
+        margin: 1px;
+    }
+    
+    .tile {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .tile-action {
+        margin-top: 0.5rem;
     }
 }
 
@@ -221,6 +354,7 @@ body {
     
     .table th {
         color: #cbd5e0;
+        background-color: #374151;
         border-color: #4a5568;
     }
     
@@ -228,7 +362,11 @@ body {
         border-color: #4a5568;
     }
     
-    .text-muted {
+    .text-gray {
         color: #a0aec0 !important;
+    }
+    
+    .empty-icon .icon {
+        color: #4a5568;
     }
 }

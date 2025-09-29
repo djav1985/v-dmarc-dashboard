@@ -30,9 +30,10 @@ class Router
     private function __construct()
     {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $r): void {
-            // Root route shows landing page
+            // Redirect the root URL to the login page
             $r->addRoute('GET', '/', function (): void {
-                require __DIR__ . '/../Views/index.php';
+                header('Location: /login');
+                exit();
             });
             
             // Authentication routes

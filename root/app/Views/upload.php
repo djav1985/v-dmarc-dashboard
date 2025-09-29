@@ -1,72 +1,149 @@
 <?php include __DIR__ . '/partials/header.php'; ?>
 
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-upload mr-2"></i>Upload DMARC Reports
-                    </h6>
+<div class="container">
+    <div class="columns">
+        <div class="column col-8 col-mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title h5">
+                        <i class="icon icon-upload mr-1"></i>Upload DMARC Reports
+                    </div>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted mb-4">
+                    <p class="text-gray">
                         Upload DMARC aggregate reports in XML, GZ, or ZIP format. The system will automatically parse and store the report data.
                     </p>
 
                     <form method="POST" action="/upload" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="dmarc_file" class="form-label">DMARC Report File</label>
-                            <input type="file" class="form-control" id="dmarc_file" name="dmarc_file" 
+                        <div class="form-group">
+                            <label class="form-label" for="dmarc_file">DMARC Report File</label>
+                            <input type="file" class="form-input" id="dmarc_file" name="dmarc_file" 
                                    accept=".xml,.gz,.zip,application/xml,text/xml,application/gzip,application/zip" required>
-                            <div class="form-text">
+                            <p class="form-input-hint">
                                 Supported formats: XML, GZ (gzipped XML), ZIP (containing XML)
-                            </div>
+                            </p>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-upload mr-2"></i>Upload and Process
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                <i class="icon icon-upload mr-1"></i>Upload and Process
                             </button>
                         </div>
                     </form>
 
-                    <hr class="my-4">
+                    <div class="divider text-center" data-content="FEATURES"></div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary">Supported File Types</h6>
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-file-code text-success mr-2"></i>XML files (.xml)</li>
-                                <li><i class="fas fa-file-archive text-info mr-2"></i>Gzipped XML (.gz)</li>
-                                <li><i class="fas fa-file-archive text-warning mr-2"></i>ZIP archives (.zip)</li>
-                            </ul>
+                    <div class="columns">
+                        <div class="column col-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title h6">Supported File Types</div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-bookmark text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">XML files (.xml)</div>
+                                        </div>
+                                    </div>
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-share text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">Gzipped XML (.gz)</div>
+                                        </div>
+                                    </div>
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-folder text-warning"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">ZIP archives (.zip)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-primary">Processing Features</h6>
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success mr-2"></i>Automatic decompression</li>
-                                <li><i class="fas fa-check text-success mr-2"></i>Domain auto-creation</li>
-                                <li><i class="fas fa-check text-success mr-2"></i>Duplicate detection</li>
-                                <li><i class="fas fa-check text-success mr-2"></i>Error reporting</li>
-                            </ul>
+                        <div class="column col-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title h6">Processing Features</div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-check text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">Automatic decompression</div>
+                                        </div>
+                                    </div>
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-check text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">Domain auto-creation</div>
+                                        </div>
+                                    </div>
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-check text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">Duplicate detection</div>
+                                        </div>
+                                    </div>
+                                    <div class="tile tile-centered">
+                                        <div class="tile-icon">
+                                            <div class="example-tile-icon">
+                                                <i class="icon icon-check text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="tile-content">
+                                            <div class="tile-title">Error reporting</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle mr-2"></i>
+                    <div class="toast">
+                        <button class="btn btn-clear float-right"></button>
                         <strong>Note:</strong> Large files may take some time to process. The system will provide feedback once processing is complete.
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Uploads (if any) -->
-            <div class="card shadow mt-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+            <!-- Recent Uploads (placeholder) -->
+            <div class="card mt-2">
+                <div class="card-header">
+                    <div class="card-title h5">Recent Activity</div>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Upload your first DMARC report to see activity here.</p>
+                    <div class="empty">
+                        <div class="empty-icon">
+                            <i class="icon icon-inbox icon-2x"></i>
+                        </div>
+                        <p class="empty-title h5">No recent uploads</p>
+                        <p class="empty-subtitle">Upload your first DMARC report to see activity here.</p>
+                    </div>
                 </div>
             </div>
         </div>
