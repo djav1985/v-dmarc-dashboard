@@ -49,6 +49,10 @@ class Router
             // IMAP Email Ingestion routes
             $r->addRoute('GET', '/imap', [\App\Controllers\ImapController::class, 'handleRequest']);
             $r->addRoute('POST', '/imap', [\App\Controllers\ImapController::class, 'handleSubmission']);
+            
+            // Reports listing and filtering
+            $r->addRoute('GET', '/reports', [\App\Controllers\ReportsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/reports', [\App\Controllers\ReportsController::class, 'handleSubmission']);
         });
     }
 
