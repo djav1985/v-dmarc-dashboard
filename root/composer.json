@@ -1,0 +1,20 @@
+{
+  "name": "appsbyv/name",
+  "description": "blah",
+  "license": "MIT",
+  "type": "project",
+  "require": {
+    "php": "^8.0",
+    "phpmailer/phpmailer": "^6.10.0",
+    "doctrine/dbal": "^3.10.0",
+    "nikic/fast-route": "^v1.3.0",
+    "respect/validation": "*"
+    
+    
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  }
+}

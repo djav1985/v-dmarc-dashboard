@@ -1,0 +1,19 @@
+{
+    "name": "appsbyv/name-dev",
+    "description": "Development dependencies for the project workspace",
+    "type": "project",
+    "license": "MIT",
+    "require": {},
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.9",
+        "phpunit/phpunit": "^10.0"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "root/app/"
+        }
+    }
+}

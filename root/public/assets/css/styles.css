@@ -1,0 +1,17 @@
+body {
+  padding: 1rem;
+}
+
+.navbar {
+  margin-bottom: 1rem;
+}
+
+.toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  border-radius: 3px;
+  background: #333;
+  padding: 0.5rem 1rem;
+  color: #fff;
+}

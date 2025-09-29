@@ -1,0 +1,21 @@
+# Node dependencies
+node_modules/
+
+# PHP dependencies
+root/vendor/
+/vendor/
+
+# Composer artifacts
+composer.lock
+root/composer.lock
+
+# NPM logs
+npm-debug.log*
+
+# Git metadata
+.git
+.gitignore
+.gitattributes
+
+# Development tooling artifacts
+Dockerfile

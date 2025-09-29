@@ -1,0 +1,16 @@
+# Environment files
+.env
+root/.env
+
+# IDE settings
+.vscode/
+.idea/
+.DS_Store
+
+# Coverage and build artifacts
+coverage/
+build/
+dist/
+
+# PHPUnit cache
+.phpunit.result.cache
