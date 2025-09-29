@@ -1,0 +1,234 @@
+/* DMARC Dashboard Custom Styles */
+
+/* Main layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Cards */
+.card {
+    border: 0;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* Statistics cards */
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+/* Status badges */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* DNS Status indicators */
+.dns-status .badge {
+    font-size: 0.6rem;
+    min-width: 20px;
+    height: 20px;
+    line-height: 1.8;
+    border-radius: 50%;
+}
+
+/* Tables */
+.table th {
+    border-top: 0;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a5c69;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.35rem;
+    font-weight: 500;
+}
+
+.btn-sm {
+    font-size: 0.8rem;
+}
+
+/* Modal improvements */
+.modal-header {
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.modal-footer {
+    border-top: 1px solid #e3e6f0;
+}
+
+/* Form improvements */
+.form-control:focus {
+    border-color: #bac8f3;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Alert improvements */
+.alert {
+    border: 0;
+    border-radius: 0.5rem;
+}
+
+.alert-dismissible .btn-close {
+    padding: 0.75rem 1rem;
+}
+
+/* Domain status indicators */
+.domain-status {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.domain-status .badge {
+    width: 18px;
+    height: 18px;
+    line-height: 1.2;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 3px;
+}
+
+/* Loading states */
+.btn.loading {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn.loading::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 5px;
+    border: 1px solid transparent;
+    border-top: 1px solid currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Policy status colors */
+.policy-none {
+    background-color: #dc3545;
+    color: white;
+}
+
+.policy-quarantine {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.policy-reject {
+    background-color: #28a745;
+    color: white;
+}
+
+/* DNS record status indicators */
+.dns-indicator {
+    display: inline-flex;
+    gap: 1px;
+}
+
+.dns-indicator .badge {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    line-height: 1.4;
+    padding: 0;
+    text-align: center;
+    border-radius: 2px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    .dns-indicator {
+        flex-direction: column;
+        gap: 1px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1a1a;
+        color: #e9ecef;
+    }
+    
+    .card {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .card-header {
+        background-color: #374151;
+        border-color: #4a5568;
+    }
+    
+    .table {
+        color: #e9ecef;
+    }
+    
+    .table th {
+        color: #cbd5e0;
+        border-color: #4a5568;
+    }
+    
+    .table td {
+        border-color: #4a5568;
+    }
+    
+    .text-muted {
+        color: #a0aec0 !important;
+    }
+}

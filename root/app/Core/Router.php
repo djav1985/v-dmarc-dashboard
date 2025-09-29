@@ -30,18 +30,31 @@ class Router
     private function __construct()
     {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $r): void {
-            // Redirect the root URL to the home page for convenience
+            // Redirect the root URL to the dashboard
             $r->addRoute('GET', '/', function (): void {
-                header('Location: /home');
+                header('Location: /dashboard');
                 exit();
             });
-            // Basic example routes
-            $r->addRoute('GET', '/', [\App\Controllers\HomeController::class, 'handleRequest']);
-            $r->addRoute('GET', '/home', [\App\Controllers\HomeController::class, 'handleRequest']);
-            $r->addRoute('POST', '/home', [\App\Controllers\HomeController::class, 'handleSubmission']);
-
+            
+            // Authentication routes
             $r->addRoute('GET', '/login', [\App\Controllers\LoginController::class, 'handleRequest']);
             $r->addRoute('POST', '/login', [\App\Controllers\LoginController::class, 'handleSubmission']);
+
+            // Legacy home route (redirect to dashboard)
+            $r->addRoute('GET', '/home', function (): void {
+                header('Location: /dashboard');
+                exit();
+            });
+            $r->addRoute('POST', '/home', [\App\Controllers\HomeController::class, 'handleSubmission']);
+
+            // DMARC Dashboard routes
+            $r->addRoute('GET', '/dashboard', [\App\Controllers\DashboardController::class, 'handleRequest']);
+            $r->addRoute('POST', '/dashboard', [\App\Controllers\DashboardController::class, 'handleSubmission']);
+
+            // Domain management routes
+            $r->addRoute('GET', '/domains', [\App\Controllers\DomainController::class, 'handleRequest']);
+            $r->addRoute('POST', '/domains', [\App\Controllers\DomainController::class, 'handleSubmission']);
+            $r->addRoute('GET', '/domains/{id:\d+}', [\App\Controllers\DomainController::class, 'handleRequest']);
         });
     }
 
@@ -82,8 +95,8 @@ class Router
             $vars    = $routeInfo[2] ?? [];
 
             if (is_array($handler) && count($handler) === 2) {
-                // Only enforce auth for controller routes (skip for /login)
-                if ($uri !== '/login') {
+                // Only enforce auth for protected routes (skip for /login)
+                if ($uri !== '/login' && !str_starts_with($uri, '/api/public')) {
                     SessionManager::getInstance()->requireAuth();
                 }
                 [$class, $action] = $handler;
