@@ -49,6 +49,29 @@ class Router
             // IMAP Email Ingestion routes
             $r->addRoute('GET', '/imap', [\App\Controllers\ImapController::class, 'handleRequest']);
             $r->addRoute('POST', '/imap', [\App\Controllers\ImapController::class, 'handleSubmission']);
+            
+            // Reports listing and filtering
+            $r->addRoute('GET', '/reports', [\App\Controllers\ReportsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/reports', [\App\Controllers\ReportsController::class, 'handleSubmission']);
+            
+            // Individual report details
+            $r->addRoute('GET', '/report/{id:\d+}', [\App\Controllers\ReportDetailController::class, 'handleRequest']);
+            
+            // Analytics dashboard
+            $r->addRoute('GET', '/analytics', [\App\Controllers\AnalyticsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/analytics', [\App\Controllers\AnalyticsController::class, 'handleSubmission']);
+            
+            // Domain Groups management
+            $r->addRoute('GET', '/domain-groups', [\App\Controllers\DomainGroupsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/domain-groups', [\App\Controllers\DomainGroupsController::class, 'handleSubmission']);
+            
+            // Alerting system
+            $r->addRoute('GET', '/alerts', [\App\Controllers\AlertController::class, 'handleRequest']);
+            $r->addRoute('POST', '/alerts', [\App\Controllers\AlertController::class, 'handleSubmission']);
+            
+            // Reports management and PDF generation
+            $r->addRoute('GET', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleRequest']);
+            $r->addRoute('POST', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleSubmission']);
         });
     }
 
@@ -94,7 +117,7 @@ class Router
                     SessionManager::getInstance()->requireAuth();
                 }
                 [$class, $action] = $handler;
-                call_user_func_array([new $class(), $action], $vars);
+                call_user_func_array([new $class(), $action], array_values($vars));
 
             } elseif (is_callable($handler)) {
                 call_user_func_array($handler, array_values($vars));

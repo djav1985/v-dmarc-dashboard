@@ -69,14 +69,22 @@ class DatabaseManager
         }
 
         if (self::$dbh === null) {
-            $params = [
-                'dbname'   => DB_NAME,
-                'user'     => DB_USER,
-                'password' => DB_PASSWORD,
-                'host'     => DB_HOST,
-                'driver'   => 'pdo_mysql',
-                'charset'  => 'utf8mb4',
-            ];
+            // Use SQLite if configured for development
+            if (defined('USE_SQLITE') && USE_SQLITE) {
+                $params = [
+                    'driver' => 'pdo_sqlite',
+                    'path' => SQLITE_DB_PATH,
+                ];
+            } else {
+                $params = [
+                    'dbname'   => DB_NAME,
+                    'user'     => DB_USER,
+                    'password' => DB_PASSWORD,
+                    'host'     => DB_HOST,
+                    'driver'   => 'pdo_mysql',
+                    'charset'  => 'utf8mb4',
+                ];
+            }
 
             try {
                 self::$dbh = DriverManager::getConnection($params);

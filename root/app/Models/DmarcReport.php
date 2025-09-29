@@ -183,4 +183,202 @@ class DmarcReport
         $db->bind(':days', $days);
         return $db->resultSet();
     }
+
+    /**
+     * Get filtered aggregate reports with detailed information.
+     *
+     * @param array $filters
+     * @return array
+     */
+    public static function getFilteredReports(array $filters): array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $whereConditions = [];
+        $bindParams = [];
+
+        // Build WHERE clause based on filters
+        if (!empty($filters['domain'])) {
+            $whereConditions[] = 'd.domain = :domain';
+            $bindParams[':domain'] = $filters['domain'];
+        }
+
+        if (!empty($filters['disposition'])) {
+            $whereConditions[] = 'dmar.disposition = :disposition';
+            $bindParams[':disposition'] = $filters['disposition'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $whereConditions[] = 'dar.date_range_begin >= UNIX_TIMESTAMP(:date_from)';
+            $bindParams[':date_from'] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $whereConditions[] = 'dar.date_range_end <= UNIX_TIMESTAMP(:date_to)';
+            $bindParams[':date_to'] = $filters['date_to'] . ' 23:59:59';
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        // Build ORDER BY clause
+        $sortBy = $filters['sort_by'] ?? 'dar.received_at';
+        $sortDir = strtoupper($filters['sort_dir'] ?? 'DESC');
+
+        // Validate sort direction
+        if (!in_array($sortDir, ['ASC', 'DESC'])) {
+            $sortDir = 'DESC';
+        }
+
+        // Validate sort column
+        $allowedSortColumns = [
+            'received_at' => 'dar.received_at',
+            'domain' => 'd.domain',
+            'org_name' => 'dar.org_name',
+            'date_range_begin' => 'dar.date_range_begin',
+            'date_range_end' => 'dar.date_range_end',
+            'report_count' => 'total_records'
+        ];
+
+        $orderColumn = $allowedSortColumns[$sortBy] ?? 'dar.received_at';
+
+        $query = "
+            SELECT 
+                dar.id,
+                dar.org_name,
+                dar.email,
+                dar.report_id,
+                dar.date_range_begin,
+                dar.date_range_end,
+                dar.received_at,
+                d.domain,
+                COUNT(dmar.id) as total_records,
+                SUM(dmar.count) as total_volume,
+                SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
+                SUM(CASE WHEN dmar.disposition = 'quarantine' THEN dmar.count ELSE 0 END) as quarantined_count,
+                SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) as passed_count,
+                SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) as dkim_pass_count,
+                SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count
+            FROM dmarc_aggregate_reports dar
+            JOIN domains d ON dar.domain_id = d.id
+            LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
+            $whereClause
+            GROUP BY dar.id, dar.org_name, dar.email, dar.report_id, dar.date_range_begin, 
+                     dar.date_range_end, dar.received_at, d.domain
+            ORDER BY $orderColumn $sortDir
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $db->query($query);
+
+        // Bind parameters
+        foreach ($bindParams as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        $db->bind(':limit', (int) ($filters['limit'] ?? 25));
+        $db->bind(':offset', (int) ($filters['offset'] ?? 0));
+
+        return $db->resultSet();
+    }
+
+    /**
+     * Get count of filtered aggregate reports.
+     *
+     * @param array $filters
+     * @return int
+     */
+    public static function getFilteredReportsCount(array $filters): int
+    {
+        $db = DatabaseManager::getInstance();
+
+        $whereConditions = [];
+        $bindParams = [];
+
+        // Build WHERE clause based on filters
+        if (!empty($filters['domain'])) {
+            $whereConditions[] = 'd.domain = :domain';
+            $bindParams[':domain'] = $filters['domain'];
+        }
+
+        if (!empty($filters['disposition'])) {
+            $whereConditions[] = 'dmar.disposition = :disposition';
+            $bindParams[':disposition'] = $filters['disposition'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $whereConditions[] = 'dar.date_range_begin >= UNIX_TIMESTAMP(:date_from)';
+            $bindParams[':date_from'] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $whereConditions[] = 'dar.date_range_end <= UNIX_TIMESTAMP(:date_to)';
+            $bindParams[':date_to'] = $filters['date_to'] . ' 23:59:59';
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        $query = "
+            SELECT COUNT(DISTINCT dar.id) as total
+            FROM dmarc_aggregate_reports dar
+            JOIN domains d ON dar.domain_id = d.id
+            LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
+            $whereClause
+        ";
+
+        $db->query($query);
+
+        // Bind parameters
+        foreach ($bindParams as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        $result = $db->single();
+        return (int) ($result['total'] ?? 0);
+    }
+
+    /**
+     * Get detailed information for a specific report.
+     *
+     * @param int $reportId
+     * @return array|null
+     */
+    public static function getReportDetails(int $reportId): ?array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            SELECT 
+                dar.*,
+                d.domain
+            FROM dmarc_aggregate_reports dar
+            JOIN domains d ON dar.domain_id = d.id
+            WHERE dar.id = :report_id
+        ');
+
+        $db->bind(':report_id', $reportId);
+        $result = $db->single();
+
+        return $result ?: null;
+    }
+
+    /**
+     * Get aggregate records for a specific report.
+     *
+     * @param int $reportId
+     * @return array
+     */
+    public static function getAggregateRecords(int $reportId): array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            SELECT *
+            FROM dmarc_aggregate_records
+            WHERE report_id = :report_id
+            ORDER BY count DESC, source_ip ASC
+        ');
+
+        $db->bind(':report_id', $reportId);
+        return $db->resultSet();
+    }
 }
