@@ -37,10 +37,6 @@ This document defines baseline expectations for all contributors to maintain cod
    - Avoid dependencies that significantly increase complexity or change the framework’s deployment requirements.
    - Test all changes for backward compatibility.
 
-6. **Collaboration**
-   - Discuss significant agent proposals with maintainers before implementation.
-   - Submit RFCs (Request for Comments) for major changes.
-
 ---
 
 ## What Agents Should NOT Do
