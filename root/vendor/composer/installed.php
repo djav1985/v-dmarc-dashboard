@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'appsbyv/name',
-        'pretty_version' => 'dev-main',
-        'version' => 'dev-main',
-        'reference' => '82883627a6c072b637520a9d2e8fac047d33d071',
+        'pretty_version' => 'dev-copilot/fix-cd27af3f-9cdd-47fe-876b-54df2c61a8ac',
+        'version' => 'dev-copilot/fix-cd27af3f-9cdd-47fe-876b-54df2c61a8ac',
+        'reference' => '83bc6feebce3d36a21c099271603f1f371f5febd',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'appsbyv/name' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => '82883627a6c072b637520a9d2e8fac047d33d071',
+            'pretty_version' => 'dev-copilot/fix-cd27af3f-9cdd-47fe-876b-54df2c61a8ac',
+            'version' => 'dev-copilot/fix-cd27af3f-9cdd-47fe-876b-54df2c61a8ac',
+            'reference' => '83bc6feebce3d36a21c099271603f1f371f5febd',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
