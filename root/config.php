@@ -26,6 +26,10 @@ define('DB_USER', 'test'); // Database username
 define('DB_PASSWORD', ''); // Database password
 define('DB_NAME', 'dmarc_dashboard'); // Database schema name
 
+// Development: Use SQLite for demo purposes
+define('USE_SQLITE', true);
+define('SQLITE_DB_PATH', __DIR__ . '/demo.db');
+
 // SMTP settings for sending emails
 define('SMTP_HOST', 'smtp.example.com');
 define('SMTP_PORT', 587);
