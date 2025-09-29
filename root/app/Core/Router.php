@@ -56,6 +56,10 @@ class Router
             
             // Individual report details
             $r->addRoute('GET', '/report/{id:\d+}', [\App\Controllers\ReportDetailController::class, 'handleRequest']);
+            
+            // Analytics dashboard
+            $r->addRoute('GET', '/analytics', [\App\Controllers\AnalyticsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/analytics', [\App\Controllers\AnalyticsController::class, 'handleSubmission']);
         });
     }
 

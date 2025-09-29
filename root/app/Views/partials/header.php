@@ -41,6 +41,9 @@
             <a class="btn btn-link" href="/reports">
                 <i class="icon icon-list"></i> Reports
             </a>
+            <a class="btn btn-link" href="/analytics">
+                <i class="icon icon-bookmark"></i> Analytics
+            </a>
             <a class="btn btn-link" href="/upload">
                 <i class="icon icon-upload"></i> Upload
             </a>
