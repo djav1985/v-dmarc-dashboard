@@ -25,18 +25,41 @@
     <link rel="stylesheet" href="/assets/css/forms.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="/assets/js/header-scripts.js"></script>
-<link rel="icon" href="/favicon.ico" type="image/x-icon" />
-<title>V PHP Framework</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <title><?= defined('APP_NAME') ? APP_NAME : 'DMARC Dashboard' ?></title>
 </head>
 <body>
-    <nav class="navbar">
+    <header class="navbar bg-primary">
         <section class="navbar-section">
-            <a class="navbar-brand mr-2" href="/home">Home</a>
+            <a class="navbar-brand text-light" href="/home">
+                <i class="icon icon-mail mr-1"></i>
+                DMARC Dashboard
+            </a>
+            <a class="btn btn-link text-light ml-2" href="/home">
+                <i class="icon icon-home"></i> Dashboard
+            </a>
+            <a class="btn btn-link text-light" href="/upload">
+                <i class="icon icon-upload"></i> Upload Reports
+            </a>
         </section>
         <section class="navbar-section">
-            <form method="POST" action="/login" class="form-inline">
-                <input type="hidden" name="csrf_token" value="<?=$_SESSION['csrf_token'] ?? ''?>">
-                <button class="btn btn-link" name="logout">Logout</button>
-            </form>
+            <div class="dropdown dropdown-right">
+                <a href="#" class="btn btn-link text-light dropdown-toggle" tabindex="0">
+                    <i class="icon icon-people"></i>
+                    <?= htmlspecialchars($_SESSION['username'] ?? 'User', ENT_QUOTES, 'UTF-8') ?>
+                    <i class="icon icon-caret"></i>
+                </a>
+                <ul class="menu">
+                    <li class="menu-item">
+                        <form method="POST" action="/login" class="m-1">
+                            <input type="hidden" name="csrf_token" value="<?=$_SESSION['csrf_token'] ?? ''?>">
+                            <button class="btn btn-link btn-sm text-left" name="logout" type="submit">
+                                <i class="icon icon-shutdown"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </section>
-    </nav>
+    </header>
+    <main class="container grid-lg mt-2">

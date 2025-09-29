@@ -1,8 +1,53 @@
-.content-box {
-  margin: 2rem auto;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  background: #fff;
-  padding: 2rem;
-  max-width: 400px;
+/* DMARC Dashboard - Login page styling */
+.bg-gray {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.card {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 8px;
+}
+
+.card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-input:focus {
+    border-color: #5755d9;
+    box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.2);
+}
+
+.btn-primary {
+    background: #5755d9;
+    border-color: #5755d9;
+}
+
+.btn-primary:hover {
+    background: #4b48d6;
+    border-color: #4b48d6;
+}
+
+.toast-primary {
+    background: rgba(87, 85, 217, 0.1);
+    border: 1px solid rgba(87, 85, 217, 0.2);
+    color: #5755d9;
+}
+
+@media (max-width: 600px) {
+    .hero {
+        padding: 1rem;
+    }
+    
+    .card {
+        margin: 1rem;
+    }
 }

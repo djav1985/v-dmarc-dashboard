@@ -1,7 +1,61 @@
+/* DMARC Dashboard - Form styles */
 .form-group {
-  margin-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 .form-input {
-  width: 100%;
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #5755d9;
+    box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.2);
+}
+
+.form-input[type="file"] {
+    padding: 0.4rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.form-input-hint {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.input-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* File input styling improvements */
+.form-input[type="file"] {
+    background: #f8f9fa;
+    border: 2px dashed #ced4da;
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+    transition: border-color 0.2s ease;
+}
+
+.form-input[type="file"]:hover {
+    border-color: #5755d9;
+    background: rgba(87, 85, 217, 0.05);
 }
