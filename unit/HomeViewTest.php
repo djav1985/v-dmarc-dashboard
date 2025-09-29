@@ -62,7 +62,7 @@ assertContains(
 );
 
 assertContains(
-    'Upload Reports',
+    'Upload',
     $firstRender,
     'The dashboard should show upload button.',
     $failures

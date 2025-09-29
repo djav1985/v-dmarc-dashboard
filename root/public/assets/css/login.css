@@ -1,53 +1,85 @@
 /* DMARC Dashboard - Login page styling */
-.bg-gray {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+body {
+    background-color: #f8f9fa;
+    padding: 2rem 1rem;
 }
 
-.hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
+.login-container {
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 .card {
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    border: none;
-    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: white;
 }
 
 .card-header {
     background: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
+    padding: 1rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .form-input:focus {
     border-color: #5755d9;
-    box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.2);
+    outline: 0;
+    box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.25);
 }
 
 .btn-primary {
-    background: #5755d9;
+    background-color: #5755d9;
     border-color: #5755d9;
+    color: white;
 }
 
 .btn-primary:hover {
-    background: #4b48d6;
+    background-color: #4b48d6;
     border-color: #4b48d6;
 }
 
-.toast-primary {
-    background: rgba(87, 85, 217, 0.1);
-    border: 1px solid rgba(87, 85, 217, 0.2);
-    color: #5755d9;
+.toast {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 0.75rem;
+    display: inline-block;
+}
+
+.text-primary {
+    color: #5755d9 !important;
 }
 
 @media (max-width: 600px) {
-    .hero {
-        padding: 1rem;
+    body {
+        padding: 1rem 0.5rem;
     }
     
-    .card {
-        margin: 1rem;
+    .card-body {
+        padding: 1rem;
     }
 }

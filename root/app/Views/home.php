@@ -28,20 +28,20 @@ try {
     $dashboardSummary = [];
 }
 ?>
-    <div class="hero hero-sm bg-primary text-light">
-        <div class="hero-body">
-            <h1 class="text-center">
-                <i class="icon icon-2x icon-shield mr-2"></i>
-                DMARC Dashboard
-            </h1>
-            <p class="text-center h5 text-light">
-                Welcome, <?= $displayUsername ?>. Monitor your domain's email authentication status.
-            </p>
+    <div class="columns">
+        <div class="column col-12">
+            <div class="text-center mb-2">
+                <h2>
+                    <i class="icon icon-2x icon-shield text-primary mr-2"></i>
+                    DMARC Dashboard
+                </h2>
+                <p class="text-gray">Welcome, <?= $displayUsername ?>. Monitor your domain's email authentication status.</p>
+            </div>
         </div>
     </div>
 
-    <div class="columns mt-2">
-        <div class="column col-10 col-mx-auto">
+    <div class="columns">
+        <div class="column col-12">
             <?php if (empty($dashboardSummary)): ?>
                 <div class="empty">
                     <div class="empty-icon">
@@ -68,29 +68,21 @@ try {
                                 </div>
                             </div>
                             <div class="card-body p-0">
-                                <table class="table table-striped table-hover">
+                                <table class="table table-striped">
                                     <thead>
                                         <tr>
                                             <th>Domain</th>
                                             <th class="text-center">Reports</th>
-                                            <th class="text-center">
-                                                <span class="label label-success">Passed</span>
-                                            </th>
-                                            <th class="text-center">
-                                                <span class="label label-warning">Quarantined</span>
-                                            </th>
-                                            <th class="text-center">
-                                                <span class="label label-error">Rejected</span>
-                                            </th>
+                                            <th class="text-center">Passed</th>
+                                            <th class="text-center">Quarantined</th>
+                                            <th class="text-center">Rejected</th>
                                             <th>Last Report</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($dashboardSummary as $row): ?>
                                             <tr>
-                                                <td>
-                                                    <strong><?= htmlspecialchars($row['domain']) ?></strong>
-                                                </td>
+                                                <td><strong><?= htmlspecialchars($row['domain']) ?></strong></td>
                                                 <td class="text-center">
                                                     <span class="chip"><?= (int) $row['report_count'] ?></span>
                                                 </td>
@@ -103,9 +95,7 @@ try {
                                                 <td class="text-center">
                                                     <span class="label label-error"><?= (int) $row['rejected_count'] ?></span>
                                                 </td>
-                                                <td>
-                                                    <?= $row['last_report_date'] ? date('M j, Y', $row['last_report_date']) : 'N/A' ?>
-                                                </td>
+                                                <td><?= $row['last_report_date'] ? date('M j, Y', $row['last_report_date']) : 'N/A' ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -117,10 +107,7 @@ try {
                     <div class="column col-4">
                         <div class="card">
                             <div class="card-header">
-                                <div class="card-title h6">
-                                    <i class="icon icon-apps mr-1"></i>
-                                    Quick Actions
-                                </div>
+                                <div class="card-title h6">Quick Actions</div>
                             </div>
                             <div class="card-body">
                                 <div class="menu">
@@ -132,7 +119,6 @@ try {
                                     <div class="divider"></div>
                                     <div class="menu-item">
                                         <small class="text-gray">
-                                            <i class="icon icon-info"></i>
                                             Future features:<br>
                                             • Email ingestion<br>
                                             • Advanced analytics<br>

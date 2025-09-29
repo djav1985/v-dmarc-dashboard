@@ -28,57 +28,51 @@
     <link rel="stylesheet" href="/assets/css/login.css">
     <link rel="stylesheet" href="/assets/css/forms.css">
 </head>
-<body class="bg-gray">
-    <div class="hero hero-sm">
-        <div class="hero-body">
-            <div class="container grid-lg">
-                <div class="columns">
-                    <div class="column col-6 col-mx-auto">
-                        <div class="card">
-                            <div class="card-header text-center">
-                                <div class="card-title h4">
-                                    <i class="icon icon-2x icon-mail text-primary"></i>
-                                    <div class="mt-2">DMARC Dashboard</div>
-                                </div>
-                                <div class="card-subtitle text-gray">
-                                    Secure email authentication monitoring
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <!-- Login form -->
-                                <form method="post">
-                                    <input type="hidden" name="csrf_token" value="<?php echo App\Core\SessionManager::getInstance()->get('csrf_token'); ?>">
-                                    
-                                    <div class="form-group">
-                                        <label class="form-label" for="username">Username</label>
-                                        <input class="form-input" id="username" type="text" name="username" 
-                                               autocomplete="username" placeholder="Enter your username" required>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label" for="password">Password</label>
-                                        <input class="form-input" id="password" type="password" name="password" 
-                                               autocomplete="current-password" placeholder="Enter your password" required>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <button class="btn btn-primary btn-block btn-lg" type="submit">
-                                            <i class="icon icon-arrow-right"></i> Sign In
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <div class="divider text-center" data-content="DEFAULT CREDENTIALS"></div>
+<body>
+    <div class="container grid-lg">
+        <div class="columns">
+            <div class="column col-6 col-mx-auto">
+                <div class="login-container">
+                    <div class="text-center mb-2">
+                        <i class="icon icon-3x icon-mail text-primary mb-1"></i>
+                        <h2>DMARC Dashboard</h2>
+                        <p class="text-gray">Secure email authentication monitoring</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title h5">Sign In</div>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                <input type="hidden" name="csrf_token" value="<?php echo App\Core\SessionManager::getInstance()->get('csrf_token'); ?>">
                                 
-                                <div class="toast toast-primary">
-                                    <div class="toast-body">
-                                        <small>
-                                            <strong>Default login:</strong> admin / admin<br>
-                                            Please change after first login
-                                        </small>
-                                    </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="username">Username</label>
+                                    <input class="form-input" id="username" type="text" name="username" 
+                                           autocomplete="username" placeholder="Enter username" required>
                                 </div>
-                            </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="password">Password</label>
+                                    <input class="form-input" id="password" type="password" name="password" 
+                                           autocomplete="current-password" placeholder="Enter password" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <button class="btn btn-primary btn-block" type="submit">
+                                        Sign In
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-2">
+                        <div class="toast">
+                            <small class="text-gray">
+                                <strong>Default credentials:</strong> admin / admin
+                            </small>
                         </div>
                     </div>
                 </div>

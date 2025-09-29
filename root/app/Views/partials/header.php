@@ -29,22 +29,22 @@
     <title><?= defined('APP_NAME') ? APP_NAME : 'DMARC Dashboard' ?></title>
 </head>
 <body>
-    <header class="navbar bg-primary">
+    <header class="navbar">
         <section class="navbar-section">
-            <a class="navbar-brand text-light" href="/home">
-                <i class="icon icon-mail mr-1"></i>
+            <a class="navbar-brand" href="/home">
+                <i class="icon icon-mail mr-1 text-primary"></i>
                 DMARC Dashboard
             </a>
-            <a class="btn btn-link text-light ml-2" href="/home">
+            <a class="btn btn-link ml-2" href="/home">
                 <i class="icon icon-home"></i> Dashboard
             </a>
-            <a class="btn btn-link text-light" href="/upload">
-                <i class="icon icon-upload"></i> Upload Reports
+            <a class="btn btn-link" href="/upload">
+                <i class="icon icon-upload"></i> Upload
             </a>
         </section>
         <section class="navbar-section">
             <div class="dropdown dropdown-right">
-                <a href="#" class="btn btn-link text-light dropdown-toggle" tabindex="0">
+                <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
                     <i class="icon icon-people"></i>
                     <?= htmlspecialchars($_SESSION['username'] ?? 'User', ENT_QUOTES, 'UTF-8') ?>
                     <i class="icon icon-caret"></i>
@@ -62,4 +62,4 @@
             </div>
         </section>
     </header>
-    <main class="container grid-lg mt-2">
+    <main class="container grid-lg">
