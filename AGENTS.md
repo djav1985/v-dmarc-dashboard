@@ -81,11 +81,13 @@ Before committing changes:
 
 ## Checklist Before Submitting Code
 - [ ] Updated or created tests.
+- [ ] Update the CHANGELOG.md.
+- [ ] Update the README.md
 - [ ] All tests pass locally.
 - [ ] Linting run with no errors.
 - [ ] Commit messages are clear.
-- [ ] PR description explains the "why" and "what."
-
+- [ ] PR description explains the "why" and "what.
+- [ ] Provide screenshots of any pages made or edited.
 ---
 
 ## Notes
