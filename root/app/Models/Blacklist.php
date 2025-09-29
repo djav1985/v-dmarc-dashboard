@@ -32,9 +32,9 @@ class Blacklist
             $result = $db->single();
 
             if ($result) {
-                $attempts = $result->login_attempts + 1;
+                $attempts = $result['login_attempts'] + 1;
                 $is_blacklisted = ($attempts >= 3);
-                $timestamp = ($is_blacklisted) ? time() : $result->timestamp;
+                $timestamp = ($is_blacklisted) ? time() : $result['timestamp'];
                 $db->query("UPDATE ip_blacklist SET login_attempts = :attempts, blacklisted = :blacklisted, timestamp = :timestamp WHERE ip_address = :ip");
                 $db->bind(':attempts', $attempts);
                 $db->bind(':blacklisted', $is_blacklisted);
@@ -67,7 +67,7 @@ class Blacklist
                 return false;
             }
 
-            if (time() - $result->timestamp > (3 * 24 * 60 * 60)) {
+            if (time() - $result['timestamp'] > (3 * 24 * 60 * 60)) {
                 $db->query("UPDATE ip_blacklist SET blacklisted = FALSE WHERE ip_address = :ip");
                 $db->bind(':ip', $ip);
                 $db->execute();

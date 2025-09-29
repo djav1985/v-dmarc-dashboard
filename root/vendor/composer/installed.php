@@ -1,19 +1,19 @@
 <?php return array(
     'root' => array(
-        'name' => 'appsbyv/name',
-        'pretty_version' => 'dev-copilot/fix-e6a17938-f253-4033-9e16-d249eafb187b',
-        'version' => 'dev-copilot/fix-e6a17938-f253-4033-9e16-d249eafb187b',
-        'reference' => '5a1a210387055d986ba6608333eb4ba375ae6e8f',
+        'name' => 'appsbyv/dmarc-dashboard',
+        'pretty_version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+        'version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+        'reference' => '9ded6e0d7910704d37fca48196df0afc71489344',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
-        'appsbyv/name' => array(
-            'pretty_version' => 'dev-copilot/fix-e6a17938-f253-4033-9e16-d249eafb187b',
-            'version' => 'dev-copilot/fix-e6a17938-f253-4033-9e16-d249eafb187b',
-            'reference' => '5a1a210387055d986ba6608333eb4ba375ae6e8f',
+        'appsbyv/dmarc-dashboard' => array(
+            'pretty_version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+            'version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+            'reference' => '9ded6e0d7910704d37fca48196df0afc71489344',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
