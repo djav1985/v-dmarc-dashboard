@@ -60,6 +60,10 @@ class Router
             // Analytics dashboard
             $r->addRoute('GET', '/analytics', [\App\Controllers\AnalyticsController::class, 'handleRequest']);
             $r->addRoute('POST', '/analytics', [\App\Controllers\AnalyticsController::class, 'handleSubmission']);
+            
+            // Domain Groups management
+            $r->addRoute('GET', '/domain-groups', [\App\Controllers\DomainGroupsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/domain-groups', [\App\Controllers\DomainGroupsController::class, 'handleSubmission']);
         });
     }
 

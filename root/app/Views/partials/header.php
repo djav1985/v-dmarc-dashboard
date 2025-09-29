@@ -31,12 +31,10 @@
 <body>
     <header class="navbar">
         <section class="navbar-section">
-            <a class="navbar-brand mr-3" href="/home">
+            <a class="navbar-brand mr-2" href="/home">
                 <i class="icon icon-mail mr-1 text-primary"></i>
                 DMARC Dashboard
             </a>
-        </section>
-        <section class="navbar-section navbar-center">
             <a class="btn btn-link mx-1" href="/home">
                 <i class="icon icon-home"></i> Dashboard
             </a>
@@ -45,6 +43,9 @@
             </a>
             <a class="btn btn-link mx-1" href="/analytics">
                 <i class="icon icon-bookmark"></i> Analytics
+            </a>
+            <a class="btn btn-link mx-1" href="/domain-groups">
+                <i class="icon icon-people"></i> Groups
             </a>
             <a class="btn btn-link mx-1" href="/upload">
                 <i class="icon icon-upload"></i> Upload

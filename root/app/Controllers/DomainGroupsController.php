@@ -1,0 +1,104 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Core\Controller;
+use App\Models\DomainGroup;
+use App\Models\Domain;
+
+/**
+ * Domain Groups Controller for managing domain organization
+ */
+class DomainGroupsController extends Controller
+{
+    /**
+     * Display domain groups management interface
+     */
+    public function handleRequest(): void
+    {
+        // Get all groups with analytics
+        $groups = DomainGroup::getAllGroups();
+        
+        // Get group analytics for the last 30 days
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+        $groupAnalytics = DomainGroup::getGroupAnalytics($startDate, $endDate);
+        
+        // Get unassigned domains
+        $unassignedDomains = DomainGroup::getUnassignedDomains();
+        
+        // Get all domains for assignment
+        $allDomains = Domain::getAllDomains();
+
+        $this->data = [
+            'groups' => $groups,
+            'group_analytics' => $groupAnalytics,
+            'unassigned_domains' => $unassignedDomains,
+            'all_domains' => $allDomains
+        ];
+
+        require __DIR__ . '/../Views/domain_groups.php';
+    }
+
+    /**
+     * Handle form submissions for group management
+     */
+    public function handleSubmission(): void
+    {
+        if (isset($_POST['action'])) {
+            switch ($_POST['action']) {
+                case 'create_group':
+                    $this->createGroup();
+                    break;
+                case 'assign_domain':
+                    $this->assignDomain();
+                    break;
+                case 'remove_domain':
+                    $this->removeDomain();
+                    break;
+            }
+        }
+
+        header('Location: /domain-groups');
+        exit();
+    }
+
+    /**
+     * Create a new domain group
+     */
+    private function createGroup(): void
+    {
+        $name = trim($_POST['group_name'] ?? '');
+        $description = trim($_POST['group_description'] ?? '');
+
+        if (!empty($name)) {
+            DomainGroup::createGroup($name, $description);
+        }
+    }
+
+    /**
+     * Assign domain to group
+     */
+    private function assignDomain(): void
+    {
+        $domainId = (int) ($_POST['domain_id'] ?? 0);
+        $groupId = (int) ($_POST['group_id'] ?? 0);
+
+        if ($domainId > 0 && $groupId > 0) {
+            DomainGroup::assignDomainToGroup($domainId, $groupId);
+        }
+    }
+
+    /**
+     * Remove domain from group
+     */
+    private function removeDomain(): void
+    {
+        $domainId = (int) ($_POST['domain_id'] ?? 0);
+        $groupId = (int) ($_POST['group_id'] ?? 0);
+
+        if ($domainId > 0 && $groupId > 0) {
+            DomainGroup::removeDomainFromGroup($domainId, $groupId);
+        }
+    }
+}
