@@ -1,90 +1,87 @@
 # AGENTS.md
 
 ## Purpose
-This document defines baseline expectations for all contributors to maintain code quality, test coverage, and project stability.
-
----
-
-## Framework Vision
-- The `v-php-framework` is designed to be lightweight, modular, and developer-friendly.
-- It uses **SPECTRE.CSS** as its foundational CSS framework for UI consistency and simplicity.  
-  **Agents must not replace, remove, or override SPECTRE.CSS as the primary style system.**
-- All contributions should prioritize maintainability, extensibility, and performance.
+This document sets baseline expectations for contributors to ensure code quality, test coverage, and project stability.
 
 ---
 
 ## Agent Development Principles
-1. **Respect Core Architecture**
-   - Do not refactor or replace major framework components unless requested by maintainers.
-   - Agents should integrate smoothly with existing systems, not bypass or override them.
-   - Do not change how any of the current `root/app/Core/` files operate.  
-     Small improvements or adding new core files are fine, but do not completely replace them.
-   - The same rule applies to the **Login Controller**—incremental changes are acceptable, but its core functionality must remain intact.
 
-2. **Preserve UI Consistency**
-   - All agent-generated UI must rely on SPECTRE.CSS classes and patterns.
-   - Do not introduce alternate CSS frameworks, reset styles, or global overrides that conflict with SPECTRE.CSS.
+1. Core Integrity
+- The `v-php-framework` is designed to be lightweight, modular, and developer-friendly.
+- Respect existing architecture: do not refactor or replace major components unless requested by maintainers.
+- Integrate with existing systems rather than bypassing or overriding them.
+- `root/app/Core/` files must not be replaced; small improvements or new files are acceptable.
+- The **Login Controller** may only receive incremental changes—its core functionality must remain intact.
 
-3. **Incremental Improvements**
-   - Focus on enhancements, bug fixes, and new features that fit within the current roadmap.
-   - Avoid rewriting large sections of code or introducing breaking changes.
+2. UI & Design Consistency
+- **SPECTRE.CSS** is the required CSS foundation for UI consistency.  
+  Do not replace, remove, or override it.
+- All UI must use SPECTRE.CSS classes and patterns.
+- Do not add other CSS frameworks, resets, or global overrides.
 
-4. **Consistency**
-   - Adhere to the framework’s coding standards and design patterns.
-   - Maintain consistency in API design, naming conventions, and documentation.
+3. Development Discipline
+- Contributions should emphasize maintainability, extensibility, and performance.
+- Prioritize enhancements, bug fixes, and new features aligned with the roadmap.
+- Avoid large rewrites or breaking changes.
+- Follow framework coding standards, API design, and naming conventions.
+- Keep documentation accurate and up to date.
 
-5. **Minimal Disruption**
-   - Avoid dependencies that significantly increase complexity or change the framework’s deployment requirements.
-   - Test all changes for backward compatibility.
-
----
-
-## What Agents Should NOT Do
-- Do not introduce alternate architectures (such as replacing MVC with another paradigm).
-- Do not enforce opinionated choices (e.g., forcing use of a specific ORM, template engine, or library).
+4. Stability & Compatibility
+- Do not add dependencies that increase complexity or alter deployment requirements.
+- Ensure backward compatibility for all changes.
 - Do not break existing APIs or remove key features without consensus.
-- **Do not remove, override, or replace SPECTRE.CSS as the framework’s base style.**
+
+5. Prohibited Architectural Changes
+- Do not replace the MVC architecture or introduce alternative paradigms.
+- Do not force specific ORMs, template engines, or libraries.
+
+6. **Security & Reliability**
+- Validate and sanitize all user input to prevent injection or XSS vulnerabilities.
+- Follow the principle of least privilege when adding permissions or roles.
+- Ensure new UI or features meet accessibility standards (contrast, keyboard navigation, ARIA where needed).
+- Avoid changes that introduce performance regressions or inflate asset size.
 
 ---
 
-## Development Guidelines
+## Workflow
 
-### 1. Testing Requirements
-- **Always update or create tests** for any feature, bug fix, or refactor.
-- Place new tests in the project’s designated test directory or add them to the existing test suite.
-- Tests should fully cover the changes made, including edge cases.
+1. **Implement Changes**
+   - Make requested updates, fixes, or new features.
+   - Keep commits small, focused, and reviewable.
 
-### 2. Local Verification
-Before committing changes:
-1. **Run all tests**  
-   Ensure the full test suite passes locally without errors.
-2. **Lint the code**  
-   Run the project's configured linter(s) or formatting tools.
-3. **Fix all linting or formatting issues**  
-   Use auto-fix tools when available, and manually address any remaining issues.
+2. **Write or Update Tests**
+   - Add tests for all new features, bug fixes, and refactors.
+   - Ensure edge cases are covered.
+   - Place tests in the designated test directory.
+   - Confirm tests are updated or created.
 
-### 3. Change Workflow
-- Implement changes in small, reviewable commits.
-- Write clear and descriptive commit messages.
-- Avoid pushing untested or lint-failing code.
+3. **Local Verification**
+   - Run the full test suite—no errors allowed.  
+   - Confirm all tests pass locally.
+   - Lint and format the code.  
+   - Fix all linting or formatting issues.  
+   - Confirm linting passes with no errors.
 
-### 4. Pull Request Expectations
-- PRs must pass all automated checks (tests, linting, builds) before requesting review.
-- Include a brief summary of the changes and their purpose.
-- Reference related issues or tickets when applicable.
+4. **Documentation & Metadata**
+   - Update `CHANGELOG.md` with relevant entries.  
+   - Update `README.md` if usage or setup changes.  
+   - Confirm both files are up to date.
 
----
+5. **Prepare Commit**
+   - Only commit once tests and linting pass locally.
+   - Write clear, descriptive commit messages.  
+   - Confirm commit messages are clear.
 
-## Checklist Before Submitting Code
-- [ ] Updated or created tests.
-- [ ] Update the CHANGELOG.md.
-- [ ] Update the README.md
-- [ ] All tests pass locally.
-- [ ] Linting run with no errors.
-- [ ] Commit messages are clear.
-- [ ] PR description explains the "why" and "what.
-- [ ] Provide screenshots of any pages made or edited.
+6. **Open Pull Request**
+   - Ensure the branch passes all automated checks (tests, linting, builds).
+   - Provide a concise summary of the changes and their purpose.  
+   - Confirm PR description explains “why” and “what.”
+   - Reference related issues or tickets when applicable.
+   - Include screenshots for any UI changes.  
+   - Confirm screenshots are provided when relevant.
+
 ---
 
 ## Notes
-These are baseline expectations—projects may have additional requirements documented elsewhere. Always follow the most restrictive applicable rules.
+These are baseline expectations. Additional project-specific rules may apply—follow the strictest set of requirements.
