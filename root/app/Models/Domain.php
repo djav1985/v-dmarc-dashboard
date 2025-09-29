@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Models;
+
+use App\Core\DatabaseManager;
+
+class Domain
+{
+    /**
+     * Get or create domain record.
+     *
+     * @param string $domain
+     * @return int Domain ID
+     */
+    public static function getOrCreateDomain(string $domain): int
+    {
+        $db = DatabaseManager::getInstance();
+
+        // Try to get existing domain
+        $db->query('SELECT id FROM domains WHERE domain = :domain');
+        $db->bind(':domain', $domain);
+        $result = $db->single();
+
+        if ($result) {
+            return (int) $result['id'];
+        }
+
+        // Create new domain
+        $db->query('INSERT INTO domains (domain) VALUES (:domain)');
+        $db->bind(':domain', $domain);
+        $db->execute();
+
+        // Get the new ID
+        $db->query('SELECT LAST_INSERT_ID() as id');
+        $result = $db->single();
+        return (int) $result['id'];
+    }
+
+    /**
+     * Get all domains.
+     *
+     * @return array
+     */
+    public static function getAllDomains(): array
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT * FROM domains ORDER BY domain ASC');
+        return $db->resultSet();
+    }
+
+    /**
+     * Get domain by ID.
+     *
+     * @param int $id
+     * @return object|null
+     */
+    public static function getDomainById(int $id): ?object
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT * FROM domains WHERE id = :id');
+        $db->bind(':id', $id);
+        $result = $db->single();
+
+        return $result ? (object) $result : null;
+    }
+}

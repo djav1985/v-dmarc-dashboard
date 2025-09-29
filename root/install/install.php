@@ -1,4 +1,5 @@
 <?php
+
 // install.php - Installs database tables using credentials from config.php and install.sql
 
 require_once __DIR__ . '/../config.php';

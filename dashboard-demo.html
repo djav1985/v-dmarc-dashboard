@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8f9fa; }
+        .navbar { background-color: #ffffff; border-bottom: 1px solid #e9ecef; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .navbar-brand { font-weight: 600; font-size: 1.1rem; color: #495057; }
+        main { min-height: calc(100vh - 120px); padding: 1rem 0; }
+        .card { border: 1px solid #e9ecef; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: white; }
+        .card-header { background: #f8f9fa; border-bottom: 1px solid #e9ecef; padding: 1rem; }
+        .card-body { padding: 1.5rem; }
+        .table td, .table th { border-bottom: 1px solid #e9ecef; padding: 0.75rem; }
+        .table thead th { background: #f8f9fa; font-weight: 600; color: #495057; border-bottom: 2px solid #e9ecef; }
+        .chip { background: #f8f9fa; color: #495057; border: 1px solid #e9ecef; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+        .text-primary { color: #5755d9 !important; }
+    </style>
+    <title>DMARC Dashboard - Demo</title>
+</head>
+<body>
+    <header class="navbar">
+        <section class="navbar-section">
+            <a class="navbar-brand" href="/home">
+                <i class="icon icon-mail mr-1 text-primary"></i>
+                DMARC Dashboard
+            </a>
+            <a class="btn btn-link ml-2" href="/home">
+                <i class="icon icon-home"></i> Dashboard
+            </a>
+            <a class="btn btn-link" href="/upload">
+                <i class="icon icon-upload"></i> Upload
+            </a>
+            <a class="btn btn-link" href="/imap">
+                <i class="icon icon-mail"></i> IMAP
+            </a>
+        </section>
+        <section class="navbar-section">
+            <div class="dropdown dropdown-right">
+                <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
+                    <i class="icon icon-people"></i>
+                    admin
+                    <i class="icon icon-caret"></i>
+                </a>
+            </div>
+        </section>
+    </header>
+    <main class="container grid-lg">
+        <div class="columns">
+            <div class="column col-12">
+                <div class="text-center mb-2">
+                    <h2>
+                        <i class="icon icon-2x icon-shield text-primary mr-2"></i>
+                        DMARC Dashboard
+                    </h2>
+                    <p class="text-gray">Welcome, admin. Monitor your domain's email authentication status.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="columns">
+            <div class="column col-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title h5">
+                            <i class="icon icon-time mr-1"></i>
+                            Recent Activity (Last 7 Days)
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Domain</th>
+                                    <th class="text-center">Reports</th>
+                                    <th class="text-center">Passed</th>
+                                    <th class="text-center">Quarantined</th>
+                                    <th class="text-center">Rejected</th>
+                                    <th>Last Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>example.com</strong></td>
+                                    <td class="text-center"><span class="chip">15</span></td>
+                                    <td class="text-center"><span class="label label-success">1,234</span></td>
+                                    <td class="text-center"><span class="label label-warning">45</span></td>
+                                    <td class="text-center"><span class="label label-error">12</span></td>
+                                    <td>Sep 28, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>testdomain.org</strong></td>
+                                    <td class="text-center"><span class="chip">8</span></td>
+                                    <td class="text-center"><span class="label label-success">567</span></td>
+                                    <td class="text-center"><span class="label label-warning">23</span></td>
+                                    <td class="text-center"><span class="label label-error">5</span></td>
+                                    <td>Sep 27, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>mydomain.net</strong></td>
+                                    <td class="text-center"><span class="chip">12</span></td>
+                                    <td class="text-center"><span class="label label-success">890</span></td>
+                                    <td class="text-center"><span class="label label-warning">67</span></td>
+                                    <td class="text-center"><span class="label label-error">18</span></td>
+                                    <td>Sep 29, 2025</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column col-4">
+                <div class="card mb-2">
+                    <div class="card-header">
+                        <div class="card-title h6">Quick Actions</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="menu">
+                            <div class="menu-item">
+                                <a href="/upload" class="btn btn-primary btn-block">
+                                    <i class="icon icon-upload"></i> Upload Reports
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a href="/imap" class="btn btn-success btn-block">
+                                    <i class="icon icon-mail"></i> IMAP Ingestion
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title h6">
+                            <i class="icon icon-check text-success"></i> 
+                            IMAP Status
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="toast toast-success">
+                            <small>
+                                <strong>Connected</strong><br>
+                                Processing emails automatically<br>
+                                Last check: 2 mins ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

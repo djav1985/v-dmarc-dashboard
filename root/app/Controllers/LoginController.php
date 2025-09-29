@@ -80,6 +80,10 @@ class LoginController extends Controller
                 $session->set('is_admin', $userInfo->admin);
                 $session->set('timeout', time());
                 $session->regenerate();
+                
+                // Update last login timestamp
+                Users::updateLastLogin($userInfo->username);
+                
                 header('Location: /');
                 exit();
             }

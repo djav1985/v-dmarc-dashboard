@@ -22,9 +22,9 @@ define('CRON_QUEUE_LIMIT', getenv('CRON_QUEUE_LIMIT') !== false ? (int) getenv('
 
 // MySQL Database Connection Constants
 define('DB_HOST', 'localhost'); // Database host or server
-define('DB_USER', ''); // Database username
+define('DB_USER', 'test'); // Database username
 define('DB_PASSWORD', ''); // Database password
-define('DB_NAME', ''); // Database schema name
+define('DB_NAME', 'dmarc_dashboard'); // Database schema name
 
 // SMTP settings for sending emails
 define('SMTP_HOST', 'smtp.example.com');
@@ -32,7 +32,19 @@ define('SMTP_PORT', 587);
 define('SMTP_USER', 'user@example.com');
 define('SMTP_PASSWORD', 'password');
 define('SMTP_FROM_EMAIL', 'no-reply@example.com');
-define('SMTP_FROM_NAME', 'ChatGPT API');
+define('SMTP_FROM_NAME', 'DMARC Dashboard');
+
+// Application settings
+define('APP_NAME', 'DMARC Dashboard');
+define('APP_VERSION', '1.0.0');
+
+// IMAP settings for email ingestion
+define('IMAP_HOST', 'imap.example.com');
+define('IMAP_PORT', 993);
+define('IMAP_USERNAME', 'dmarc@example.com');
+define('IMAP_PASSWORD', 'password');
+define('IMAP_MAILBOX', 'INBOX');
+define('IMAP_SSL', true);
 
 
 // Validate required configuration constants

@@ -36,12 +36,19 @@ class Router
                 exit();
             });
             // Basic example routes
-            $r->addRoute('GET', '/', [\App\Controllers\HomeController::class, 'handleRequest']);
             $r->addRoute('GET', '/home', [\App\Controllers\HomeController::class, 'handleRequest']);
             $r->addRoute('POST', '/home', [\App\Controllers\HomeController::class, 'handleSubmission']);
 
             $r->addRoute('GET', '/login', [\App\Controllers\LoginController::class, 'handleRequest']);
             $r->addRoute('POST', '/login', [\App\Controllers\LoginController::class, 'handleSubmission']);
+            
+            // DMARC Dashboard specific routes
+            $r->addRoute('GET', '/upload', [\App\Controllers\UploadController::class, 'handleRequest']);
+            $r->addRoute('POST', '/upload', [\App\Controllers\UploadController::class, 'handleSubmission']);
+            
+            // IMAP Email Ingestion routes
+            $r->addRoute('GET', '/imap', [\App\Controllers\ImapController::class, 'handleRequest']);
+            $r->addRoute('POST', '/imap', [\App\Controllers\ImapController::class, 'handleSubmission']);
         });
     }
 

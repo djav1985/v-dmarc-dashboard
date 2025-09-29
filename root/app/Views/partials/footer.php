@@ -13,11 +13,27 @@
  */
 ?>
 
-<footer class="columns">
+    </main>
+    
+    <footer class="bg-gray p-2 mt-4">
+        <div class="container grid-lg">
+            <div class="columns">
+                <div class="column col-6">
+                    <small class="text-gray">
+                        <i class="icon icon-mail"></i> DMARC Dashboard
+                        <span class="ml-1">- Email Authentication Monitor</span>
+                    </small>
+                </div>
+                <div class="column col-6 text-right">
+                    <small class="text-gray">
+                        Powered by V PHP Framework
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-</footer>
-<?php
-        App\Helpers\MessageHelper::displayAndClearMessages(); ?>
-<script src="/assets/js/footer-scripts.js"></script>
+    <?php App\Helpers\MessageHelper::displayAndClearMessages(); ?>
+    <script src="/assets/js/footer-scripts.js"></script>
 </body>
 </html>
