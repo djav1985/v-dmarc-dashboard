@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    <link rel="stylesheet" href="/assets/css/enhanced-styles.css">
+    <link rel="stylesheet" href="/assets/css/forms.css">
+    <title>Branding Settings - DMARC Dashboard</title>
+    
+    <!-- Custom branding CSS -->
+    <style>
+        :root {
+            --primary-color: #5755d9;
+            --primary-color-dark: #4b42d1;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-color-dark);
+            border-color: var(--primary-color-dark);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <section class="navbar-section">
+            <a class="navbar-brand" href="/home">
+                <i class="icon icon-mail mr-1 text-primary"></i>
+                DMARC Dashboard
+            </a>
+        </section>
+        
+        <section class="navbar-section navbar-center">
+            <a class="btn btn-link nav-link" href="/home">
+                <i class="icon icon-home"></i> Dashboard
+            </a>
+            <a class="btn btn-link nav-link" href="/reports">
+                <i class="icon icon-list"></i> Reports
+            </a>
+            <a class="btn btn-link nav-link" href="/analytics">
+                <i class="icon icon-bookmark"></i> Analytics
+            </a>
+        </section>
+        
+        <section class="navbar-section">
+            <div class="dropdown dropdown-right">
+                <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
+                    <i class="icon icon-people"></i>
+                    Admin User
+                    <i class="icon icon-caret"></i>
+                </a>
+                <ul class="menu">
+                    <li class="menu-item">
+                        <a href="/user-management" class="btn btn-link btn-sm">
+                            <i class="icon icon-people"></i> User Management
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="/branding" class="btn btn-link btn-sm" style="background-color: var(--primary-color); color: white;">
+                            <i class="icon icon-photo"></i> Branding
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </header>
+    
+    <main class="container">
+        <div class="columns">
+            <div class="column col-12">
+                <h2><i class="icon icon-photo"></i> Branding Settings</h2>
+                <p class="text-gray">Customize the appearance and branding of your DMARC Dashboard.</p>
+            </div>
+        </div>
+
+        <div class="columns">
+            <!-- General Settings -->
+            <div class="column col-lg-8">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title">General Branding</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label" for="app_name">Application Name</label>
+                            <input class="form-input" type="text" id="app_name" name="app_name" 
+                                   value="DMARC Dashboard">
+                            <div class="form-input-hint">This appears in the header and page titles</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="company_name">Company Name</label>
+                            <input class="form-input" type="text" id="company_name" name="company_name" 
+                                   value="">
+                            <div class="form-input-hint">Optional company name for footer branding</div>
+                        </div>
+                        
+                        <div class="columns">
+                            <div class="column col-lg-6 col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label" for="primary_color">Primary Color</label>
+                                    <input class="form-input" type="color" id="primary_color" name="primary_color" 
+                                           value="#5755d9">
+                                </div>
+                            </div>
+                            <div class="column col-lg-6 col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label" for="secondary_color">Secondary Color</label>
+                                    <input class="form-input" type="color" id="secondary_color" name="secondary_color" 
+                                           value="#f1f3f4">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="theme_mode">Theme Mode</label>
+                            <select class="form-select" id="theme_mode" name="theme_mode">
+                                <option value="light" selected>Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="footer_text">Footer Text</label>
+                            <input class="form-input" type="text" id="footer_text" name="footer_text" 
+                                   value="" 
+                                   placeholder="Powered by V PHP Framework">
+                            <div class="form-input-hint">Custom text for the footer (leave empty for default)</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" name="enable_custom_css" value="1">
+                                Enable Custom CSS
+                            </label>
+                            <div class="form-input-hint">Allow injection of custom CSS styles</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="icon icon-check"></i> Save Settings
+                            </button>
+                            <button type="button" class="btn btn-secondary">
+                                <i class="icon icon-refresh"></i> Reset to Defaults
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logo Upload -->
+            <div class="column col-lg-4">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title">Logo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label" for="logo">Upload New Logo</label>
+                            <input class="form-input" type="file" id="logo" name="logo" 
+                                   accept="image/jpeg,image/png,image/gif,image/webp">
+                            <div class="form-input-hint">
+                                Max size: 2MB<br>
+                                Formats: JPEG, PNG, GIF, WebP<br>
+                                Recommended: 200x50px
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="icon icon-upload"></i> Upload Logo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="color-preview" class="text-center p-2 mb-2" style="background-color: var(--primary-color); color: white; border-radius: 6px;">
+                            <strong>DMARC Dashboard</strong>
+                        </div>
+                        <p class="text-center text-gray">
+                            Primary color preview
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="bg-gray p-2 mt-4">
+        <div class="container">
+            <div class="columns">
+                <div class="column col-6">
+                    <small class="text-gray">
+                        <i class="icon icon-mail"></i> DMARC Dashboard
+                        <span class="ml-1">- Email Authentication Monitor</span>
+                    </small>
+                </div>
+                <div class="column col-6 text-right">
+                    <small class="text-gray">
+                        Powered by V PHP Framework
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -31,6 +31,8 @@ body {
 .container {
     max-width: 100%;
     padding: 0 1rem;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
@@ -42,8 +44,66 @@ body {
 @media (min-width: 1200px) {
     .container {
         max-width: 1140px;
-        margin: 0 auto;
     }
+}
+
+/* Fix Spectre.css grid system issues */
+.columns {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+.column {
+    flex: 1;
+    max-width: 100%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+}
+
+/* Responsive column classes */
+.col-12 { flex: 0 0 100%; max-width: 100%; }
+.col-6 { flex: 0 0 50%; max-width: 50%; }
+.col-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+.col-3 { flex: 0 0 25%; max-width: 25%; }
+
+.col-mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Mobile responsive overrides */
+@media (max-width: 767px) {
+    .col-sm-12 { flex: 0 0 100%; max-width: 100%; }
+    .col-sm-6 { flex: 0 0 50%; max-width: 50%; }
+    .col-sm-4 { flex: 0 0 100%; max-width: 100%; } /* Stack on mobile */
+    .col-sm-3 { flex: 0 0 100%; max-width: 100%; } /* Stack on mobile */
+    
+    .columns {
+        margin-left: -0.25rem;
+        margin-right: -0.25rem;
+    }
+    
+    .column {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .col-md-12 { flex: 0 0 100%; max-width: 100%; }
+    .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+    .col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+    .col-md-3 { flex: 0 0 25%; max-width: 25%; }
+}
+
+@media (min-width: 1200px) {
+    .col-lg-12 { flex: 0 0 100%; max-width: 100%; }
+    .col-lg-6 { flex: 0 0 50%; max-width: 50%; }
+    .col-lg-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+    .col-lg-3 { flex: 0 0 25%; max-width: 25%; }
 }
 
 /* Enhanced Navigation Bar */
@@ -57,22 +117,42 @@ body {
     z-index: 1000;
 }
 
+.navbar-section {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-section.navbar-center {
+    flex: 1;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
 .navbar-brand {
     font-weight: 600;
     font-size: 1.25rem;
     color: var(--primary-color);
     text-decoration: none;
+    margin-right: 2rem;
+    display: flex;
+    align-items: center;
 }
 
 .navbar-brand:hover {
     color: var(--primary-color-dark);
 }
 
+.navbar-brand img {
+    height: 32px;
+    margin-right: 0.5rem;
+}
+
 .navbar-nav {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .nav-item {
@@ -86,12 +166,17 @@ body {
     text-decoration: none;
     font-weight: 500;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
 }
 
 .nav-link:hover,
 .nav-link:focus {
     background-color: var(--light-gray);
     color: var(--primary-color);
+    text-decoration: none;
 }
 
 .nav-link.active {
@@ -100,17 +185,33 @@ body {
 }
 
 /* Mobile Navigation */
-@media (max-width: 767px) {
-    .navbar-nav {
-        flex-direction: column;
-        width: 100%;
-        margin-top: 1rem;
+@media (max-width: 960px) {
+    .navbar-section.navbar-center {
+        display: none;
     }
     
-    .nav-link {
-        display: block;
-        width: 100%;
-        text-align: center;
+    .navbar-brand {
+        margin-right: 1rem;
+        font-size: 1rem;
+    }
+    
+    .navbar {
+        padding: 0.5rem 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 0.5rem 0;
+    }
+    
+    .navbar-brand {
+        font-size: 0.9rem;
+        margin-right: 0.5rem;
+    }
+    
+    .navbar-brand img {
+        height: 24px;
     }
 }
 
@@ -456,40 +557,7 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Responsive Grid Enhancements */
-.columns {
-    display: flex;
-    flex-wrap: wrap;
-    margin: -0.5rem;
-}
-
-.column {
-    flex: 1;
-    padding: 0.5rem;
-    box-sizing: border-box;
-}
-
-/* Mobile-first responsive columns */
-@media (max-width: 767px) {
-    .col-sm-12 { flex: 0 0 100%; max-width: 100%; }
-    .col-sm-6 { flex: 0 0 50%; max-width: 50%; }
-    .col-sm-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
-    .col-sm-3 { flex: 0 0 25%; max-width: 25%; }
-}
-
-@media (min-width: 768px) {
-    .col-md-12 { flex: 0 0 100%; max-width: 100%; }
-    .col-md-6 { flex: 0 0 50%; max-width: 50%; }
-    .col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
-    .col-md-3 { flex: 0 0 25%; max-width: 25%; }
-}
-
-@media (min-width: 1200px) {
-    .col-lg-12 { flex: 0 0 100%; max-width: 100%; }
-    .col-lg-6 { flex: 0 0 50%; max-width: 50%; }
-    .col-lg-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
-    .col-lg-3 { flex: 0 0 25%; max-width: 25%; }
-}
+/* Responsive Grid Enhancements - Already defined above */
 
 /* Utility Classes */
 .text-center { text-align: center; }
@@ -499,13 +567,18 @@ body {
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
 .mb-1 { margin-bottom: 0.5rem; }
 .mb-2 { margin-bottom: 1rem; }
 .mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+.ml-1 { margin-left: 0.5rem; }
+.mr-1 { margin-right: 0.5rem; }
 
 .p-1 { padding: 0.5rem; }
 .p-2 { padding: 1rem; }
 .p-3 { padding: 1.5rem; }
+.p-4 { padding: 2rem; }
 
 .d-none { display: none; }
 .d-block { display: block; }
@@ -515,6 +588,7 @@ body {
 @media (max-width: 767px) {
     .d-sm-none { display: none; }
     .d-sm-block { display: block; }
+    .text-sm-center { text-align: center; }
 }
 
 @media (min-width: 768px) {

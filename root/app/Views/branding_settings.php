@@ -34,14 +34,14 @@
                     </div>
                     
                     <div class="columns">
-                        <div class="column col-6">
+                        <div class="column col-lg-6 col-md-12">
                             <div class="form-group">
                                 <label class="form-label" for="primary_color">Primary Color</label>
                                 <input class="form-input" type="color" id="primary_color" name="primary_color" 
                                        value="<?= htmlspecialchars($settings['primary_color'] ?? '#5755d9') ?>">
                             </div>
                         </div>
-                        <div class="column col-6">
+                        <div class="column col-lg-6 col-md-12">
                             <div class="form-group">
                                 <label class="form-label" for="secondary_color">Secondary Color</label>
                                 <input class="form-input" type="color" id="secondary_color" name="secondary_color" 
