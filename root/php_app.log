@@ -15,3 +15,4 @@
 [2025-09-29 22:06:35] [error]: Error checking blacklist status: An exception occurred in the driver: SQLSTATE[HY000] [2002] No such file or directory
 [2025-09-29 22:06:35] [exception]: Uncaught Exception: An exception occurred in the driver: SQLSTATE[HY000] [2002] No such file or directory in /home/runner/work/v-dmarc-dashboard/v-dmarc-dashboard/root/vendor/doctrine/dbal/src/Driver/API/MySQL/ExceptionConverter.php on line 112
 [2025-09-29 22:09:49] [error]: Invalid username or password.
+[2025-09-29 22:13:52] [exception]: Uncaught Exception: Unknown named parameter $id in /home/runner/work/v-dmarc-dashboard/v-dmarc-dashboard/root/app/Core/Router.php on line 105

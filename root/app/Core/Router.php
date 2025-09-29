@@ -53,6 +53,9 @@ class Router
             // Reports listing and filtering
             $r->addRoute('GET', '/reports', [\App\Controllers\ReportsController::class, 'handleRequest']);
             $r->addRoute('POST', '/reports', [\App\Controllers\ReportsController::class, 'handleSubmission']);
+            
+            // Individual report details
+            $r->addRoute('GET', '/report/{id:\d+}', [\App\Controllers\ReportDetailController::class, 'handleRequest']);
         });
     }
 
@@ -98,7 +101,7 @@ class Router
                     SessionManager::getInstance()->requireAuth();
                 }
                 [$class, $action] = $handler;
-                call_user_func_array([new $class(), $action], $vars);
+                call_user_func_array([new $class(), $action], array_values($vars));
 
             } elseif (is_callable($handler)) {
                 call_user_func_array($handler, array_values($vars));

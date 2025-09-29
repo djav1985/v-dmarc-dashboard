@@ -335,4 +335,50 @@ class DmarcReport
         $result = $db->single();
         return (int) ($result['total'] ?? 0);
     }
+
+    /**
+     * Get detailed information for a specific report.
+     *
+     * @param int $reportId
+     * @return array|null
+     */
+    public static function getReportDetails(int $reportId): ?array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            SELECT 
+                dar.*,
+                d.domain
+            FROM dmarc_aggregate_reports dar
+            JOIN domains d ON dar.domain_id = d.id
+            WHERE dar.id = :report_id
+        ');
+
+        $db->bind(':report_id', $reportId);
+        $result = $db->single();
+
+        return $result ?: null;
+    }
+
+    /**
+     * Get aggregate records for a specific report.
+     *
+     * @param int $reportId
+     * @return array
+     */
+    public static function getAggregateRecords(int $reportId): array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            SELECT *
+            FROM dmarc_aggregate_records
+            WHERE report_id = :report_id
+            ORDER BY count DESC, source_ip ASC
+        ');
+
+        $db->bind(':report_id', $reportId);
+        return $db->resultSet();
+    }
 }
