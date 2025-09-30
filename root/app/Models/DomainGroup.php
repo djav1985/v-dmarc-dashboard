@@ -262,7 +262,7 @@ class DomainGroup
 
             $groupIds = array_map(static fn($group) => (int) $group['id'], $accessibleGroups);
             [$placeholders, $bindings] = self::buildInClause($groupIds, 'group_id');
-            $groupFilterClause = ' AND dg.id IN (' . implode(', ', $placeholders) . ')';
+            $groupFilterClause = ' WHERE dg.id IN (' . implode(', ', $placeholders) . ')';
         }
 
         $db->query('
@@ -272,21 +272,35 @@ class DomainGroup
                 dg.description,
                 COUNT(DISTINCT d.id) as domain_count,
                 COUNT(DISTINCT dar.id) as report_count,
-                SUM(dmar.count) as total_volume,
-                SUM(CASE WHEN dmar.disposition = "none" THEN dmar.count ELSE 0 END) as passed_count,
-                SUM(CASE WHEN dmar.disposition = "quarantine" THEN dmar.count ELSE 0 END) as quarantined_count,
-                SUM(CASE WHEN dmar.disposition = "reject" THEN dmar.count ELSE 0 END) as rejected_count,
-                ROUND(
-                    (SUM(CASE WHEN dmar.disposition = "none" THEN dmar.count ELSE 0 END) * 100.0) /
-                    NULLIF(SUM(dmar.count), 0), 2
-                ) as pass_rate
+                COALESCE(SUM(dmar.count), 0) as total_volume,
+                COALESCE(
+                    SUM(CASE WHEN dmar.disposition = "none" THEN dmar.count ELSE 0 END),
+                    0
+                ) as passed_count,
+                COALESCE(
+                    SUM(CASE WHEN dmar.disposition = "quarantine" THEN dmar.count ELSE 0 END),
+                    0
+                ) as quarantined_count,
+                COALESCE(
+                    SUM(CASE WHEN dmar.disposition = "reject" THEN dmar.count ELSE 0 END),
+                    0
+                ) as rejected_count,
+                CASE
+                    WHEN COALESCE(SUM(dmar.count), 0) = 0 THEN 0
+                    ELSE ROUND(
+                        (SUM(CASE WHEN dmar.disposition = "none" THEN dmar.count ELSE 0 END) * 100.0) /
+                        SUM(dmar.count),
+                        2
+                    )
+                END as pass_rate
             FROM domain_groups dg
             LEFT JOIN domain_group_assignments dga ON dg.id = dga.group_id
             LEFT JOIN domains d ON dga.domain_id = d.id
             LEFT JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
+                AND dar.date_range_begin >= :start_date
+                AND dar.date_range_end <= :end_date
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date
-            AND dar.date_range_end <= :end_date' . $groupFilterClause . '
+        ' . $groupFilterClause . '
             GROUP BY dg.id, dg.name, dg.description
             ORDER BY dg.name ASC
         ');
