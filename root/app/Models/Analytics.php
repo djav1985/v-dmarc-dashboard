@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
 
 /**
  * Analytics model for generating DMARC dashboard analytics and trends
@@ -44,6 +45,28 @@ class Analytics
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
             $bindParams[':group_id'] = $groupId;
+        }
+
+        if ($domain === '') {
+            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $whereClause .= ' AND ' . $authorization['clause'];
+            }
+        }
+
+        if ($domain === '') {
+            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $whereClause .= ' AND ' . $authorization['clause'];
+            }
         }
 
         $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
@@ -106,6 +129,32 @@ class Analytics
             $domainClause = 'AND d.domain = :domain';
         }
 
+        $authorizationClause = '';
+        $authorizationBindings = [];
+        if ($domainFilter === null || $domainFilter === '') {
+            $authorization = self::buildAuthorizationConstraint($authorizationBindings, 'dar.domain_id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $authorizationClause = 'AND ' . $authorization['clause'];
+            }
+        }
+
+        $authorizationClause = '';
+        $authorizationBindings = [];
+        if ($domainFilter === null || $domainFilter === '') {
+            $authorization = self::buildAuthorizationConstraint($authorizationBindings, 'd.id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $authorizationClause = 'AND ' . $authorization['clause'];
+            }
+        }
+
         $query = "
             SELECT
                 d.domain,
@@ -139,6 +188,7 @@ class Analytics
             AND dar.date_range_end <= :end_date
             $domainClause
             $groupClause
+            $authorizationClause
             GROUP BY d.id, d.domain
             HAVING total_volume > 0
             ORDER BY health_score DESC
@@ -152,6 +202,9 @@ class Analytics
         }
         if ($domainFilter !== null && $domainFilter !== '') {
             $db->bind(':domain', $domainFilter);
+        }
+        foreach ($authorizationBindings as $placeholder => $value) {
+            $db->bind($placeholder, $value);
         }
 
         $results = $db->resultSet();
@@ -298,6 +351,7 @@ class Analytics
             AND dmar.disposition IN ('quarantine', 'reject')
             $domainClause
             $groupClause
+            $authorizationClause
             GROUP BY dmar.source_ip
             HAVING threat_volume > 0
             ORDER BY threat_volume DESC, threat_rate DESC
@@ -314,6 +368,9 @@ class Analytics
             $db->bind(':domain', $domainFilter);
         }
         $db->bind(':limit', $limit);
+        foreach ($authorizationBindings as $placeholder => $value) {
+            $db->bind($placeholder, $value);
+        }
 
         return $db->resultSet();
     }
@@ -352,6 +409,17 @@ class Analytics
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
             $bindParams[':group_id'] = $groupId;
+        }
+
+        if ($domain === '') {
+            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $whereClause .= ' AND ' . $authorization['clause'];
+            }
         }
 
         $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
@@ -406,5 +474,42 @@ class Analytics
         }
 
         return "DATE(FROM_UNIXTIME($column))";
+    }
+
+    /**
+     * Build a domain authorization clause for the current user.
+     */
+    private static function buildAuthorizationConstraint(array &$bindParams, string $column): ?array
+    {
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return null;
+        }
+
+        $accessibleDomains = $rbac->getAccessibleDomains();
+        if (empty($accessibleDomains)) {
+            return ['allowed' => false, 'clause' => ''];
+        }
+
+        $domainIds = array_values(array_filter(array_map(
+            static fn($domain) => (int) ($domain['id'] ?? 0),
+            $accessibleDomains
+        )));
+
+        if (empty($domainIds)) {
+            return ['allowed' => false, 'clause' => ''];
+        }
+
+        $placeholders = [];
+        foreach ($domainIds as $index => $domainId) {
+            $placeholder = ':authorized_domain_' . $index;
+            $placeholders[] = $placeholder;
+            $bindParams[$placeholder] = $domainId;
+        }
+
+        return [
+            'allowed' => true,
+            'clause' => $column . ' IN (' . implode(', ', $placeholders) . ')'
+        ];
     }
 }

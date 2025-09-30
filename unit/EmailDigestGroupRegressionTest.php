@@ -7,11 +7,16 @@ if (!defined('PHPUNIT_RUNNING')) {
     define('PHPUNIT_RUNNING', true);
 }
 
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
 require __DIR__ . '/TestHelpers.php';
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
 use App\Models\EmailDigest;
 use function TestHelpers\assertCountEquals;
 use function TestHelpers\assertEquals;
@@ -145,6 +150,25 @@ $groupBId = emailDigestRegressionInsertGroup('Digest Regression B ' . $timestamp
 emailDigestRegressionAssignDomain($domainId, $groupAId);
 emailDigestRegressionAssignDomain($domainId, $groupBId);
 
+$_SESSION['username'] = 'digest-regression-' . $timestamp;
+$_SESSION['user_role'] = RBACManager::ROLE_VIEWER;
+
+$db = DatabaseManager::getInstance();
+$db->query('INSERT INTO user_domain_assignments (user_id, domain_id) VALUES (:user, :domain)');
+$db->bind(':user', $_SESSION['username']);
+$db->bind(':domain', $domainId);
+$db->execute();
+
+$db->query('INSERT INTO user_group_assignments (user_id, group_id) VALUES (:user, :group)');
+$db->bind(':user', $_SESSION['username']);
+$db->bind(':group', $groupAId);
+$db->execute();
+
+$db->query('INSERT INTO user_group_assignments (user_id, group_id) VALUES (:user, :group)');
+$db->bind(':user', $_SESSION['username']);
+$db->bind(':group', $groupBId);
+$db->execute();
+
 $reportId = emailDigestRegressionInsertReport($domainId, $rangeStart, $rangeEnd, 'digest-regression-report-' . $timestamp);
 emailDigestRegressionInsertRecord($reportId, '198.51.100.25', 5, 'none', 'pass', 'pass');
 emailDigestRegressionInsertRecord($reportId, '198.51.100.25', 3, 'reject', 'fail', 'fail');
@@ -180,6 +204,8 @@ assertCountEquals(1, $threats, 'Threat aggregation should produce one source IP 
 $threat = $threats[0] ?? [];
 assertEquals(3, (int) ($threat['threat_volume'] ?? 0), 'Threat aggregation should respect raw reject volume', $failures);
 assertEquals(1, (int) ($threat['affected_domains'] ?? 0), 'Threat aggregation should count the affected domain once', $failures);
+
+$_SESSION['user_role'] = RBACManager::ROLE_APP_ADMIN;
 
 $globalScheduleId = EmailDigest::createSchedule([
     'name' => 'Digest Regression Global ' . $timestamp,

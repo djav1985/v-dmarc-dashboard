@@ -3,15 +3,18 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csrf;
 use App\Models\PdfReport;
 use App\Models\PdfReportSchedule;
 use App\Models\PolicySimulation;
 use App\Models\Domain;
 use App\Models\DomainGroup;
 use App\Core\RBACManager;
+use App\Helpers\MessageHelper;
 use App\Services\PdfReportService;
 use App\Services\PdfReportScheduler;
 use Throwable;
+use RuntimeException;
 
 /**
  * Reports Controller for PDF generation and policy simulation
@@ -54,6 +57,15 @@ class ReportsManagementController extends Controller
     public function handleSubmission(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            if (defined('PHPUNIT_RUNNING') && PHPUNIT_RUNNING) {
+                return;
+            }
+
+            header('Location: /reports-management');
+            exit();
+        }
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'generate_pdf':
@@ -291,6 +303,9 @@ class ReportsManagementController extends Controller
 
             $_SESSION['flash_message'] = "Schedule '{$name}' created successfully.";
             $_SESSION['flash_type'] = 'success';
+        } catch (RuntimeException $exception) {
+            $_SESSION['flash_message'] = $exception->getMessage();
+            $_SESSION['flash_type'] = 'error';
         } catch (Throwable $exception) {
             $_SESSION['flash_message'] = 'Failed to create schedule: ' . $exception->getMessage();
             $_SESSION['flash_type'] = 'error';
@@ -346,6 +361,9 @@ class ReportsManagementController extends Controller
 
             $_SESSION['flash_message'] = "Schedule '{$name}' updated successfully.";
             $_SESSION['flash_type'] = 'success';
+        } catch (RuntimeException $exception) {
+            $_SESSION['flash_message'] = $exception->getMessage();
+            $_SESSION['flash_type'] = 'error';
         } catch (Throwable $exception) {
             $_SESSION['flash_message'] = 'Failed to update schedule: ' . $exception->getMessage();
             $_SESSION['flash_type'] = 'error';
@@ -465,9 +483,14 @@ class ReportsManagementController extends Controller
         ];
 
         if (!empty($data['name']) && $data['domain_id'] > 0) {
-            $simulationId = PolicySimulation::createSimulation($data);
-            $_SESSION['flash_message'] = "Policy simulation '{$data['name']}' created successfully.";
-            $_SESSION['flash_type'] = 'success';
+            try {
+                $simulationId = PolicySimulation::createSimulation($data);
+                $_SESSION['flash_message'] = "Policy simulation '{$data['name']}' created successfully.";
+                $_SESSION['flash_type'] = 'success';
+            } catch (RuntimeException $exception) {
+                $_SESSION['flash_message'] = $exception->getMessage();
+                $_SESSION['flash_type'] = 'error';
+            }
         }
     }
 
@@ -479,9 +502,14 @@ class ReportsManagementController extends Controller
         $simulationId = (int) ($_POST['simulation_id'] ?? 0);
 
         if ($simulationId > 0) {
-            $results = PolicySimulation::runSimulation($simulationId);
-            $_SESSION['flash_message'] = "Policy simulation completed successfully.";
-            $_SESSION['flash_type'] = 'success';
+            try {
+                $results = PolicySimulation::runSimulation($simulationId);
+                $_SESSION['flash_message'] = "Policy simulation completed successfully.";
+                $_SESSION['flash_type'] = 'success';
+            } catch (RuntimeException $exception) {
+                $_SESSION['flash_message'] = $exception->getMessage();
+                $_SESSION['flash_type'] = 'error';
+            }
         }
     }
 }

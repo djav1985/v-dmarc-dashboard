@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
+use App\Core\SessionManager;
 use DateTimeImmutable;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -18,9 +21,76 @@ class PdfReportSchedule
     {
         $db = DatabaseManager::getInstance();
 
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            $db->query('
+                SELECT
+                    prs.*,
+                    prt.name AS template_name,
+                    prt.template_type,
+                    prg.generated_at AS last_generated_at,
+                    prg.filename AS last_filename,
+                    prg.file_path AS last_file_path,
+                    prg.id AS last_generation_id
+                FROM pdf_report_schedules prs
+                JOIN pdf_report_templates prt ON prs.template_id = prt.id
+                LEFT JOIN pdf_report_generations prg ON prs.last_generation_id = prg.id
+                ORDER BY prs.created_at DESC
+            ');
+
+            return $db->resultSet();
+        }
+
+        $session = SessionManager::getInstance();
+        $username = (string) $session->get('username', '');
+
+        $accessibleDomains = array_values(array_filter(array_map(
+            static fn(array $domain) => strtolower((string) ($domain['domain'] ?? '')),
+            $rbac->getAccessibleDomains()
+        )));
+
+        $accessibleGroups = array_values(array_filter(array_map(
+            static fn(array $group) => (int) ($group['id'] ?? 0),
+            $rbac->getAccessibleGroups()
+        )));
+
+        $conditions = [];
+        $bindings = [];
+
+        if ($username !== '') {
+            $conditions[] = 'prs.created_by = :current_user';
+            $bindings[':current_user'] = $username;
+        }
+
+        if (!empty($accessibleDomains)) {
+            $placeholders = [];
+            foreach ($accessibleDomains as $index => $domainName) {
+                $placeholder = ':authorized_domain_' . $index;
+                $placeholders[] = $placeholder;
+                $bindings[$placeholder] = $domainName;
+            }
+            $conditions[] = '(prs.domain_filter <> "" AND LOWER(prs.domain_filter) IN (' . implode(', ', $placeholders) . '))';
+        }
+
+        if (!empty($accessibleGroups)) {
+            $groupPlaceholders = [];
+            foreach ($accessibleGroups as $index => $groupId) {
+                $placeholder = ':authorized_group_' . $index;
+                $groupPlaceholders[] = $placeholder;
+                $bindings[$placeholder] = $groupId;
+            }
+            $conditions[] = '(prs.group_filter IS NOT NULL AND prs.group_filter IN (' . implode(', ', $groupPlaceholders) . '))';
+        }
+
+        if (empty($conditions)) {
+            return [];
+        }
+
+        $whereClause = 'WHERE ' . implode(' OR ', $conditions);
+
         $db->query('
             SELECT
-                prs.*, 
+                prs.*,
                 prt.name AS template_name,
                 prt.template_type,
                 prg.generated_at AS last_generated_at,
@@ -30,8 +100,17 @@ class PdfReportSchedule
             FROM pdf_report_schedules prs
             JOIN pdf_report_templates prt ON prs.template_id = prt.id
             LEFT JOIN pdf_report_generations prg ON prs.last_generation_id = prg.id
+            ' . $whereClause . '
             ORDER BY prs.created_at DESC
         ');
+
+        foreach ($bindings as $placeholder => $value) {
+            if (str_starts_with($placeholder, ':authorized_domain_')) {
+                $db->bind($placeholder, strtolower((string) $value));
+            } else {
+                $db->bind($placeholder, $value);
+            }
+        }
 
         return $db->resultSet();
     }
@@ -47,7 +126,16 @@ class PdfReportSchedule
         $db->bind(':id', $id);
         $result = $db->single();
 
-        return $result ?: null;
+        if (!$result) {
+            return null;
+        }
+
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return $result;
+        }
+
+        return self::scheduleIsAccessible($result) ? $result : null;
     }
 
     /**
@@ -58,6 +146,13 @@ class PdfReportSchedule
     public static function create(array $data): int
     {
         $db = DatabaseManager::getInstance();
+
+        $domainFilter = trim((string) ($data['domain_filter'] ?? ''));
+        $groupFilter = isset($data['group_filter']) && $data['group_filter'] !== ''
+            ? (int) $data['group_filter']
+            : null;
+
+        self::assertFilterAccess($domainFilter, $groupFilter);
 
         $db->query('
             INSERT INTO pdf_report_schedules
@@ -73,8 +168,8 @@ class PdfReportSchedule
         $db->bind(':title', $data['title'] ?? $data['name']);
         $db->bind(':frequency', $data['frequency']);
         $db->bind(':recipients', json_encode($data['recipients'] ?? []));
-        $db->bind(':domain_filter', $data['domain_filter'] ?? '');
-        $db->bind(':group_filter', $data['group_filter'] ?? null);
+        $db->bind(':domain_filter', $domainFilter);
+        $db->bind(':group_filter', $groupFilter);
         $db->bind(':parameters', json_encode($data['parameters'] ?? []));
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->bind(':next_run_at', $data['next_run_at'] ?? null);
@@ -92,6 +187,13 @@ class PdfReportSchedule
     public static function update(int $id, array $data): void
     {
         $db = DatabaseManager::getInstance();
+
+        $domainFilter = trim((string) ($data['domain_filter'] ?? ''));
+        $groupFilter = isset($data['group_filter']) && $data['group_filter'] !== ''
+            ? (int) $data['group_filter']
+            : null;
+
+        self::assertFilterAccess($domainFilter, $groupFilter);
 
         $db->query('
             UPDATE pdf_report_schedules
@@ -115,8 +217,8 @@ class PdfReportSchedule
         $db->bind(':title', $data['title'] ?? $data['name']);
         $db->bind(':frequency', $data['frequency']);
         $db->bind(':recipients', json_encode($data['recipients'] ?? []));
-        $db->bind(':domain_filter', $data['domain_filter'] ?? '');
-        $db->bind(':group_filter', $data['group_filter'] ?? null);
+        $db->bind(':domain_filter', $domainFilter);
+        $db->bind(':group_filter', $groupFilter);
         $db->bind(':parameters', json_encode($data['parameters'] ?? []));
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->bind(':next_run_at', $data['next_run_at'] ?? null);
@@ -145,6 +247,70 @@ class PdfReportSchedule
         $db->bind(':enabled', $enabled ? 1 : 0);
         $db->bind(':id', $id);
         $db->execute();
+    }
+
+    private static function scheduleIsAccessible(array $schedule): bool
+    {
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return true;
+        }
+
+        $session = SessionManager::getInstance();
+        $username = (string) $session->get('username', '');
+        if ($username !== '' && ($schedule['created_by'] ?? null) === $username) {
+            return true;
+        }
+
+        $domainFilter = strtolower(trim((string) ($schedule['domain_filter'] ?? '')));
+        if ($domainFilter !== '') {
+            $accessibleDomains = array_map(
+                static fn(array $domain) => strtolower((string) ($domain['domain'] ?? '')),
+                $rbac->getAccessibleDomains()
+            );
+
+            if (in_array($domainFilter, $accessibleDomains, true)) {
+                return true;
+            }
+        }
+
+        $groupFilter = $schedule['group_filter'] ?? null;
+        if ($groupFilter !== null) {
+            $accessibleGroups = array_map(
+                static fn(array $group) => (int) ($group['id'] ?? 0),
+                $rbac->getAccessibleGroups()
+            );
+
+            if (in_array((int) $groupFilter, $accessibleGroups, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function assertFilterAccess(?string $domainFilter, ?int $groupFilter): void
+    {
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return;
+        }
+
+        $domainFilter = trim((string) $domainFilter);
+        if ($domainFilter !== '') {
+            $accessibleDomains = array_map(
+                static fn(array $domain) => strtolower((string) ($domain['domain'] ?? '')),
+                $rbac->getAccessibleDomains()
+            );
+
+            if (!in_array(strtolower($domainFilter), $accessibleDomains, true)) {
+                throw new RuntimeException('You are not authorized to schedule reports for the selected domain.');
+            }
+        }
+
+        if ($groupFilter !== null && !$rbac->canAccessGroup($groupFilter)) {
+            throw new RuntimeException('You are not authorized to schedule reports for the selected group.');
+        }
     }
 
     /**

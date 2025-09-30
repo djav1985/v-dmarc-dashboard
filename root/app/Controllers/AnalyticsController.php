@@ -18,9 +18,12 @@ class AnalyticsController extends Controller
     public function handleRequest(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_ANALYTICS);
-        // Get date range from parameters (default to show sample data from 2023)
-        $endDate = $_GET['end_date'] ?? '2023-10-02';
-        $startDate = $_GET['start_date'] ?? '2023-09-28';
+        // Default to the last seven days when no explicit range is provided
+        $defaultEndDate = date('Y-m-d');
+        $defaultStartDate = date('Y-m-d', strtotime('-6 days'));
+
+        $endDate = $_GET['end_date'] ?? $defaultEndDate;
+        $startDate = $_GET['start_date'] ?? $defaultStartDate;
         $domain = $_GET['domain'] ?? '';
 
         // Get trend data for charts

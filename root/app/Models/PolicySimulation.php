@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
+use RuntimeException;
 
 /**
  * Policy Simulation model for DMARC policy testing and recommendations
@@ -40,10 +42,19 @@ class PolicySimulation
     {
         $db = DatabaseManager::getInstance();
 
+        $domainId = (int) ($data['domain_id'] ?? 0);
+        if ($domainId <= 0) {
+            throw new RuntimeException('A valid domain must be selected for the simulation.');
+        }
+
+        if (!RBACManager::getInstance()->canAccessDomain($domainId)) {
+            throw new RuntimeException('You do not have permission to simulate this domain.');
+        }
+
         $db->query('
-            INSERT INTO policy_simulations 
-            (name, description, domain_id, current_policy, simulated_policy, 
-             simulation_period_start, simulation_period_end, created_by) 
+            INSERT INTO policy_simulations
+            (name, description, domain_id, current_policy, simulated_policy,
+             simulation_period_start, simulation_period_end, created_by)
             VALUES 
             (:name, :description, :domain_id, :current_policy, :simulated_policy,
              :period_start, :period_end, :created_by)
@@ -51,7 +62,7 @@ class PolicySimulation
 
         $db->bind(':name', $data['name']);
         $db->bind(':description', $data['description'] ?? '');
-        $db->bind(':domain_id', $data['domain_id']);
+        $db->bind(':domain_id', $domainId);
         $db->bind(':current_policy', json_encode($data['current_policy']));
         $db->bind(':simulated_policy', json_encode($data['simulated_policy']));
         $db->bind(':period_start', $data['period_start']);
@@ -79,6 +90,10 @@ class PolicySimulation
 
         if (!$simulation) {
             return [];
+        }
+
+        if (!RBACManager::getInstance()->canAccessDomain((int) $simulation['domain_id'])) {
+            throw new RuntimeException('You do not have permission to run this simulation.');
         }
 
         $currentPolicy = json_decode($simulation['current_policy'], true);

@@ -396,6 +396,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
 
                         <div class="schedule-actions mt-2">
                             <form method="post" class="mr-1">
+                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                 <input type="hidden" name="action" value="run_schedule">
                                 <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
                                 <button class="btn btn-sm btn-primary" type="submit">
@@ -403,6 +404,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                                 </button>
                             </form>
                             <form method="post" class="mr-1">
+                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                 <input type="hidden" name="action" value="toggle_schedule">
                                 <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
                                 <input type="hidden" name="schedule_enabled" value="<?= $isEnabled ? 0 : 1 ?>">
@@ -411,6 +413,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                                 </button>
                             </form>
                             <form method="post" onsubmit="return confirm('Delete this schedule?');">
+                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                 <input type="hidden" name="action" value="delete_schedule">
                                 <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
                                 <button class="btn btn-sm btn-error" type="submit">Delete</button>
@@ -418,6 +421,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                         </div>
 
                         <form method="post" class="schedule-form mt-2">
+                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                             <input type="hidden" name="action" value="update_schedule">
                             <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
                             <div class="form-group">
@@ -482,6 +486,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
         <div class="column col-5 col-md-12">
             <h5>Create New Schedule</h5>
             <form method="post" class="schedule-form">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="action" value="create_schedule">
                 <div class="form-group">
                     <label class="form-label">Schedule Name</label>

@@ -11,6 +11,7 @@ use App\Models\DomainGroup;
 use App\Models\EmailDigest;
 use DateInterval;
 use DateTimeImmutable;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -118,17 +119,23 @@ class EmailDigestController extends Controller
             }
         }
 
-        EmailDigest::createSchedule([
-            'name' => $name,
-            'frequency' => $frequency,
-            'recipients' => $recipients,
-            'domain_filter' => $domainFilter,
-            'group_filter' => $groupFilter,
-            'enabled' => $enabled,
-            'next_scheduled' => $nextScheduled,
-        ]);
+        try {
+            EmailDigest::createSchedule([
+                'name' => $name,
+                'frequency' => $frequency,
+                'recipients' => $recipients,
+                'domain_filter' => $domainFilter,
+                'group_filter' => $groupFilter,
+                'enabled' => $enabled,
+                'next_scheduled' => $nextScheduled,
+            ]);
 
-        MessageHelper::addMessage('Email digest schedule created successfully.', 'success');
+            MessageHelper::addMessage('Email digest schedule created successfully.', 'success');
+        } catch (RuntimeException $exception) {
+            MessageHelper::addMessage($exception->getMessage(), 'error');
+        } catch (Throwable $exception) {
+            MessageHelper::addMessage('Failed to create digest schedule: ' . $exception->getMessage(), 'error');
+        }
     }
 
     /**
