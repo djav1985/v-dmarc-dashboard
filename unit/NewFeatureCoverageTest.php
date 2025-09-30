@@ -62,9 +62,7 @@ function insertTlsReport(int $domainId): int
     $db->bind(':raw_json', json_encode(['id' => 'tls-' . $timestamp]));
     $db->execute();
 
-    $db->query('SELECT last_insert_rowid() as id');
-    $result = $db->single();
-    $reportId = (int) ($result['id'] ?? 0);
+    $reportId = (int) $db->getLastInsertId();
 
     $db->query('INSERT INTO smtp_tls_policies (tls_report_id, policy_type, policy_string, policy_domain, mx_host, successful_session_count, failure_session_count) VALUES (:id, :type, :string, :domain, :mx, :success, :failure)');
     $db->bind(':id', $reportId);
