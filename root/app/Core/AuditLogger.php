@@ -57,7 +57,7 @@ class AuditLogger
     ): void {
         try {
             $session = SessionManager::getInstance();
-            
+
             // Get user ID from session if not provided
             if ($userId === null) {
                 $userId = $session->get('username');
@@ -82,7 +82,6 @@ class AuditLogger
             $db->bind(':user_agent', $userAgent);
 
             $db->execute();
-
         } catch (\Exception $e) {
             // Don't let audit logging break the application
             error_log("Audit logging failed: " . $e->getMessage());
@@ -194,13 +193,18 @@ class AuditLogger
     public function getFailedLogins(int $hours = 24): array
     {
         $db = DatabaseManager::getInstance();
+
+        // Calculate the cutoff timestamp in PHP for database portability
+        $cutoffTime = date('Y-m-d H:i:s', strtotime("-{$hours} hours"));
+
         $db->query('
             SELECT * FROM audit_logs
             WHERE action = :action 
-            AND timestamp >= datetime("now", "-' . $hours . ' hours")
+            AND timestamp >= :cutoff_time
             ORDER BY timestamp DESC
         ');
         $db->bind(':action', self::ACTION_LOGIN_FAILED);
+        $db->bind(':cutoff_time', $cutoffTime);
         return $db->resultSet();
     }
 
@@ -210,10 +214,15 @@ class AuditLogger
     public function cleanOldLogs(int $daysToKeep = 90): int
     {
         $db = DatabaseManager::getInstance();
+
+        // Calculate the cutoff timestamp in PHP for database portability
+        $cutoffTime = date('Y-m-d H:i:s', strtotime("-{$daysToKeep} days"));
+
         $db->query('
             DELETE FROM audit_logs
-            WHERE timestamp < datetime("now", "-' . $daysToKeep . ' days")
+            WHERE timestamp < :cutoff_time
         ');
+        $db->bind(':cutoff_time', $cutoffTime);
         $db->execute();
         return $db->rowCount();
     }
@@ -224,7 +233,7 @@ class AuditLogger
     private function getClientIp(): string
     {
         $ipKeys = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
-        
+
         foreach ($ipKeys as $key) {
             if (!empty($_SERVER[$key])) {
                 $ip = $_SERVER[$key];
