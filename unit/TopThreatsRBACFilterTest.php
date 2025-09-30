@@ -98,12 +98,17 @@ $reportB = topThreatsInsertReport($domainBId, $rangeStart, $rangeEnd, 'threat-re
 topThreatsInsertRecord($reportB, '192.0.2.200', 20, 'reject');
 topThreatsInsertRecord($reportB, '192.0.2.201', 5, 'quarantine');
 
-// Test as app admin - should see all threats
+// Test as app admin - should see all threats from our test domains
 $_SESSION['username'] = 'threat_admin_' . $microtime;
 $_SESSION['user_role'] = RBACManager::ROLE_APP_ADMIN;
 
 $adminResults = Analytics::getTopThreats($startDate, $endDate, 10);
-assertCountEquals(4, $adminResults, 'Admin should see all threat IPs from all domains', $failures);
+// Filter to only count IPs that affected our test domains
+$testIps = array_filter($adminResults, function ($row) use ($domainA, $domainB) {
+    $affectedDomains = (string) ($row['affected_domains'] ?? '');
+    return strpos($affectedDomains, $domainA) !== false || strpos($affectedDomains, $domainB) !== false;
+});
+assertCountEquals(4, $testIps, 'Admin should see all threat IPs from test domains', $failures);
 
 // Test as viewer with access to only domain A - should see only threats from domain A
 $_SESSION['username'] = 'threat_viewer_' . $microtime;
