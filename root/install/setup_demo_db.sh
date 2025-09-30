@@ -1,5 +1,3 @@
-installlllllln/bash
-
 # Script to set up a demo SQLite database for the DMARC Dashboard
 
 cd "$(dirname "$0")"
