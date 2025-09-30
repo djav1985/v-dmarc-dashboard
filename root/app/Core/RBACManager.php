@@ -26,6 +26,9 @@ class RBACManager
     public const PERM_MANAGE_SETTINGS = 'manage_settings';
     public const PERM_VIEW_ANALYTICS = 'view_analytics';
     public const PERM_MANAGE_ALERTS = 'manage_alerts';
+    public const PERM_MANAGE_SECURITY = 'manage_security';
+    public const PERM_VIEW_TLS_REPORTS = 'view_tls_reports';
+    public const PERM_VIEW_FORENSIC_REPORTS = 'view_forensic_reports';
 
     private static ?RBACManager $instance = null;
     private array $rolePermissions;
@@ -55,12 +58,17 @@ class RBACManager
                 self::PERM_MANAGE_SETTINGS,
                 self::PERM_VIEW_ANALYTICS,
                 self::PERM_MANAGE_ALERTS,
+                self::PERM_MANAGE_SECURITY,
+                self::PERM_VIEW_TLS_REPORTS,
+                self::PERM_VIEW_FORENSIC_REPORTS,
             ],
             self::ROLE_DOMAIN_ADMIN => [
                 self::PERM_VIEW_REPORTS,
                 self::PERM_UPLOAD_REPORTS,
                 self::PERM_VIEW_ANALYTICS,
                 self::PERM_MANAGE_ALERTS,
+                self::PERM_VIEW_TLS_REPORTS,
+                self::PERM_VIEW_FORENSIC_REPORTS,
             ],
             self::ROLE_GROUP_ADMIN => [
                 self::PERM_MANAGE_GROUPS,
@@ -68,10 +76,14 @@ class RBACManager
                 self::PERM_UPLOAD_REPORTS,
                 self::PERM_VIEW_ANALYTICS,
                 self::PERM_MANAGE_ALERTS,
+                self::PERM_VIEW_TLS_REPORTS,
+                self::PERM_VIEW_FORENSIC_REPORTS,
             ],
             self::ROLE_VIEWER => [
                 self::PERM_VIEW_REPORTS,
                 self::PERM_VIEW_ANALYTICS,
+                self::PERM_VIEW_TLS_REPORTS,
+                self::PERM_VIEW_FORENSIC_REPORTS,
             ],
         ];
     }

@@ -103,6 +103,20 @@ CREATE TABLE dmarc_forensic_reports (
 CREATE INDEX idx_forensic_source_ip ON dmarc_forensic_reports(source_ip);
 CREATE INDEX idx_arrival_date ON dmarc_forensic_reports(arrival_date);
 
+CREATE TABLE password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    selector TEXT NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_password_reset_selector ON password_reset_tokens(selector);
+CREATE INDEX idx_password_reset_expiry ON password_reset_tokens(expires_at);
+
 CREATE TABLE smtp_tls_reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     domain_id INTEGER NOT NULL,

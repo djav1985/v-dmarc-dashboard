@@ -98,4 +98,44 @@ class Blacklist
             throw $e;
         }
     }
+
+    /**
+     * Retrieve all blacklist entries.
+     */
+    public static function getAll(): array
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT * FROM ip_blacklist ORDER BY blacklisted DESC, timestamp DESC');
+        return $db->resultSet();
+    }
+
+    /**
+     * Manually ban an IP address.
+     */
+    public static function banIp(string $ip, ?string $reason = null): bool
+    {
+        $timestamp = time();
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            INSERT INTO ip_blacklist (ip_address, login_attempts, blacklisted, timestamp)
+            VALUES (:ip, 0, TRUE, :timestamp)
+            ON DUPLICATE KEY UPDATE blacklisted = TRUE, timestamp = :timestamp
+        ');
+        $db->bind(':ip', $ip);
+        $db->bind(':timestamp', $timestamp);
+
+        return $db->execute();
+    }
+
+    /**
+     * Remove an IP address from the blacklist.
+     */
+    public static function unbanIp(string $ip): bool
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('UPDATE ip_blacklist SET blacklisted = FALSE, login_attempts = 0 WHERE ip_address = :ip');
+        $db->bind(':ip', $ip);
+        return $db->execute();
+    }
 }

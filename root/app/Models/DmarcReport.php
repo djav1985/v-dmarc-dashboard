@@ -184,6 +184,89 @@ class DmarcReport
     }
 
     /**
+     * Retrieve stored forensic reports with optional domain filtering.
+     */
+    public static function getForensicReports(?int $domainId = null, int $limit = 50, int $offset = 0): array
+    {
+        $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        $clauses = [];
+        $bindings = [];
+
+        if ($domainId !== null && $domainId > 0) {
+            if (!$rbac->canAccessDomain($domainId)) {
+                return [];
+            }
+            $clauses[] = 'dfr.domain_id = :domain_id';
+            $bindings[':domain_id'] = $domainId;
+        } else {
+            $accessibleDomainIds = self::getAccessibleDomainIds();
+            if (!empty($accessibleDomainIds)) {
+                [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+                $clauses[] = 'dfr.domain_id IN (' . implode(', ', $placeholders) . ')';
+                $bindings = array_merge($bindings, $inBindings);
+            }
+        }
+
+        $whereClause = '';
+        if (!empty($clauses)) {
+            $whereClause = 'WHERE ' . implode(' AND ', $clauses);
+        }
+
+        $db->query(
+            "
+            SELECT dfr.*, d.domain
+            FROM dmarc_forensic_reports dfr
+            JOIN domains d ON dfr.domain_id = d.id
+            $whereClause
+            ORDER BY dfr.arrival_date DESC
+            LIMIT :limit OFFSET :offset
+        "
+        );
+
+        foreach ($bindings as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        $db->bind(':limit', $limit);
+        $db->bind(':offset', $offset);
+
+        return $db->resultSet();
+    }
+
+    /**
+     * Retrieve a single forensic report by ID.
+     */
+    public static function getForensicReportById(int $reportId): ?array
+    {
+        $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        $db->query(
+            '
+            SELECT dfr.*, d.domain
+            FROM dmarc_forensic_reports dfr
+            JOIN domains d ON dfr.domain_id = d.id
+            WHERE dfr.id = :id
+        '
+        );
+        $db->bind(':id', $reportId);
+        $report = $db->single();
+
+        if (!$report) {
+            return null;
+        }
+
+        $domainId = (int) $report['domain_id'];
+        if (!$rbac->canAccessDomain($domainId)) {
+            return null;
+        }
+
+        return $report;
+    }
+
+    /**
      * Get recent aggregate reports summary for dashboard.
      *
      * @param int $days

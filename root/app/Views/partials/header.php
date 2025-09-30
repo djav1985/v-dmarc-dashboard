@@ -101,12 +101,33 @@ $brandingVars = $branding->getBrandingVars();
                         </a>
                         <?php endif; ?>
 
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_FORENSIC_REPORTS)): ?>
+                        <a class="nav-item" href="/forensic-reports">
+                            <i class="icon icon-flag"></i> Forensics
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_TLS_REPORTS)): ?>
+                        <a class="nav-item" href="/tls-reports">
+                            <i class="icon icon-signal"></i> TLS Reports
+                        </a>
+                        <?php endif; ?>
+
                         <?php if ($rbac->hasPermission(RBACManager::PERM_UPLOAD_REPORTS)): ?>
                         <a class="nav-item" href="/upload">
                             <i class="icon icon-upload"></i> Upload
                         </a>
                         <a class="nav-item" href="/imap">
                             <i class="icon icon-mail"></i> IMAP
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_SECURITY)): ?>
+                        <a class="nav-item" href="/audit-logs">
+                            <i class="icon icon-activity"></i> Audit Logs
+                        </a>
+                        <a class="nav-item" href="/blacklist">
+                            <i class="icon icon-shield"></i> Blacklist
                         </a>
                         <?php endif; ?>
                     </div>
@@ -126,6 +147,11 @@ $brandingVars = $branding->getBrandingVars();
                             <i class="icon icon-caret"></i>
                         </a>
                         <ul class="menu">
+                            <li class="menu-item">
+                                <a href="/profile" class="btn btn-link btn-sm">
+                                    <i class="icon icon-user"></i> Profile
+                                </a>
+                            </li>
                             <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_USERS)): ?>
                             <li class="menu-item">
                                 <a href="/user-management" class="btn btn-link btn-sm">
