@@ -34,3 +34,4 @@ All notable changes to this project will be documented in this file.
 - Hardened DMARC ingestion to parse forensic single-part payloads and detect gzip/ZIP attachments by signature so reports without filename extensions are still processed.
 - Corrected alert metric scheduling to respect the configured application timezone when calculating window boundaries.
 - Fixed email digest aggregation to prevent duplicated volumes when domains belong to multiple groups.
+- Resolved digest summaries, domain breakdowns, and threat rollups to skip domain-group joins unless filtering so multi-group domains do not inflate totals.
