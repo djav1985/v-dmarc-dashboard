@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csrf;
 use App\Core\RBACManager;
 use App\Helpers\MessageHelper;
 use App\Models\SavedReportFilter;
@@ -14,6 +15,12 @@ class SavedReportFiltersController extends Controller
     public function store(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            $this->redirectToReports();
+            return;
+        }
 
         $username = $_SESSION['username'] ?? '';
         if ($username === '') {
@@ -48,6 +55,12 @@ class SavedReportFiltersController extends Controller
     public function update(int $id): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            $this->redirectToReports(['saved_filter_id' => $id]);
+            return;
+        }
 
         $username = $_SESSION['username'] ?? '';
         if ($username === '') {
@@ -89,6 +102,12 @@ class SavedReportFiltersController extends Controller
     public function delete(int $id): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            $this->redirectToReports();
+            return;
+        }
 
         $username = $_SESSION['username'] ?? '';
         if ($username === '') {

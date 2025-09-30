@@ -24,6 +24,7 @@ use App\Models\EmailDigest;
 use App\Services\AlertService;
 use App\Services\EmailDigestService;
 use function TestHelpers\assertContains;
+use function TestHelpers\assertEquals;
 use function TestHelpers\assertPredicate;
 use function TestHelpers\assertTrue;
 
