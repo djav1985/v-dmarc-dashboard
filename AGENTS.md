@@ -5,6 +5,18 @@ This document sets baseline expectations for contributors to ensure code quality
 
 ---
 
+## Framework
+
+- Use respect/validation for validation.
+- Use phpmailer/phpmailer for emails.
+- Use root/app/Core/ErrorManager.php for error management.
+- Use root/app/Helpers/MessageHelper.php for toast notifications.
+- Store email templates in root/app/Templates.
+- Keep dev dependencies (Composer, Node, etc.) in /.
+- Keep production dependencies in /root.
+  
+---
+
 ## Agent Development Principles
 
 1. Core Integrity
