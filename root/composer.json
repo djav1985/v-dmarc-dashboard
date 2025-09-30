@@ -9,7 +9,8 @@
     "phpmailer/phpmailer": "^6.10.0",
     "doctrine/dbal": "^3.10.0",
     "nikic/fast-route": "^v1.3.0",
-    "respect/validation": "*"
+    "respect/validation": "*",
+    "dompdf/dompdf": "^3.1"
   },
   "autoload": {
     "psr-4": {
