@@ -27,7 +27,9 @@ class AnalyticsController extends Controller
         $trendData = Analytics::getTrendData($startDate, $endDate, $domain);
 
         // Get domain health scores
-        $healthScores = Analytics::getDomainHealthScores($startDate, $endDate);
+        $domainFilter = $domain !== '' ? $domain : null;
+
+        $healthScores = Analytics::getDomainHealthScores($startDate, $endDate, null, $domainFilter);
 
         // Get summary statistics
         $summaryStats = Analytics::getSummaryStatistics($startDate, $endDate, $domain);
