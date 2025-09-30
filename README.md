@@ -120,7 +120,7 @@ Administrators with the new `manage_retention` permission can adjust DMARC aggre
 
 ## Group-Scoped Analytics and PDF Reports
 
-Analytics helpers now accept an optional domain group identifier so dashboards and PDF exports can be constrained to a curated set of domains. Pass the group ID to `Analytics::getSummaryStatistics()`, `Analytics::getTrendData()`, `Analytics::getComplianceData()`, `Analytics::getDomainHealthScores()`, and `Analytics::getTopThreats()` to automatically join `domain_group_assignments` and limit the result set. When building scheduled or ad-hoc PDFs, call `PdfReport::generateReportData()` with the same group ID—the summary, compliance, recommendations, and authentication breakdown sections all honour the filter so cross-tenant data never leaks into a scoped report.
+Analytics helpers now accept an optional domain group identifier so dashboards and PDF exports can be constrained to a curated set of domains. Pass the group ID to `Analytics::getSummaryStatistics()`, `Analytics::getTrendData()`, `Analytics::getComplianceData()`, `Analytics::getDomainHealthScores()`, and `Analytics::getTopThreats()` to automatically join `domain_group_assignments` and limit the result set. When building scheduled or ad-hoc PDFs, call `PdfReport::generateReportData()` with the same group ID—the summary, compliance, recommendations, authentication breakdown, and domain health sections all honour the filter so cross-tenant data never leaks into a scoped report. Domain-specific filters applied via the dashboard UI or PDF generation helpers now also narrow the domain health rollup, preventing unrelated domains from appearing in scoped exports.
 
 ## IP Ownership and Reputation Insights
 
