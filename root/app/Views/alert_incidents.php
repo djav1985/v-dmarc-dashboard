@@ -45,7 +45,7 @@ function incidentStatus(string $status): string
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-flag icon-2x text-error mr-2"></i>
                 Active Incidents
@@ -72,7 +72,7 @@ function incidentStatus(string $status): string
         <div class="columns">
             <div class="column col-12">
                 <div class="incident-card">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start">
                         <div>
                             <h4 class="mb-1"><?= htmlspecialchars($incident['rule_name'] ?? 'Alert') ?></h4>
                             <p class="mb-1"><?= htmlspecialchars($incident['message']) ?></p>

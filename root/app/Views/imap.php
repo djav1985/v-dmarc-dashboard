@@ -11,7 +11,7 @@ require 'partials/header.php';
 ?>
 
     <div class="columns">
-        <div class="column col-10 col-mx-auto">
+        <div class="column col-12 col-lg-10 col-xl-8 col-mx-auto">
             <div class="text-center mb-2">
                 <h2>
                     <i class="icon icon-2x icon-mail mr-2"></i>
@@ -40,7 +40,7 @@ require 'partials/header.php';
                         </div>
                         
                         <div class="columns mt-2">
-                            <div class="column col-6">
+                            <div class="column col-12 col-sm-6">
                                 <form method="post">
                                     <input type="hidden" name="csrf_token" value="<?php echo App\Core\SessionManager::getInstance()->get('csrf_token'); ?>">
                                     <input type="hidden" name="action" value="test_connection">
@@ -49,7 +49,7 @@ require 'partials/header.php';
                                     </button>
                                 </form>
                             </div>
-                            <div class="column col-6">
+                            <div class="column col-12 col-sm-6 mt-2 mt-sm-0">
                                 <form method="post">
                                     <input type="hidden" name="csrf_token" value="<?php echo App\Core\SessionManager::getInstance()->get('csrf_token'); ?>">
                                     <input type="hidden" name="action" value="process_emails">
@@ -90,7 +90,7 @@ define('IMAP_MAILBOX', 'INBOX');
 define('IMAP_SSL', true);</code></pre>
                     
                     <div class="columns mt-2">
-                        <div class="column col-6">
+                        <div class="column col-12 col-lg-6">
                             <div class="tile">
                                 <div class="tile-content">
                                     <div class="tile-title h6">
@@ -109,7 +109,7 @@ define('IMAP_SSL', true);</code></pre>
                                 </div>
                             </div>
                         </div>
-                        <div class="column col-6">
+                        <div class="column col-12 col-lg-6 mt-2 mt-lg-0">
                             <div class="tile">
                                 <div class="tile-content">
                                     <div class="tile-title h6">
@@ -137,7 +137,7 @@ define('IMAP_SSL', true);</code></pre>
                 </div>
                 <div class="card-body">
                     <div class="columns">
-                        <div class="column col-4">
+                        <div class="column col-12 col-md-4">
                             <div class="empty">
                                 <div class="empty-icon">
                                     <i class="icon icon-2x icon-share text-primary"></i>
@@ -148,7 +148,7 @@ define('IMAP_SSL', true);</code></pre>
                                 </p>
                             </div>
                         </div>
-                        <div class="column col-4">
+                        <div class="column col-12 col-md-4 mt-2 mt-md-0">
                             <div class="empty">
                                 <div class="empty-icon">
                                     <i class="icon icon-2x icon-link text-primary"></i>
@@ -159,7 +159,7 @@ define('IMAP_SSL', true);</code></pre>
                                 </p>
                             </div>
                         </div>
-                        <div class="column col-4">
+                        <div class="column col-12 col-md-4 mt-2 mt-md-0">
                             <div class="empty">
                                 <div class="empty-icon">
                                     <i class="icon icon-2x icon-upload text-primary"></i>

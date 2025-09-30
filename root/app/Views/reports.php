@@ -96,7 +96,7 @@ function getAuthResultBadge($result, $total) {
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-2x icon-list text-primary mr-2"></i>
                 DMARC Reports
@@ -113,15 +113,15 @@ function getAuthResultBadge($result, $total) {
     <div class="column col-12">
         <form method="POST" action="/reports" class="filter-row">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-            
+
             <div class="columns">
-                <div class="column col-6 col-md-3">
+                <div class="column col-12 col-sm-6 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="domain">Domain</label>
                         <select class="form-select" id="domain" name="domain">
                             <option value="">All Domains</option>
                             <?php foreach ($this->data['domains'] as $domain): ?>
-                                <option value="<?= htmlspecialchars($domain['domain']) ?>" 
+                                <option value="<?= htmlspecialchars($domain['domain']) ?>"
                                     <?= $this->data['filters']['domain'] === $domain['domain'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($domain['domain']) ?>
                                 </option>
@@ -129,8 +129,8 @@ function getAuthResultBadge($result, $total) {
                         </select>
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-2">
+
+                <div class="column col-12 col-sm-6 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="disposition">Disposition</label>
                         <select class="form-select" id="disposition" name="disposition">
@@ -141,24 +141,24 @@ function getAuthResultBadge($result, $total) {
                         </select>
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-2">
+
+                <div class="column col-12 col-sm-6 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="start_date">Start Date</label>
-                        <input type="date" class="form-input" id="start_date" name="start_date" 
+                        <input type="date" class="form-input" id="start_date" name="start_date"
                                value="<?= htmlspecialchars($this->data['filters']['start_date']) ?>">
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-2">
+
+                <div class="column col-12 col-sm-6 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="end_date">End Date</label>
-                        <input type="date" class="form-input" id="end_date" name="end_date" 
+                        <input type="date" class="form-input" id="end_date" name="end_date"
                                value="<?= htmlspecialchars($this->data['filters']['end_date']) ?>">
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-2">
+
+                <div class="column col-12 col-sm-6 col-lg-2">
                     <div class="form-group">
                         <label class="form-label" for="per_page">Per Page</label>
                         <select class="form-select" id="per_page" name="per_page">
@@ -168,39 +168,35 @@ function getAuthResultBadge($result, $total) {
                         </select>
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-1">
+
+                <div class="column col-12 col-sm-6 col-lg-1">
                     <div class="form-group">
-                        <label class="form-label d-invisible d-md-block">&nbsp;</label>
-                        <div class="d-flex">
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="icon icon-search"></i>
-                            </button>
-                        </div>
+                        <label class="form-label d-invisible d-lg-block">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="icon icon-search"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-        </form>
-                    </div>
-                </div>
-                
-                <div class="column col-12 col-sm-6 col-md-4 col-lg-2">
+
+            <div class="columns mt-1">
+                <div class="column col-12 col-sm-6 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="date_from">From Date</label>
-                        <input type="date" class="form-input" id="date_from" name="date_from" 
+                        <input type="date" class="form-input" id="date_from" name="date_from"
                                value="<?= htmlspecialchars($this->data['filters']['date_from']) ?>">
                     </div>
                 </div>
-                
-                <div class="column col-12 col-sm-6 col-md-4 col-lg-2">
+
+                <div class="column col-12 col-sm-6 col-lg-3">
                     <div class="form-group">
                         <label class="form-label" for="date_to">To Date</label>
-                        <input type="date" class="form-input" id="date_to" name="date_to" 
+                        <input type="date" class="form-input" id="date_to" name="date_to"
                                value="<?= htmlspecialchars($this->data['filters']['date_to']) ?>">
                     </div>
                 </div>
-                
-                <div class="column col-12 col-sm-12 col-md-8 col-lg-3">
+
+                <div class="column col-12 col-lg-4 col-xl-3">
                     <div class="form-group">
                         <label class="form-label d-invisible d-lg-block">&nbsp;</label>
                         <div class="d-flex flex-wrap">

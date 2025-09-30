@@ -165,7 +165,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-2x icon-eye text-primary mr-2"></i>
                 Report Details
@@ -180,7 +180,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
 <!-- Report Summary -->
 <div class="summary-card">
     <div class="columns">
-        <div class="column col-8">
+        <div class="column col-12 col-lg-8">
             <h3 class="mb-1"><?= htmlspecialchars($this->data['report']['domain']) ?></h3>
             <p class="mb-1">
                 <strong>From:</strong> <?= htmlspecialchars($this->data['report']['org_name']) ?><br>
@@ -188,14 +188,14 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
                 <strong>Report ID:</strong> <code><?= htmlspecialchars($this->data['report']['report_id']) ?></code>
             </p>
             <p class="mb-0">
-                <strong>Period:</strong> 
-                <?= date('M j, Y', $this->data['report']['date_range_begin']) ?> - 
+                <strong>Period:</strong>
+                <?= date('M j, Y', $this->data['report']['date_range_begin']) ?> -
                 <?= date('M j, Y', $this->data['report']['date_range_end']) ?>
                 <br>
                 <strong>Received:</strong> <?= date('M j, Y H:i', strtotime($this->data['report']['received_at'])) ?>
             </p>
         </div>
-        <div class="column col-4">
+        <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
             <div class="stat-box">
                 <div class="stat-number"><?= number_format($this->data['summary']['total_volume']) ?></div>
                 <div class="stat-label">Total Messages</div>
@@ -206,7 +206,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
 
 <!-- Statistics Overview -->
 <div class="columns mb-2">
-    <div class="column col-2">
+    <div class="column col-12 col-sm-6 col-lg-2">
         <div class="card text-center">
             <div class="card-body">
                 <div class="h4 text-success"><?= number_format($this->data['summary']['pass_count']) ?></div>
@@ -214,7 +214,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
             </div>
         </div>
     </div>
-    <div class="column col-2">
+    <div class="column col-12 col-sm-6 col-lg-2">
         <div class="card text-center">
             <div class="card-body">
                 <div class="h4 text-warning"><?= number_format($this->data['summary']['quarantine_count']) ?></div>
@@ -222,7 +222,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
             </div>
         </div>
     </div>
-    <div class="column col-2">
+    <div class="column col-12 col-sm-6 col-lg-2">
         <div class="card text-center">
             <div class="card-body">
                 <div class="h4 text-error"><?= number_format($this->data['summary']['reject_count']) ?></div>
@@ -230,7 +230,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
             </div>
         </div>
     </div>
-    <div class="column col-3">
+    <div class="column col-12 col-sm-6 col-lg-3">
         <div class="card text-center">
             <div class="card-body">
                 <div class="h5"><?= formatAuthResult($this->data['summary']['dkim_pass_count'], $this->data['summary']['total_volume']) ?></div>
@@ -238,7 +238,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
             </div>
         </div>
     </div>
-    <div class="column col-3">
+    <div class="column col-12 col-sm-6 col-lg-3">
         <div class="card text-center">
             <div class="card-body">
                 <div class="h5"><?= formatAuthResult($this->data['summary']['spf_pass_count'], $this->data['summary']['total_volume']) ?></div>
@@ -262,7 +262,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
                 <?php foreach ($this->data['ip_groups'] as $ipGroup): ?>
                     <div class="ip-group">
                         <div class="ip-header">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
                                 <div>
                                     <?= formatIPAddress($ipGroup['ip']) ?>
                                     <span class="ml-2 text-gray">(<?= count($ipGroup['records']) ?> records)</span>
@@ -275,7 +275,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
                         <?php if ($intel): ?>
                             <div class="ip-insights">
                                 <div class="columns">
-                                    <div class="column col-4 col-sm-12">
+                                    <div class="column col-12 col-lg-4">
                                         <div class="tile tile-centered">
                                             <div class="tile-icon"><i class="icon icon-location text-primary"></i></div>
                                             <div class="tile-content">
@@ -298,7 +298,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="column col-4 col-sm-12">
+                                    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
                                         <div class="tile tile-centered">
                                             <div class="tile-icon"><i class="icon icon-people text-primary"></i></div>
                                             <div class="tile-content">
@@ -320,7 +320,7 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="column col-4 col-sm-12">
+                                    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
                                         <div class="tile tile-centered">
                                             <div class="tile-icon"><i class="icon icon-shield text-primary"></i></div>
                                             <div class="tile-content">
@@ -360,21 +360,21 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
                         <?php foreach ($ipGroup['records'] as $record): ?>
                             <div class="record-row">
                                 <div class="columns">
-                                    <div class="column col-2">
+                                    <div class="column col-12 col-sm-6 col-lg-2">
                                         <span class="chip"><?= number_format($record['count']) ?></span>
                                     </div>
-                                    <div class="column col-2">
+                                    <div class="column col-12 col-sm-6 col-lg-2">
                                         <?= formatDisposition($record['disposition']) ?>
                                     </div>
-                                    <div class="column col-2">
+                                    <div class="column col-12 col-sm-6 col-lg-2 mt-1 mt-lg-0">
                                         <small class="text-gray">DKIM:</small>
                                         <?= formatAuthResult($record['dkim_result']) ?>
                                     </div>
-                                    <div class="column col-2">
+                                    <div class="column col-12 col-sm-6 col-lg-2 mt-1 mt-lg-0">
                                         <small class="text-gray">SPF:</small>
                                         <?= formatAuthResult($record['spf_result']) ?>
                                     </div>
-                                    <div class="column col-4">
+                                    <div class="column col-12 col-lg-4 mt-1 mt-lg-0">
                                         <?php if ($record['header_from']): ?>
                                             <small class="text-gray">From:</small>
                                             <code><?= htmlspecialchars($record['header_from']) ?></code>

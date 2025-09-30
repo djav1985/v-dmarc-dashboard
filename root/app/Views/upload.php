@@ -15,7 +15,7 @@ $displayUsername = htmlspecialchars($displayUsername, ENT_QUOTES, 'UTF-8');
 ?>
 
     <div class="columns">
-        <div class="column col-8 col-mx-auto">
+        <div class="column col-12 col-lg-8 col-xl-6 col-mx-auto">
             <div class="text-center mb-2">
                 <h2>
                     <i class="icon icon-upload mr-2"></i>
@@ -88,7 +88,7 @@ $displayUsername = htmlspecialchars($displayUsername, ENT_QUOTES, 'UTF-8');
                             <strong>Phase 2 will include:</strong>
                         </p>
                         <div class="columns">
-                            <div class="column col-6">
+                            <div class="column col-12 col-sm-6">
                                 <div class="tile tile-centered">
                                     <div class="tile-content">
                                         <div class="tile-title">
@@ -101,7 +101,7 @@ $displayUsername = htmlspecialchars($displayUsername, ENT_QUOTES, 'UTF-8');
                                     </div>
                                 </div>
                             </div>
-                            <div class="column col-6">
+                            <div class="column col-12 col-sm-6 mt-2 mt-sm-0">
                                 <div class="tile tile-centered">
                                     <div class="tile-content">
                                         <div class="tile-title">

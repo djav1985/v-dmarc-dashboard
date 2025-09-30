@@ -89,7 +89,7 @@ function getIncidentStatusClass($status) {
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-2x icon-flag text-primary mr-2"></i>
                 Alerting Dashboard
@@ -133,7 +133,7 @@ function getIncidentStatusClass($status) {
 
 <div class="columns">
     <!-- Active Incidents -->
-    <div class="column col-8">
+    <div class="column col-12 col-lg-8">
         <div class="alert-card">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h4>
@@ -178,7 +178,7 @@ function getIncidentStatusClass($status) {
     </div>
     
     <!-- Alert Rules Summary -->
-    <div class="column col-4">
+    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="alert-card">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h4>

@@ -23,7 +23,7 @@ require 'partials/header.php';
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-plus icon-2x text-primary mr-2"></i>
                 Create Alert Rule
@@ -142,7 +142,7 @@ require 'partials/header.php';
         </div>
     </div>
 
-    <div class="column col-12 col-lg-4">
+    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="rule-form-card">
             <h4 class="mb-2"><i class="icon icon-info"></i> Tips</h4>
             <ul>

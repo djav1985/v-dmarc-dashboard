@@ -32,7 +32,7 @@
 <body>
     <div class="container grid-lg">
         <div class="columns">
-            <div class="column col-4 col-sm-8 col-xs-12 col-mx-auto">
+            <div class="column col-12 col-sm-10 col-md-6 col-lg-4 col-mx-auto">
                 <div class="login-container">
                     <div class="text-center mb-3">
                         <i class="icon icon-3x icon-mail text-primary mb-2"></i>

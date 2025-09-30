@@ -22,8 +22,8 @@ $brandingVars = $branding->getBrandingVars();
     
     <footer class="bg-gray p-2 mt-4">
         <div class="container grid-lg">
-            <div class="columns">
-                <div class="column col-6">
+            <div class="columns footer-columns">
+                <div class="column col-12 col-md-6">
                     <small class="text-gray">
                         <i class="icon icon-mail"></i> <?= htmlspecialchars($brandingVars['app_name']) ?>
                         <?php if (!empty($brandingVars['company_name'])): ?>
@@ -33,7 +33,7 @@ $brandingVars = $branding->getBrandingVars();
                         <?php endif; ?>
                     </small>
                 </div>
-                <div class="column col-6 text-right">
+                <div class="column col-12 col-md-6 footer-right">
                     <small class="text-gray">
                         <?php if (!empty($brandingVars['footer_text'])): ?>
                             <?= htmlspecialchars($brandingVars['footer_text']) ?>
