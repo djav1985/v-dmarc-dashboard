@@ -213,25 +213,27 @@ class EmailDigestService
     private static function determinePeriod(array $schedule, DateTimeImmutable $now, array $parsed): array
     {
         $endDate = $now->format('Y-m-d');
+        $cadenceFloor = self::defaultStartReference($now, $parsed);
 
         if (!empty($schedule['last_sent'])) {
             try {
                 $lastSent = new DateTimeImmutable($schedule['last_sent']);
-                $startReference = $lastSent;
+                $startReference = $lastSent->add(new DateInterval('P1D'));
+                if ($startReference < $cadenceFloor) {
+                    $startReference = $cadenceFloor;
+                }
             } catch (Throwable $exception) {
-                $startReference = self::defaultStartReference($now, $parsed);
+                $startReference = $cadenceFloor;
             }
         } else {
-            $startReference = self::defaultStartReference($now, $parsed);
+            $startReference = $cadenceFloor;
         }
-
-        $startDate = $startReference->format('Y-m-d');
 
         if ($startReference > $now) {
-            $startDate = $now->format('Y-m-d');
+            $startReference = $now;
         }
 
-        return [$startDate, $endDate];
+        return [$startReference->format('Y-m-d'), $endDate];
     }
 
     /**
