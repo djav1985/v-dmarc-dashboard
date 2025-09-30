@@ -127,17 +127,22 @@ class Alert
         $startTime = $startTimePoint->format('Y-m-d H:i:s');
 
         // Build domain filter
-        $whereClause = '';
         $bindParams = [':start_time' => $startTime];
+        $filterClauses = [];
 
         if (!empty($rule['domain_filter'])) {
-            $whereClause .= ' AND d.domain = :domain_filter';
+            $filterClauses[] = 'd.domain = :domain_filter';
             $bindParams[':domain_filter'] = $rule['domain_filter'];
         }
 
         if (!empty($rule['group_filter'])) {
-            $whereClause .= ' AND dga.group_id = :group_filter';
+            $filterClauses[] = 'dga.group_id = :group_filter';
             $bindParams[':group_filter'] = $rule['group_filter'];
+        }
+
+        $whereClause = '';
+        if (!empty($filterClauses)) {
+            $whereClause = ' AND ' . implode(' AND ', $filterClauses);
         }
 
         switch ($rule['metric']) {
@@ -191,6 +196,21 @@ class Alert
                 break;
 
             case 'new_failure_ips':
+                $historicalFilterClauses = [];
+
+                if (!empty($rule['domain_filter'])) {
+                    $historicalFilterClauses[] = 'd2.domain = :domain_filter';
+                }
+
+                if (!empty($rule['group_filter'])) {
+                    $historicalFilterClauses[] = 'dga2.group_id = :group_filter';
+                }
+
+                $historicalWhereClause = '';
+                if (!empty($historicalFilterClauses)) {
+                    $historicalWhereClause = ' AND ' . implode(' AND ', $historicalFilterClauses);
+                }
+
                 $query = "
                     SELECT COUNT(DISTINCT dmar.source_ip) as value
                     FROM dmarc_aggregate_reports dar
@@ -203,7 +223,10 @@ class Alert
                         SELECT DISTINCT source_ip
                         FROM dmarc_aggregate_records dmar2
                         JOIN dmarc_aggregate_reports dar2 ON dmar2.report_id = dar2.id
+                        JOIN domains d2 ON dar2.domain_id = d2.id
+                        LEFT JOIN domain_group_assignments dga2 ON d2.id = dga2.domain_id
                         WHERE dar2.received_at < :start_time
+                        $historicalWhereClause
                     )
                     $whereClause
                 ";
