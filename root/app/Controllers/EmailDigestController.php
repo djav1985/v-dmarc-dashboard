@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csrf;
 use App\Core\RBACManager;
 use App\Helpers\MessageHelper;
 use App\Models\Domain;
@@ -39,6 +40,15 @@ class EmailDigestController extends Controller
     public function handleSubmission(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_ALERTS);
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            if (defined('PHPUNIT_RUNNING') && PHPUNIT_RUNNING) {
+                return;
+            }
+            header('Location: /email-digests');
+            exit();
+        }
 
         $action = $_POST['action'] ?? '';
 
