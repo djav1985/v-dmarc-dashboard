@@ -29,6 +29,7 @@ class RBACManager
     public const PERM_MANAGE_SECURITY = 'manage_security';
     public const PERM_VIEW_TLS_REPORTS = 'view_tls_reports';
     public const PERM_VIEW_FORENSIC_REPORTS = 'view_forensic_reports';
+    public const PERM_MANAGE_RETENTION = 'manage_retention';
 
     private static ?RBACManager $instance = null;
     private array $rolePermissions;
@@ -61,6 +62,7 @@ class RBACManager
                 self::PERM_MANAGE_SECURITY,
                 self::PERM_VIEW_TLS_REPORTS,
                 self::PERM_VIEW_FORENSIC_REPORTS,
+                self::PERM_MANAGE_RETENTION,
             ],
             self::ROLE_DOMAIN_ADMIN => [
                 self::PERM_VIEW_REPORTS,

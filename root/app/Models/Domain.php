@@ -60,4 +60,97 @@ class Domain
 
         return $result ? (object) $result : null;
     }
+
+    /**
+     * Retrieve the ownership contact for a domain.
+     */
+    public static function getOwnershipContact(int $id): ?string
+    {
+        $domain = self::getDomainById($id);
+
+        return $domain !== null ? ($domain->ownership_contact ?? null) : null;
+    }
+
+    /**
+     * Retrieve the enforcement level for a domain.
+     */
+    public static function getEnforcementLevel(int $id): ?string
+    {
+        $domain = self::getDomainById($id);
+
+        return $domain !== null ? ($domain->enforcement_level ?? null) : null;
+    }
+
+    /**
+     * Update the ownership contact value for a domain.
+     */
+    public static function setOwnershipContact(int $id, ?string $contact): bool
+    {
+        return self::updateDomainMetadata($id, ['ownership_contact' => $contact]);
+    }
+
+    /**
+     * Update the enforcement level for a domain.
+     */
+    public static function setEnforcementLevel(int $id, ?string $level): bool
+    {
+        return self::updateDomainMetadata($id, ['enforcement_level' => $level]);
+    }
+
+    /**
+     * Update metadata values on the domains table while keeping timestamps current.
+     *
+     * @param array<string, scalar|null> $attributes
+     */
+    public static function updateDomainMetadata(int $id, array $attributes): bool
+    {
+        if ($id <= 0 || empty($attributes)) {
+            return false;
+        }
+
+        $db = DatabaseManager::getInstance();
+        $setClauses = [];
+
+        foreach ($attributes as $column => $value) {
+            if (!in_array($column, ['ownership_contact', 'enforcement_level'], true)) {
+                continue;
+            }
+
+            $placeholder = ':' . $column;
+            $setClauses[] = $column . ' = ' . $placeholder;
+        }
+
+        if (empty($setClauses)) {
+            return false;
+        }
+
+        $setClauses[] = 'updated_at = ' . self::getTimestampExpression();
+
+        $db->query('UPDATE domains SET ' . implode(', ', $setClauses) . ' WHERE id = :id');
+        $db->bind(':id', $id);
+
+        foreach ($attributes as $column => $value) {
+            if (!in_array($column, ['ownership_contact', 'enforcement_level'], true)) {
+                continue;
+            }
+
+            $db->bind(':' . $column, $value);
+        }
+
+        return $db->execute();
+    }
+
+    /**
+     * Resolve a driver-appropriate current timestamp expression.
+     */
+    private static function getTimestampExpression(): string
+    {
+        $driver = strtolower(DatabaseManager::getInstance()->getDriverName());
+
+        if (str_contains($driver, 'mysql')) {
+            return 'NOW()';
+        }
+
+        return 'CURRENT_TIMESTAMP';
+    }
 }

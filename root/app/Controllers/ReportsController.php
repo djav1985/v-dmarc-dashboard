@@ -5,9 +5,11 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\DmarcReport;
 use App\Models\Domain;
+use App\Models\SavedReportFilter;
 use App\Core\RBACManager;
 use App\Core\Mailer;
 use App\Helpers\MessageHelper;
+use App\Utilities\ReportExport;
 
 /**
  * Reports Controller for DMARC report listing and filtering
@@ -20,61 +22,78 @@ class ReportsController extends Controller
     public function handleRequest(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
-        // Get filter parameters from URL
-        $domain = $_GET['domain'] ?? '';
-        $disposition = $_GET['disposition'] ?? '';
-        $dateFrom = $_GET['date_from'] ?? '';
-        $dateTo = $_GET['date_to'] ?? '';
-        $sortBy = $_GET['sort'] ?? 'received_at';
-        $sortDir = $_GET['dir'] ?? 'DESC';
+        $savedFilterId = isset($_GET['saved_filter_id']) ? (int) $_GET['saved_filter_id'] : null;
         $page = max(1, (int) ($_GET['page'] ?? 1));
-        $perPage = 25;
-        $offset = ($page - 1) * $perPage;
 
-        // Get filtered reports
-        $reports = DmarcReport::getFilteredReports([
-            'domain' => $domain,
-            'disposition' => $disposition,
-            'date_from' => $dateFrom,
-            'date_to' => $dateTo,
-            'sort_by' => $sortBy,
-            'sort_dir' => $sortDir,
-            'limit' => $perPage,
-            'offset' => $offset
-        ]);
+        $resolution = $this->resolveFilters($_GET, $savedFilterId);
+        $filters = $resolution['filters'];
+        $appliedSavedFilter = $resolution['savedFilter'];
 
-        // Get total count for pagination
-        $totalReports = DmarcReport::getFilteredReportsCount([
-            'domain' => $domain,
-            'disposition' => $disposition,
-            'date_from' => $dateFrom,
-            'date_to' => $dateTo
-        ]);
+        $defaultLimit = isset($filters['limit']) ? (int) $filters['limit'] : 25;
+        $perPage = $this->resolvePerPage($defaultLimit, $_GET);
 
-        // Get all domains for filter dropdown
+        $filters['limit'] = $perPage;
+        $filters['offset'] = ($page - 1) * $perPage;
+        $filters['sort_by'] = $filters['sort_by'] ?? 'received_at';
+        $filters['sort_dir'] = $filters['sort_dir'] ?? 'DESC';
+
+        $reports = DmarcReport::getFilteredReports($filters);
+
+        $countFilters = $filters;
+        unset($countFilters['limit'], $countFilters['offset']);
+        $totalReports = DmarcReport::getFilteredReportsCount($countFilters);
+
         $domains = Domain::getAllDomains();
+        $totalPages = $perPage > 0 ? (int) ceil(max(1, $totalReports) / $perPage) : 1;
 
-        // Calculate pagination
-        $totalPages = ceil($totalReports / $perPage);
+        $username = $_SESSION['username'] ?? '';
+        $savedFilters = [];
+        if ($username !== '') {
+            foreach (SavedReportFilter::getForUser($username) as $record) {
+                $savedFilters[] = [
+                    'id' => (int) $record['id'],
+                    'name' => $record['name'],
+                    'filters' => SavedReportFilter::decodeFilters($record),
+                ];
+            }
+        }
 
-        // Pass data to view
+        $filtersForView = $filters;
+        $filtersForView['per_page'] = $perPage;
+        $filtersForView['page'] = $page;
+        unset($filtersForView['limit'], $filtersForView['offset']);
+
+        $filtersForQuery = $filters;
+        unset($filtersForQuery['offset']);
+        $activeSavedFilterId = $appliedSavedFilter['id'] ?? ($savedFilterId ?: null);
+        $queryParams = $this->buildQueryParams($filtersForQuery, $perPage, $page, $activeSavedFilterId);
+        $queryParamsWithoutPage = $queryParams;
+        unset($queryParamsWithoutPage['page']);
+
+        $filtersForPersistence = $this->prepareFiltersForPersistence($filters);
+        $filterJson = json_encode($filtersForPersistence, JSON_UNESCAPED_SLASHES);
+        if ($filterJson === false) {
+            $filterJson = '[]';
+        }
+
         $this->data = [
             'reports' => $reports,
             'domains' => $domains,
-            'filters' => [
-                'domain' => $domain,
-                'disposition' => $disposition,
-                'date_from' => $dateFrom,
-                'date_to' => $dateTo,
-                'sort_by' => $sortBy,
-                'sort_dir' => $sortDir
-            ],
+            'filters' => $filtersForView,
             'pagination' => [
                 'current_page' => $page,
-                'total_pages' => $totalPages,
+                'total_pages' => max(1, $totalPages),
                 'total_reports' => $totalReports,
-                'per_page' => $perPage
-            ]
+                'per_page' => $perPage,
+                'query_params' => $queryParams,
+            ],
+            'saved_filters' => $savedFilters,
+            'active_saved_filter_id' => $activeSavedFilterId,
+            'saved_filter_name' => $appliedSavedFilter['name'] ?? null,
+            'current_filter_json' => $filterJson,
+            'query_params' => $queryParams,
+            'query_params_no_page' => $queryParamsWithoutPage,
+            'enforcement_levels' => ['none', 'monitor', 'quarantine', 'reject'],
         ];
 
         require __DIR__ . '/../Views/reports.php';
@@ -98,27 +117,271 @@ class ReportsController extends Controller
             exit();
         }
 
-        // Redirect to GET request with parameters
+        $savedFilterId = isset($_POST['saved_filter_id']) ? (int) $_POST['saved_filter_id'] : null;
+        $filters = $this->extractFilterRequest($_POST);
+
+        $normalized = DmarcReport::normalizeFilterInput($filters);
+        $defaultLimit = isset($normalized['limit']) ? (int) $normalized['limit'] : 25;
+        $perPage = $this->resolvePerPage($defaultLimit, $_POST);
+        $normalized['limit'] = $perPage;
+        unset($normalized['offset']);
+
+        $queryParams = $this->buildQueryParams($normalized, $perPage, 1, $savedFilterId ?: null);
+        $queryString = http_build_query($queryParams);
+
+        header('Location: /reports' . ($queryString ? '?' . $queryString : ''));
+        exit();
+    }
+
+    /**
+     * Export filtered reports to CSV.
+     */
+    public function exportCsv(): void
+    {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+
+        $savedFilterId = isset($_GET['saved_filter_id']) ? (int) $_GET['saved_filter_id'] : null;
+        $resolution = $this->resolveFilters($_GET, $savedFilterId);
+        $filters = $resolution['filters'];
+        unset($filters['offset']);
+        $filters['limit'] = null;
+
+        $reports = DmarcReport::getFilteredReports($filters);
+
+        $csv = ReportExport::buildCsv($reports);
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="dmarc_reports_' . date('Ymd_His') . '.csv"');
+        echo $csv;
+        exit();
+    }
+
+    /**
+     * Export filtered reports to XLSX.
+     */
+    public function exportXlsx(): void
+    {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+
+        $savedFilterId = isset($_GET['saved_filter_id']) ? (int) $_GET['saved_filter_id'] : null;
+        $resolution = $this->resolveFilters($_GET, $savedFilterId);
+        $filters = $resolution['filters'];
+        unset($filters['offset']);
+        $filters['limit'] = null;
+
+        $reports = DmarcReport::getFilteredReports($filters);
+
+        $xlsx = ReportExport::buildXlsx($reports);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="dmarc_reports_' . date('Ymd_His') . '.xlsx"');
+        echo $xlsx;
+        exit();
+    }
+
+    /**
+     * Resolve filter input from the request and optional saved filter.
+     *
+     * @param array<string, mixed> $source
+     * @return array{filters: array<string, mixed>, savedFilter: ?array}
+     */
+    private function resolveFilters(array $source, ?int $savedFilterId = null): array
+    {
+        $filters = $this->extractFilterRequest($source);
+        $appliedSavedFilter = null;
+
+        $username = $_SESSION['username'] ?? '';
+        if ($savedFilterId && $savedFilterId > 0 && $username !== '') {
+            $record = SavedReportFilter::getById($savedFilterId, $username);
+            if ($record) {
+                $savedFilters = SavedReportFilter::decodeFilters($record);
+                if (!empty($savedFilters)) {
+                    $filters = array_merge($savedFilters, $filters);
+                }
+                $appliedSavedFilter = [
+                    'id' => (int) $record['id'],
+                    'name' => $record['name'],
+                    'filters' => $savedFilters,
+                ];
+            } elseif (!empty($source)) {
+                MessageHelper::addMessage('The requested saved filter is not available.', 'error');
+            }
+        }
+
+        $normalized = DmarcReport::normalizeFilterInput($filters);
+
+        return [
+            'filters' => $normalized,
+            'savedFilter' => $appliedSavedFilter,
+        ];
+    }
+
+    /**
+     * Extract filter values from request data.
+     *
+     * @param array<string, mixed> $source
+     * @return array<string, mixed>
+     */
+    private function extractFilterRequest(array $source): array
+    {
+        $filters = [];
+
+        $map = [
+            'domain' => 'domain',
+            'disposition' => 'disposition',
+            'policy_result' => 'policy_result',
+            'date_from' => 'date_from',
+            'date_to' => 'date_to',
+            'org_name' => 'org_name',
+            'source_ip' => 'source_ip',
+            'dkim_result' => 'dkim_result',
+            'spf_result' => 'spf_result',
+            'header_from' => 'header_from',
+            'envelope_from' => 'envelope_from',
+            'envelope_to' => 'envelope_to',
+            'ownership_contact' => 'ownership_contact',
+            'enforcement_level' => 'enforcement_level',
+            'report_id' => 'report_id',
+            'reporter_email' => 'reporter_email',
+            'min_volume' => 'min_volume',
+            'max_volume' => 'max_volume',
+            'sort' => 'sort_by',
+            'dir' => 'sort_dir',
+        ];
+
+        foreach ($map as $param => $key) {
+            if (!array_key_exists($param, $source)) {
+                continue;
+            }
+
+            $value = $source[$param];
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $filtered = array_values(array_filter($value, static fn($item) => $item !== ''));
+                if (!empty($filtered)) {
+                    $filters[$key] = $filtered;
+                }
+                continue;
+            }
+
+            $filters[$key] = $value;
+        }
+
+        if (isset($source['has_failures'])) {
+            $filters['has_failures'] = $source['has_failures'];
+        }
+
+        if (isset($source['per_page'])) {
+            $filters['limit'] = $source['per_page'];
+        }
+
+        return $filters;
+    }
+
+    private function resolvePerPage(int $defaultLimit, array $source): int
+    {
+        $perPage = (int) ($source['per_page'] ?? 0);
+        $allowed = [25, 50, 100];
+
+        if (!in_array($perPage, $allowed, true)) {
+            $perPage = $defaultLimit;
+        }
+
+        if (!in_array($perPage, $allowed, true)) {
+            $perPage = 25;
+        }
+
+        return $perPage;
+    }
+
+    /**
+     * Build query parameters for redirects and links.
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
+     */
+    private function buildQueryParams(array $filters, int $perPage, int $page, ?int $savedFilterId = null): array
+    {
         $params = [];
 
-        if (!empty($_POST['domain'])) {
-            $params['domain'] = $_POST['domain'];
-        }
-        if (!empty($_POST['disposition'])) {
-            $params['disposition'] = $_POST['disposition'];
-        }
-        if (!empty($_POST['date_from'])) {
-            $params['date_from'] = $_POST['date_from'];
-        }
-        if (!empty($_POST['date_to'])) {
-            $params['date_to'] = $_POST['date_to'];
+        $map = [
+            'domain' => 'domain',
+            'disposition' => 'disposition',
+            'date_from' => 'date_from',
+            'date_to' => 'date_to',
+            'org_name' => 'org_name',
+            'source_ip' => 'source_ip',
+            'dkim_result' => 'dkim_result',
+            'spf_result' => 'spf_result',
+            'header_from' => 'header_from',
+            'envelope_from' => 'envelope_from',
+            'envelope_to' => 'envelope_to',
+            'ownership_contact' => 'ownership_contact',
+            'enforcement_level' => 'enforcement_level',
+            'report_id' => 'report_id',
+            'reporter_email' => 'reporter_email',
+            'min_volume' => 'min_volume',
+            'max_volume' => 'max_volume',
+        ];
+
+        foreach ($map as $filterKey => $param) {
+            if (!array_key_exists($filterKey, $filters)) {
+                continue;
+            }
+
+            $value = $filters[$filterKey];
+
+            if (is_array($value)) {
+                $params[$param] = $value;
+            } elseif ($value !== '' && $value !== null) {
+                $params[$param] = $value;
+            }
         }
 
-        $queryString = http_build_query($params);
-        $url = '/reports' . ($queryString ? '?' . $queryString : '');
+        if (!empty($filters['disposition']) && is_array($filters['disposition'])) {
+            $params['disposition'] = $filters['disposition'];
+        }
 
-        header('Location: ' . $url);
-        exit();
+        if (!empty($filters['sort_by'])) {
+            $params['sort'] = $filters['sort_by'];
+        }
+
+        if (!empty($filters['sort_dir'])) {
+            $params['dir'] = strtoupper((string) $filters['sort_dir']);
+        }
+
+        if (!empty($filters['has_failures'])) {
+            $params['has_failures'] = '1';
+        }
+
+        $params['per_page'] = $perPage;
+        $params['page'] = max(1, $page);
+
+        if ($savedFilterId) {
+            $params['saved_filter_id'] = $savedFilterId;
+        }
+
+        return $params;
+    }
+
+    /**
+     * Prepare filter payload for persistence to saved filters.
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
+     */
+    private function prepareFiltersForPersistence(array $filters): array
+    {
+        $persistable = $filters;
+        unset($persistable['offset']);
+
+        if (isset($persistable['limit']) && $persistable['limit'] === null) {
+            unset($persistable['limit']);
+        }
+
+        return $persistable;
     }
 
     /**

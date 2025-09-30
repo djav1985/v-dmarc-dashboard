@@ -63,6 +63,11 @@ class Router
             // Reports listing and filtering
             $r->addRoute('GET', '/reports', [\App\Controllers\ReportsController::class, 'handleRequest']);
             $r->addRoute('POST', '/reports', [\App\Controllers\ReportsController::class, 'handleSubmission']);
+            $r->addRoute('GET', '/reports/export/csv', [\App\Controllers\ReportsController::class, 'exportCsv']);
+            $r->addRoute('GET', '/reports/export/xlsx', [\App\Controllers\ReportsController::class, 'exportXlsx']);
+            $r->addRoute('POST', '/reports/saved-filters', [\App\Controllers\SavedReportFiltersController::class, 'store']);
+            $r->addRoute('POST', '/reports/saved-filters/{id:\d+}/update', [\App\Controllers\SavedReportFiltersController::class, 'update']);
+            $r->addRoute('POST', '/reports/saved-filters/{id:\d+}/delete', [\App\Controllers\SavedReportFiltersController::class, 'delete']);
 
             // Individual report details
             $r->addRoute('GET', '/report/{id:\d+}', [\App\Controllers\ReportDetailController::class, 'handleRequest']);
@@ -108,6 +113,10 @@ class Router
             // Branding settings
             $r->addRoute('GET', '/branding', [\App\Controllers\BrandingController::class, 'handleRequest']);
             $r->addRoute('POST', '/branding', [\App\Controllers\BrandingController::class, 'handleSubmission']);
+
+            // Data retention settings
+            $r->addRoute('GET', '/retention-settings', [\App\Controllers\RetentionSettingsController::class, 'handleRequest']);
+            $r->addRoute('POST', '/retention-settings', [\App\Controllers\RetentionSettingsController::class, 'handleSubmission']);
         });
     }
 

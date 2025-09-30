@@ -7,6 +7,38 @@ use App\Core\RBACManager;
 
 class DmarcReport
 {
+    public const FILTERABLE_FIELDS = [
+        'domain',
+        'disposition',
+        'policy_result',
+        'date_from',
+        'date_to',
+        'org_name',
+        'source_ip',
+        'dkim_result',
+        'spf_result',
+        'header_from',
+        'envelope_from',
+        'envelope_to',
+        'ownership_contact',
+        'enforcement_level',
+        'report_id',
+        'reporter_email',
+        'has_failures',
+        'min_volume',
+        'max_volume',
+        'sort_by',
+        'sort_dir',
+        'limit',
+        'offset'
+    ];
+
+    private const FAILURE_VOLUME_EXPR = "COALESCE(SUM(CASE WHEN (dmar.disposition IN ('quarantine','reject') OR COALESCE(dmar.dkim_result, '') NOT IN ('pass') OR COALESCE(dmar.spf_result, '') NOT IN ('pass')) THEN dmar.count ELSE 0 END), 0)";
+
+    private const ALLOWED_DISPOSITIONS = ['none', 'quarantine', 'reject'];
+
+    private const ALLOWED_AUTH_RESULTS = ['pass', 'fail', 'softfail', 'neutral', 'temperror', 'permerror', 'none'];
+
     /**
      * Store an aggregate DMARC report.
      *
@@ -297,21 +329,11 @@ class DmarcReport
             $bindings = $inBindings;
         }
 
-        $db->query('
-            SELECT
-                d.domain,
-                COUNT(dar.id) as report_count,
-                MAX(dar.date_range_end) as last_report_date,
-                SUM(CASE WHEN dmar.disposition = "reject" THEN dmar.count ELSE 0 END) as rejected_count,
-                SUM(CASE WHEN dmar.disposition = "quarantine" THEN dmar.count ELSE 0 END) as quarantined_count,
-                SUM(CASE WHEN dmar.disposition = "none" THEN dmar.count ELSE 0 END) as passed_count
-            FROM domains d
-            LEFT JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
-            LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_end >= :cutoff_timestamp' . $domainFilterClause . '
-            GROUP BY d.id, d.domain
-            ORDER BY report_count DESC
-        ');
+        $query = "\n            SELECT\n                d.domain,\n                COUNT(dar.id) as report_count,\n                MAX(dar.date_range_end) as last_report_date,\n                SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,\n                SUM(CASE WHEN dmar.disposition = 'quarantine' THEN dmar.count ELSE 0 END) as quarantined_count,\n                SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) as passed_count\n            FROM domains d\n            LEFT JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id\n            LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id\n            WHERE dar.date_range_end >= :cutoff_timestamp";
+        $query .= $domainFilterClause;
+        $query .= "\n            GROUP BY d.id, d.domain\n            ORDER BY report_count DESC\n        ";
+
+        $db->query($query);
 
         $db->bind(':cutoff_timestamp', $cutoffTimestamp);
 
@@ -330,88 +352,25 @@ class DmarcReport
      */
     public static function getFilteredReports(array $filters): array
     {
+        $filters = self::normalizeFilterInput($filters);
+
         $db = DatabaseManager::getInstance();
-        $rbac = RBACManager::getInstance();
 
-        $isAdmin = $rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN;
-        $accessibleDomains = $rbac->getAccessibleDomains();
-
-        if (!$isAdmin && empty($accessibleDomains)) {
+        $context = self::buildFilterContext($filters, false);
+        if ($context === null || ($context['abort'] ?? false)) {
             return [];
         }
 
-        $accessibleDomainIds = array_map(static fn($domain) => (int) $domain['id'], $accessibleDomains);
-        $accessibleDomainMap = [];
-        foreach ($accessibleDomains as $domain) {
-            if (isset($domain['domain'])) {
-                $accessibleDomainMap[$domain['domain']] = (int) $domain['id'];
-            }
-        }
-
-        $whereConditions = [];
-        $bindParams = [];
-
-        // Build WHERE clause based on filters
-        if (!empty($filters['domain'])) {
-            if (!$isAdmin && !isset($accessibleDomainMap[$filters['domain']])) {
-                return [];
-            }
-            $whereConditions[] = 'd.domain = :domain';
-            $bindParams[':domain'] = $filters['domain'];
-        }
-
-        if (!empty($filters['disposition'])) {
-            $whereConditions[] = 'dmar.disposition = :disposition';
-            $bindParams[':disposition'] = $filters['disposition'];
-        }
-
-        if (!empty($filters['date_from'])) {
-            $dateFrom = strtotime($filters['date_from']);
-            if ($dateFrom !== false) {
-                $whereConditions[] = 'dar.date_range_begin >= :date_from_ts';
-                $bindParams[':date_from_ts'] = $dateFrom;
-            }
-        }
-
-        if (!empty($filters['date_to'])) {
-            $dateTo = strtotime($filters['date_to'] . ' 23:59:59');
-            if ($dateTo !== false) {
-                $whereConditions[] = 'dar.date_range_end <= :date_to_ts';
-                $bindParams[':date_to_ts'] = $dateTo;
-            }
-        }
-
-        if (!$isAdmin && empty($filters['domain'])) {
-            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
-            $whereConditions[] = 'dar.domain_id IN (' . implode(', ', $placeholders) . ')';
-            $bindParams = array_merge($bindParams, $inBindings);
-        }
-
-        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
-
-        // Build ORDER BY clause
-        $sortBy = $filters['sort_by'] ?? 'dar.received_at';
-        $sortDir = strtoupper($filters['sort_dir'] ?? 'DESC');
-
-        // Validate sort direction
-        if (!in_array($sortDir, ['ASC', 'DESC'])) {
-            $sortDir = 'DESC';
-        }
-
-        // Validate sort column
-        $allowedSortColumns = [
-            'received_at' => 'dar.received_at',
-            'domain' => 'd.domain',
-            'org_name' => 'dar.org_name',
-            'date_range_begin' => 'dar.date_range_begin',
-            'date_range_end' => 'dar.date_range_end',
-            'report_count' => 'total_records'
-        ];
-
-        $orderColumn = $allowedSortColumns[$sortBy] ?? 'dar.received_at';
+        $whereClause = $context['whereClause'] ?? '';
+        $havingClause = $context['havingClause'] ?? '';
+        $orderClause = $context['orderClause'] ?? '';
+        $limit = $context['limit'] ?? null;
+        $offset = $context['offset'] ?? null;
+        $bindings = $context['bindings'] ?? [];
+        $havingBindings = $context['havingBindings'] ?? [];
 
         $query = "
-            SELECT 
+            SELECT
                 dar.id,
                 dar.org_name,
                 dar.email,
@@ -420,32 +379,50 @@ class DmarcReport
                 dar.date_range_end,
                 dar.received_at,
                 d.domain,
+                d.ownership_contact,
+                d.enforcement_level,
                 COUNT(dmar.id) as total_records,
-                SUM(dmar.count) as total_volume,
+                COALESCE(SUM(dmar.count), 0) as total_volume,
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 SUM(CASE WHEN dmar.disposition = 'quarantine' THEN dmar.count ELSE 0 END) as quarantined_count,
                 SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) as passed_count,
                 SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) as dkim_pass_count,
-                SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count
+                SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count,
+                " . self::FAILURE_VOLUME_EXPR . " as failure_volume
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
             $whereClause
-            GROUP BY dar.id, dar.org_name, dar.email, dar.report_id, dar.date_range_begin, 
-                     dar.date_range_end, dar.received_at, d.domain
-            ORDER BY $orderColumn $sortDir
-            LIMIT :limit OFFSET :offset
-        ";
+            GROUP BY dar.id, dar.org_name, dar.email, dar.report_id, dar.date_range_begin,
+                     dar.date_range_end, dar.received_at, d.domain, d.ownership_contact, d.enforcement_level
+            $havingClause
+            $orderClause";
+
+        if ($limit !== null) {
+            $query .= "\n            LIMIT :limit";
+        }
+
+        if ($offset !== null) {
+            $query .= "\n            OFFSET :offset";
+        }
 
         $db->query($query);
 
-        // Bind parameters
-        foreach ($bindParams as $param => $value) {
+        foreach ($bindings as $param => $value) {
             $db->bind($param, $value);
         }
 
-        $db->bind(':limit', (int) ($filters['limit'] ?? 25));
-        $db->bind(':offset', (int) ($filters['offset'] ?? 0));
+        foreach ($havingBindings as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        if ($limit !== null) {
+            $db->bind(':limit', $limit);
+        }
+
+        if ($offset !== null) {
+            $db->bind(':offset', $offset);
+        }
 
         return $db->resultSet();
     }
@@ -458,14 +435,185 @@ class DmarcReport
      */
     public static function getFilteredReportsCount(array $filters): int
     {
+        $filters = self::normalizeFilterInput($filters);
+
         $db = DatabaseManager::getInstance();
+
+        $context = self::buildFilterContext($filters, true);
+        if ($context === null || ($context['abort'] ?? false)) {
+            return 0;
+        }
+
+        $whereClause = $context['whereClause'] ?? '';
+        $havingClause = $context['havingClause'] ?? '';
+        $bindings = $context['bindings'] ?? [];
+        $havingBindings = $context['havingBindings'] ?? [];
+
+        $subQuery = "
+            SELECT dar.id
+            FROM dmarc_aggregate_reports dar
+            JOIN domains d ON dar.domain_id = d.id
+            LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
+            $whereClause
+            GROUP BY dar.id, dar.org_name, dar.email, dar.report_id, dar.date_range_begin,
+                     dar.date_range_end, dar.received_at, d.domain, d.ownership_contact, d.enforcement_level
+            $havingClause
+        ";
+
+        $db->query('SELECT COUNT(*) as total FROM (' . $subQuery . ') as filtered_reports');
+
+        foreach ($bindings as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        foreach ($havingBindings as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        $result = $db->single();
+        return (int) ($result['total'] ?? 0);
+    }
+
+    /**
+     * Normalize the incoming filter payload to ensure consistent handling.
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
+     */
+    public static function normalizeFilterInput(array $filters): array
+    {
+        $normalized = [];
+
+        foreach ($filters as $key => $value) {
+            if (!in_array($key, self::FILTERABLE_FIELDS, true)) {
+                continue;
+            }
+
+            switch ($key) {
+                case 'domain':
+                    if (is_array($value)) {
+                        $domains = array_values(array_filter(array_map(static fn($domain) => trim((string) $domain), $value)));
+                        if (!empty($domains)) {
+                            $normalized['domain'] = $domains;
+                        }
+                    } else {
+                        $domain = trim((string) $value);
+                        if ($domain !== '') {
+                            $normalized['domain'] = $domain;
+                        }
+                    }
+                    break;
+                case 'disposition':
+                case 'policy_result':
+                    if (is_array($value)) {
+                        $dispositions = array_values(array_filter(array_map(static function ($item) {
+                            $val = strtolower(trim((string) $item));
+                            return in_array($val, self::ALLOWED_DISPOSITIONS, true) ? $val : null;
+                        }, $value)));
+                        if (!empty($dispositions)) {
+                            $normalized['disposition'] = $dispositions;
+                        }
+                    } else {
+                        $val = strtolower(trim((string) $value));
+                        if (in_array($val, self::ALLOWED_DISPOSITIONS, true)) {
+                            $normalized['disposition'] = $val;
+                        }
+                    }
+                    break;
+                case 'date_from':
+                case 'date_to':
+                    $stringValue = trim((string) $value);
+                    if ($stringValue !== '') {
+                        $normalized[$key] = $stringValue;
+                    }
+                    break;
+                case 'org_name':
+                case 'source_ip':
+                case 'header_from':
+                case 'envelope_from':
+                case 'envelope_to':
+                case 'ownership_contact':
+                case 'enforcement_level':
+                case 'report_id':
+                case 'reporter_email':
+                    if (is_array($value)) {
+                        $values = array_values(array_filter(array_map(static fn($item) => trim((string) $item), $value)));
+                        if (!empty($values)) {
+                            $normalized[$key] = $values;
+                        }
+                    } else {
+                        $stringValue = trim((string) $value);
+                        if ($stringValue !== '') {
+                            $normalized[$key] = $stringValue;
+                        }
+                    }
+                    break;
+                case 'dkim_result':
+                case 'spf_result':
+                    $stringValue = strtolower(trim((string) $value));
+                    if (in_array($stringValue, self::ALLOWED_AUTH_RESULTS, true)) {
+                        $normalized[$key] = $stringValue;
+                    }
+                    break;
+                case 'has_failures':
+                    $normalized[$key] = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+                    if ($normalized[$key] === null) {
+                        unset($normalized[$key]);
+                    }
+                    break;
+                case 'min_volume':
+                case 'max_volume':
+                    if ($value === null || $value === '') {
+                        break;
+                    }
+                    $intValue = (int) $value;
+                    if ($intValue >= 0) {
+                        $normalized[$key] = $intValue;
+                    }
+                    break;
+                case 'sort_by':
+                case 'sort_dir':
+                    $normalized[$key] = $value;
+                    break;
+                case 'limit':
+                    if ($value === null || $value === '') {
+                        $normalized[$key] = null;
+                        break;
+                    }
+                    $limit = (int) $value;
+                    $normalized[$key] = $limit > 0 ? $limit : null;
+                    break;
+                case 'offset':
+                    $offset = max(0, (int) $value);
+                    $normalized[$key] = $offset;
+                    break;
+            }
+        }
+
+        if (!isset($normalized['disposition']) && isset($normalized['policy_result'])) {
+            $normalized['disposition'] = $normalized['policy_result'];
+        }
+
+        unset($normalized['policy_result']);
+
+        return $normalized;
+    }
+
+    /**
+     * Build SQL fragments for the provided filters.
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>|null
+     */
+    private static function buildFilterContext(array $filters, bool $forCount): ?array
+    {
         $rbac = RBACManager::getInstance();
 
         $isAdmin = $rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN;
         $accessibleDomains = $rbac->getAccessibleDomains();
 
         if (!$isAdmin && empty($accessibleDomains)) {
-            return 0;
+            return ['abort' => true];
         }
 
         $accessibleDomainIds = array_map(static fn($domain) => (int) $domain['id'], $accessibleDomains);
@@ -477,63 +625,233 @@ class DmarcReport
         }
 
         $whereConditions = [];
-        $bindParams = [];
+        $bindings = [];
+        $havingConditions = [];
+        $havingBindings = [];
 
-        // Build WHERE clause based on filters
+        // Domain scoping
         if (!empty($filters['domain'])) {
-            if (!$isAdmin && !isset($accessibleDomainMap[$filters['domain']])) {
-                return 0;
+            $domains = is_array($filters['domain']) ? $filters['domain'] : [$filters['domain']];
+            $domains = array_values(array_unique(array_filter(array_map(static fn($domain) => trim((string) $domain), $domains))));
+
+            if (empty($domains)) {
+                return ['abort' => true];
             }
-            $whereConditions[] = 'd.domain = :domain';
-            $bindParams[':domain'] = $filters['domain'];
+
+            if (!$isAdmin) {
+                foreach ($domains as $domainName) {
+                    if (!isset($accessibleDomainMap[$domainName])) {
+                        return ['abort' => true];
+                    }
+                }
+            }
+
+            $placeholders = [];
+            foreach ($domains as $index => $domainName) {
+                $placeholder = ':domain_' . $index;
+                $placeholders[] = $placeholder;
+                $bindings[$placeholder] = $domainName;
+            }
+
+            if (!empty($placeholders)) {
+                $whereConditions[] = 'd.domain IN (' . implode(', ', $placeholders) . ')';
+            }
+        } elseif (!$isAdmin) {
+            if (empty($accessibleDomainIds)) {
+                return ['abort' => true];
+            }
+
+            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+            if (empty($placeholders)) {
+                return ['abort' => true];
+            }
+
+            $whereConditions[] = 'dar.domain_id IN (' . implode(', ', $placeholders) . ')';
+            $bindings = array_merge($bindings, $inBindings);
         }
 
         if (!empty($filters['disposition'])) {
-            $whereConditions[] = 'dmar.disposition = :disposition';
-            $bindParams[':disposition'] = $filters['disposition'];
+            $dispositions = is_array($filters['disposition']) ? $filters['disposition'] : [$filters['disposition']];
+            $dispositions = array_values(array_filter(array_map(static fn($value) => strtolower(trim((string) $value)), $dispositions)));
+
+            if (!empty($dispositions)) {
+                $placeholders = [];
+                foreach ($dispositions as $index => $value) {
+                    if (!in_array($value, self::ALLOWED_DISPOSITIONS, true)) {
+                        continue;
+                    }
+                    $placeholder = ':disposition_' . $index;
+                    $placeholders[] = $placeholder;
+                    $bindings[$placeholder] = $value;
+                }
+
+                if (!empty($placeholders)) {
+                    $whereConditions[] = 'dmar.disposition IN (' . implode(', ', $placeholders) . ')';
+                }
+            }
         }
 
         if (!empty($filters['date_from'])) {
             $dateFrom = strtotime($filters['date_from']);
             if ($dateFrom !== false) {
+                $bindings[':date_from_ts'] = $dateFrom;
                 $whereConditions[] = 'dar.date_range_begin >= :date_from_ts';
-                $bindParams[':date_from_ts'] = $dateFrom;
             }
         }
 
         if (!empty($filters['date_to'])) {
             $dateTo = strtotime($filters['date_to'] . ' 23:59:59');
             if ($dateTo !== false) {
+                $bindings[':date_to_ts'] = $dateTo;
                 $whereConditions[] = 'dar.date_range_end <= :date_to_ts';
-                $bindParams[':date_to_ts'] = $dateTo;
             }
         }
 
-        if (!$isAdmin && empty($filters['domain'])) {
-            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
-            $whereConditions[] = 'dar.domain_id IN (' . implode(', ', $placeholders) . ')';
-            $bindParams = array_merge($bindParams, $inBindings);
+        if (!empty($filters['org_name'])) {
+            $placeholder = ':org_name';
+            $bindings[$placeholder] = '%' . str_replace('%', '\\%', $filters['org_name']) . '%';
+            $whereConditions[] = 'dar.org_name LIKE ' . $placeholder;
+        }
+
+        if (!empty($filters['report_id'])) {
+            $placeholder = ':report_id_exact';
+            $bindings[$placeholder] = $filters['report_id'];
+            $whereConditions[] = 'dar.report_id = ' . $placeholder;
+        }
+
+        if (!empty($filters['reporter_email'])) {
+            $placeholder = ':reporter_email';
+            $bindings[$placeholder] = '%' . str_replace('%', '\\%', $filters['reporter_email']) . '%';
+            $whereConditions[] = 'dar.email LIKE ' . $placeholder;
+        }
+
+        if (!empty($filters['source_ip'])) {
+            $value = is_array($filters['source_ip']) ? $filters['source_ip'][0] : $filters['source_ip'];
+            $placeholder = ':source_ip';
+            $likeValue = str_replace('*', '%', $value);
+            if (!str_contains($likeValue, '%')) {
+                $likeValue = '%' . $likeValue . '%';
+            }
+            $bindings[$placeholder] = $likeValue;
+            $whereConditions[] = 'dmar.source_ip LIKE ' . $placeholder;
+        }
+
+        if (!empty($filters['dkim_result'])) {
+            $placeholder = ':dkim_result';
+            $bindings[$placeholder] = $filters['dkim_result'];
+            $whereConditions[] = "LOWER(COALESCE(dmar.dkim_result, '')) = LOWER($placeholder)";
+        }
+
+        if (!empty($filters['spf_result'])) {
+            $placeholder = ':spf_result';
+            $bindings[$placeholder] = $filters['spf_result'];
+            $whereConditions[] = "LOWER(COALESCE(dmar.spf_result, '')) = LOWER($placeholder)";
+        }
+
+        foreach (['header_from' => 'dmar.header_from', 'envelope_from' => 'dmar.envelope_from', 'envelope_to' => 'dmar.envelope_to'] as $filterKey => $column) {
+            if (!empty($filters[$filterKey])) {
+                $value = is_array($filters[$filterKey]) ? $filters[$filterKey][0] : $filters[$filterKey];
+                $placeholder = ':' . $filterKey;
+                $bindings[$placeholder] = '%' . str_replace('%', '\\%', $value) . '%';
+                $whereConditions[] = $column . ' LIKE ' . $placeholder;
+            }
+        }
+
+        if (!empty($filters['ownership_contact'])) {
+            $value = is_array($filters['ownership_contact']) ? $filters['ownership_contact'][0] : $filters['ownership_contact'];
+            $placeholder = ':ownership_contact';
+            $bindings[$placeholder] = '%' . str_replace('%', '\\%', $value) . '%';
+            $whereConditions[] = 'd.ownership_contact LIKE ' . $placeholder;
+        }
+
+        if (!empty($filters['enforcement_level'])) {
+            $levels = is_array($filters['enforcement_level']) ? $filters['enforcement_level'] : [$filters['enforcement_level']];
+            $levels = array_values(array_filter(array_map(static fn($value) => trim((string) $value), $levels)));
+            if (!empty($levels)) {
+                $placeholders = [];
+                foreach ($levels as $index => $level) {
+                    $placeholder = ':enforcement_' . $index;
+                    $placeholders[] = $placeholder;
+                    $bindings[$placeholder] = $level;
+                }
+                if (!empty($placeholders)) {
+                    $whereConditions[] = 'd.enforcement_level IN (' . implode(', ', $placeholders) . ')';
+                }
+            }
+        }
+
+        if (!empty($filters['min_volume'])) {
+            $havingConditions[] = 'COALESCE(SUM(dmar.count), 0) >= :min_volume';
+            $havingBindings[':min_volume'] = (int) $filters['min_volume'];
+        }
+
+        if (!empty($filters['max_volume'])) {
+            $havingConditions[] = 'COALESCE(SUM(dmar.count), 0) <= :max_volume';
+            $havingBindings[':max_volume'] = (int) $filters['max_volume'];
+        }
+
+        if (($filters['has_failures'] ?? false) === true) {
+            $havingConditions[] = self::FAILURE_VOLUME_EXPR . ' > 0';
         }
 
         $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+        $havingClause = !empty($havingConditions) ? 'HAVING ' . implode(' AND ', $havingConditions) : '';
 
-        $query = "
-            SELECT COUNT(DISTINCT dar.id) as total
-            FROM dmarc_aggregate_reports dar
-            JOIN domains d ON dar.domain_id = d.id
-            LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            $whereClause
-        ";
+        $sortBy = (string) ($filters['sort_by'] ?? 'received_at');
+        $sortDir = strtoupper((string) ($filters['sort_dir'] ?? 'DESC'));
 
-        $db->query($query);
-
-        // Bind parameters
-        foreach ($bindParams as $param => $value) {
-            $db->bind($param, $value);
+        if (!in_array($sortDir, ['ASC', 'DESC'], true)) {
+            $sortDir = 'DESC';
         }
 
-        $result = $db->single();
-        return (int) ($result['total'] ?? 0);
+        $allowedSortColumns = [
+            'received_at' => 'dar.received_at',
+            'domain' => 'd.domain',
+            'org_name' => 'dar.org_name',
+            'date_range_begin' => 'dar.date_range_begin',
+            'date_range_end' => 'dar.date_range_end',
+            'total_records' => 'total_records',
+            'total_volume' => 'total_volume',
+            'failure_volume' => 'failure_volume',
+            'rejected_count' => 'rejected_count',
+            'quarantined_count' => 'quarantined_count',
+            'passed_count' => 'passed_count',
+            'dkim_pass_count' => 'dkim_pass_count',
+            'spf_pass_count' => 'spf_pass_count',
+            'enforcement_level' => 'd.enforcement_level',
+            'ownership_contact' => 'd.ownership_contact'
+        ];
+
+        $orderColumn = $allowedSortColumns[$sortBy] ?? 'dar.received_at';
+        $orderClause = 'ORDER BY ' . $orderColumn . ' ' . $sortDir;
+
+        $limit = $filters['limit'] ?? ($forCount ? null : 25);
+        $offset = $filters['offset'] ?? ($forCount ? null : 0);
+
+        if ($limit !== null) {
+            $limit = max(1, (int) $limit);
+        }
+
+        if ($offset !== null) {
+            $offset = max(0, (int) $offset);
+        }
+
+        if ($forCount) {
+            $orderClause = '';
+            $limit = null;
+            $offset = null;
+        }
+
+        return [
+            'abort' => false,
+            'whereClause' => $whereClause,
+            'havingClause' => $havingClause,
+            'orderClause' => $orderClause,
+            'bindings' => $bindings,
+            'havingBindings' => $havingBindings,
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
     }
 
     /**

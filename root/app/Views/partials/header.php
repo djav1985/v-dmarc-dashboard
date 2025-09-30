@@ -74,6 +74,12 @@ $brandingVars = $branding->getBrandingVars();
                         </a>
                         <?php endif; ?>
 
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_RETENTION)): ?>
+                        <a class="nav-item" href="/retention-settings">
+                            <i class="icon icon-time"></i> Retention
+                        </a>
+                        <?php endif; ?>
+
                         <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_ANALYTICS)): ?>
                         <a class="nav-item" href="/analytics">
                             <i class="icon icon-bookmark"></i> Analytics
