@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
+require __DIR__ . '/TestHelpers.php';
 
 use App\Controllers\BrandingController;
 use App\Core\SessionManager;
+use function TestHelpers\assertEqual;
+use function TestHelpers\assertContains;
 
 // Mock RBACManager for testing
 class MockRBACManager
@@ -41,25 +44,6 @@ class MockBrandingManager
 // Replace the real classes with mocks
 class_alias('MockRBACManager', 'App\\Core\\RBACManager');
 class_alias('MockBrandingManager', 'App\\Core\\BrandingManager');
-
-/**
- * Simple assertion helper that records failures and reports a helpful message.
- */
-function assertEqual(string $expected, string $actual, string $message, int &$failures): void
-{
-    if ($expected !== $actual) {
-        fwrite(STDERR, $message . " Expected: '$expected', Got: '$actual'" . PHP_EOL);
-        $failures++;
-    }
-}
-
-function assertContains(string $needle, string $haystack, string $message, int &$failures): void
-{
-    if (strpos($haystack, $needle) === false) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
 
 $failures = 0;
 

@@ -4,23 +4,15 @@ declare(strict_types=1);
 
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
+require __DIR__ . '/TestHelpers.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-$_SESSION['csrf_token'] = $_SESSION['csrf_token'] ?? 'test-token';
+use function TestHelpers\assertContains;
 
-/**
- * Simple assertion helper that records failures and reports a helpful message.
- */
-function assertContains(string $needle, string $haystack, string $message, int &$failures): void
-{
-    if (strpos($haystack, $needle) === false) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
+$_SESSION['csrf_token'] = $_SESSION['csrf_token'] ?? 'test-token';
 
 $failures = 0;
 

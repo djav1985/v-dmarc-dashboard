@@ -4,23 +4,15 @@ declare(strict_types=1);
 
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
+require __DIR__ . '/TestHelpers.php';
+
+use function TestHelpers\assertPredicate;
 
 /**
  * Test AuditLogger edge cases and verify database compatibility
  */
 
 $failures = 0;
-
-/**
- * Simple assertion helper that records failures and reports a helpful message.
- */
-function assertPredicate(bool $condition, string $message, int &$failures): void
-{
-    if (!$condition) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
 
 // Test timestamp generation with various parameters
 function testTimestampGenerationEdgeCases(): string

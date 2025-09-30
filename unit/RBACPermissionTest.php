@@ -5,6 +5,7 @@ define('PHPUNIT_RUNNING', true);
 
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
+require __DIR__ . '/TestHelpers.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -16,38 +17,10 @@ use App\Core\RBACManager;
 use App\Models\Domain;
 use App\Models\DomainGroup;
 use App\Models\DmarcReport;
-
-function assertTrue(bool $condition, string $message, int &$failures): void
-{
-    if (!$condition) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
-
-function assertFalse(bool $condition, string $message, int &$failures): void
-{
-    if ($condition) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
-
-function assertEquals($expected, $actual, string $message, int &$failures): void
-{
-    if ($expected !== $actual) {
-        fwrite(STDERR, $message . ' Expected ' . var_export($expected, true) . ' got ' . var_export($actual, true) . PHP_EOL);
-        $failures++;
-    }
-}
-
-function assertCountEquals(int $expected, array $actual, string $message, int &$failures): void
-{
-    if (count($actual) !== $expected) {
-        fwrite(STDERR, $message . ' Expected count ' . $expected . ' got ' . count($actual) . PHP_EOL);
-        $failures++;
-    }
-}
+use function TestHelpers\assertTrue;
+use function TestHelpers\assertFalse;
+use function TestHelpers\assertEquals;
+use function TestHelpers\assertCountEquals;
 
 function resetSession(): void
 {

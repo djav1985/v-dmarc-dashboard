@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
+require __DIR__ . '/TestHelpers.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -12,33 +13,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 use App\Controllers\UserManagementController;
 use App\Core\SessionManager;
 use App\Helpers\MessageHelper;
-
-/**
- * Simple assertion helper that records failures and reports a helpful message.
- */
-function assertContains(string $needle, string $haystack, string $message, int &$failures): void
-{
-    if (strpos($haystack, $needle) === false) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
-
-function assertTrue(bool $condition, string $message, int &$failures): void
-{
-    if (!$condition) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
-
-function assertFalse(bool $condition, string $message, int &$failures): void
-{
-    if ($condition) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
+use function TestHelpers\assertTrue;
+use function TestHelpers\assertFalse;
+use function TestHelpers\assertContains;
 
 $failures = 0;
 
