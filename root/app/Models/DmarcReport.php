@@ -204,6 +204,9 @@ class DmarcReport
         $domainFilterClause = '';
         $bindings = [];
 
+        $normalizedDays = max(0, $days);
+        $cutoffTimestamp = time() - ($normalizedDays * 24 * 60 * 60);
+
         if (!$isAdmin) {
             $accessibleDomainIds = self::getAccessibleDomainIds();
 
@@ -227,12 +230,12 @@ class DmarcReport
             FROM domains d
             LEFT JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_end >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :days DAY))' . $domainFilterClause . '
+            WHERE dar.date_range_end >= :cutoff_timestamp' . $domainFilterClause . '
             GROUP BY d.id, d.domain
             ORDER BY report_count DESC
         ');
 
-        $db->bind(':days', $days);
+        $db->bind(':cutoff_timestamp', $cutoffTimestamp);
 
         foreach ($bindings as $placeholder => $value) {
             $db->bind($placeholder, $value);
@@ -285,13 +288,19 @@ class DmarcReport
         }
 
         if (!empty($filters['date_from'])) {
-            $whereConditions[] = 'dar.date_range_begin >= UNIX_TIMESTAMP(:date_from)';
-            $bindParams[':date_from'] = $filters['date_from'];
+            $dateFrom = strtotime($filters['date_from']);
+            if ($dateFrom !== false) {
+                $whereConditions[] = 'dar.date_range_begin >= :date_from_ts';
+                $bindParams[':date_from_ts'] = $dateFrom;
+            }
         }
 
         if (!empty($filters['date_to'])) {
-            $whereConditions[] = 'dar.date_range_end <= UNIX_TIMESTAMP(:date_to)';
-            $bindParams[':date_to'] = $filters['date_to'] . ' 23:59:59';
+            $dateTo = strtotime($filters['date_to'] . ' 23:59:59');
+            if ($dateTo !== false) {
+                $whereConditions[] = 'dar.date_range_end <= :date_to_ts';
+                $bindParams[':date_to_ts'] = $dateTo;
+            }
         }
 
         if (!$isAdmin && empty($filters['domain'])) {
@@ -407,13 +416,19 @@ class DmarcReport
         }
 
         if (!empty($filters['date_from'])) {
-            $whereConditions[] = 'dar.date_range_begin >= UNIX_TIMESTAMP(:date_from)';
-            $bindParams[':date_from'] = $filters['date_from'];
+            $dateFrom = strtotime($filters['date_from']);
+            if ($dateFrom !== false) {
+                $whereConditions[] = 'dar.date_range_begin >= :date_from_ts';
+                $bindParams[':date_from_ts'] = $dateFrom;
+            }
         }
 
         if (!empty($filters['date_to'])) {
-            $whereConditions[] = 'dar.date_range_end <= UNIX_TIMESTAMP(:date_to)';
-            $bindParams[':date_to'] = $filters['date_to'] . ' 23:59:59';
+            $dateTo = strtotime($filters['date_to'] . ' 23:59:59');
+            if ($dateTo !== false) {
+                $whereConditions[] = 'dar.date_range_end <= :date_to_ts';
+                $bindParams[':date_to_ts'] = $dateTo;
+            }
         }
 
         if (!$isAdmin && empty($filters['domain'])) {

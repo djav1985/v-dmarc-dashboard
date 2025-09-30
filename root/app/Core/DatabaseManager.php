@@ -272,6 +272,25 @@ class DatabaseManager
     }
 
     /**
+     * Retrieve the configured database driver name.
+     */
+    public function getDriverName(): string
+    {
+        $this->connect();
+
+        $params = self::$dbh->getParams();
+        if (isset($params['driver'])) {
+            return (string) $params['driver'];
+        }
+
+        try {
+            return self::$dbh->getDatabasePlatform()->getName();
+        } catch (\Throwable) {
+            return '';
+        }
+    }
+
+    /**
      * Check if the exception indicates a lost connection.
      *
      * @param DBALException $e
