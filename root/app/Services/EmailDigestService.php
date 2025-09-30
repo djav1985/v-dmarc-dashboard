@@ -38,7 +38,7 @@ class EmailDigestService
             }
 
             [$startDate, $endDate] = self::determinePeriod($schedule, $referenceTime, $parsedFrequency);
-            $digestData = EmailDigest::generateDigestData((int) $schedule['id'], $startDate, $endDate);
+            $digestData = EmailDigest::generateDigestData((int) $schedule['id'], $startDate, $endDate, true);
 
             $recipients = json_decode($schedule['recipients'] ?? '[]', true) ?? [];
             $subject = self::buildSubject($schedule['name'] ?? 'DMARC Digest', $startDate, $endDate);
