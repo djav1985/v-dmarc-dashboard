@@ -61,6 +61,7 @@ This document sets baseline expectations for contributors to ensure code quality
 1. **Implement Changes**
    - Make requested updates, fixes, or new features.
    - Keep commits small, focused, and reviewable.
+   - Do not reinstall dependencies if they already exist; update them instead to improve speed.
 
 2. **Write or Update Tests**
    - Add tests for all new features, bug fixes, and refactors.
