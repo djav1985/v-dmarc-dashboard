@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Script to set up a demo SQLite database for the DMARC Dashboard
 
 cd "$(dirname "$0")"
@@ -10,7 +11,7 @@ fi
 
 # Create the database using SQLite
 echo "Creating SQLite database..."
-sqlite3 demo.db < root/install/install.sql
+sqlite3 demo.db < install.sql
 
 # Add some sample data for demonstration
 echo "Adding sample data..."
