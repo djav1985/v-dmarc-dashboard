@@ -16,6 +16,7 @@ class Analytics
      * @param string $endDate
      * @param string $domain
      * @param int|null $groupId
+     * @param string|null $domainFilter
      * @return array
      */
     public static function getTrendData(
@@ -85,8 +86,12 @@ class Analytics
      * @param int|null $groupId
      * @return array
      */
-    public static function getDomainHealthScores(string $startDate, string $endDate, ?int $groupId = null): array
-    {
+    public static function getDomainHealthScores(
+        string $startDate,
+        string $endDate,
+        ?int $groupId = null,
+        ?string $domainFilter = null
+    ): array {
         $db = DatabaseManager::getInstance();
 
         $groupJoin = '';
@@ -94,6 +99,11 @@ class Analytics
         if ($groupId !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
+        }
+
+        $domainClause = '';
+        if ($domainFilter !== null && $domainFilter !== '') {
+            $domainClause = 'AND d.domain = :domain';
         }
 
         $query = "
@@ -107,8 +117,19 @@ class Analytics
                 SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) as dkim_pass_count,
                 SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count,
                 ROUND(
-                    (SUM(CASE WHEN dmar.disposition = 'none' AND dmar.dkim_result = 'pass' AND dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) /
-                    NULLIF(SUM(dmar.count), 0), 2
+                    (
+                        SUM(
+                            CASE
+                                WHEN dmar.disposition = 'none'
+                                    AND dmar.dkim_result = 'pass'
+                                    AND dmar.spf_result = 'pass'
+                                THEN dmar.count
+                                ELSE 0
+                            END
+                        ) * 100.0
+                    ) /
+                    NULLIF(SUM(dmar.count), 0),
+                    2
                 ) as health_score
             FROM domains d
             JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
@@ -116,6 +137,7 @@ class Analytics
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
             WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
+            $domainClause
             $groupClause
             GROUP BY d.id, d.domain
             HAVING total_volume > 0
@@ -127,6 +149,9 @@ class Analytics
         $db->bind(':end_date', strtotime($endDate . ' 23:59:59'));
         if ($groupId !== null) {
             $db->bind(':group_id', $groupId);
+        }
+        if ($domainFilter !== null && $domainFilter !== '') {
+            $db->bind(':domain', $domainFilter);
         }
 
         $results = $db->resultSet();

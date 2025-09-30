@@ -46,3 +46,4 @@ All notable changes to this project will be documented in this file.
 - Resolved digest summaries, domain breakdowns, and threat rollups to skip domain-group joins unless filtering so multi-group domains do not inflate totals.
 - Unified UPSERT handling through the DatabaseManager helper so blacklist bans and retention updates run on both SQLite and MySQL, with dedicated regression coverage.
 - Ensured domain-group analytics retains empty-traffic groups and reports zeroed metrics alongside valid aggregations.
+- Corrected domain health analytics and PDF exports to honour explicit domain filters alongside existing group scoping.

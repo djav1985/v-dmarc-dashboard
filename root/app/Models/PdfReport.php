@@ -133,7 +133,9 @@ class PdfReport
      */
     private static function generateDomainHealthData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getDomainHealthScores($startDate, $endDate, $groupFilter);
+        $domain = $domainFilter !== '' ? $domainFilter : null;
+
+        return \App\Models\Analytics::getDomainHealthScores($startDate, $endDate, $groupFilter, $domain);
     }
 
     /**
