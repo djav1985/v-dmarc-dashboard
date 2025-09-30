@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 # Script to set up a demo SQLite database for the DMARC Dashboard
 
-cd "$(dirname "$0")"
+
+# Always work from repo root for DB creation
+cd "$(dirname "$0")/../.."
+
 
 # Remove existing demo database if it exists
-if [ -f "demo.db" ]; then
+if [ -f "root/demo.db" ]; then
     echo "Removing existing demo database..."
-    rm demo.db
+    rm root/demo.db
 fi
+
 
 # Create the database using SQLite
 echo "Creating SQLite database..."
-sqlite3 demo.db < install.sql
+sqlite3 root/demo.db < root/install/install.sql
 
 # Add some sample data for demonstration
 echo "Adding sample data..."
-sqlite3 demo.db << 'EOF'
+sqlite3 root/demo.db << 'EOF'
 -- Insert sample domains
 INSERT INTO domains (domain) VALUES 
 ('example.com'),
