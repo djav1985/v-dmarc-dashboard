@@ -174,13 +174,15 @@ class AlertController extends Controller
 
         if ($incidentId > 0) {
             $db = \App\Core\DatabaseManager::getInstance();
+            $acknowledgedAt = date('Y-m-d H:i:s');
             $db->query('
-                UPDATE alert_incidents 
-                SET status = "acknowledged", acknowledged_by = :acknowledged_by, acknowledged_at = datetime("now")
+                UPDATE alert_incidents
+                SET status = "acknowledged", acknowledged_by = :acknowledged_by, acknowledged_at = :acknowledged_at
                 WHERE id = :incident_id
             ');
             $db->bind(':incident_id', $incidentId);
             $db->bind(':acknowledged_by', $acknowledgedBy);
+            $db->bind(':acknowledged_at', $acknowledgedAt);
             $db->execute();
         }
     }

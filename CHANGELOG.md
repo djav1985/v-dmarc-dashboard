@@ -26,3 +26,4 @@ All notable changes to this project will be documented in this file.
 - Stopped tracking the generated SQLite demo database in version control and documented how to recreate it from the consolidated installer.
 - Updated digest schedule persistence, analytics date expressions, and user deletion handling for cross-database compatibility and safer transaction rollbacks.
 - Ensured IMAP attachment processing always cleans up temporary files and logs the failing path for diagnostics.
+- Standardized alert metrics, incident acknowledgement, and GeoIP cache cleanup to bind ISO timestamps for cross-database compatibility and added regression coverage for non-SQLite drivers.
