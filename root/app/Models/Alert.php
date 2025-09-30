@@ -135,10 +135,14 @@ class Alert
             $bindParams[':domain_filter'] = $rule['domain_filter'];
         }
 
-        if (!empty($rule['group_filter'])) {
-            $filterClauses[] = 'dga.group_id = :group_filter';
+        $hasGroupFilter = !empty($rule['group_filter']);
+        if ($hasGroupFilter) {
             $bindParams[':group_filter'] = $rule['group_filter'];
         }
+
+        $groupJoinClause = $hasGroupFilter
+            ? 'JOIN domain_group_assignments dga ON d.id = dga.domain_id AND dga.group_id = :group_filter'
+            : '';
 
         $whereClause = '';
         if (!empty($filterClauses)) {
@@ -153,7 +157,7 @@ class Alert
                         NULLIF(SUM(dmar.count), 0) as value
                     FROM dmarc_aggregate_reports dar
                     JOIN domains d ON dar.domain_id = d.id
-                    LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
+                    $groupJoinClause
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
                     WHERE dar.received_at >= :start_time
                     $whereClause
@@ -176,7 +180,7 @@ class Alert
                             (SELECT SUM(dmar.count)
                              FROM dmarc_aggregate_reports dar
                              JOIN domains d ON dar.domain_id = d.id
-                             LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
+                             $groupJoinClause
                              LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
                              WHERE dar.received_at >= :start_time
                              $whereClause
@@ -184,7 +188,7 @@ class Alert
                             (SELECT SUM(dmar.count)
                              FROM dmarc_aggregate_reports dar
                              JOIN domains d ON dar.domain_id = d.id
-                             LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
+                             $groupJoinClause
                              LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
                              WHERE dar.received_at >= :prev_start_time
                              AND dar.received_at < :start_time
@@ -202,9 +206,9 @@ class Alert
                     $historicalFilterClauses[] = 'd2.domain = :domain_filter';
                 }
 
-                if (!empty($rule['group_filter'])) {
-                    $historicalFilterClauses[] = 'dga2.group_id = :group_filter';
-                }
+                $historicalGroupJoinClause = $hasGroupFilter
+                    ? 'JOIN domain_group_assignments dga2 ON d2.id = dga2.domain_id AND dga2.group_id = :group_filter'
+                    : '';
 
                 $historicalWhereClause = '';
                 if (!empty($historicalFilterClauses)) {
@@ -215,7 +219,7 @@ class Alert
                     SELECT COUNT(DISTINCT dmar.source_ip) as value
                     FROM dmarc_aggregate_reports dar
                     JOIN domains d ON dar.domain_id = d.id
-                    LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
+                    $groupJoinClause
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
                     WHERE dar.received_at >= :start_time
                     AND dmar.disposition IN ('quarantine', 'reject')
@@ -224,7 +228,7 @@ class Alert
                         FROM dmarc_aggregate_records dmar2
                         JOIN dmarc_aggregate_reports dar2 ON dmar2.report_id = dar2.id
                         JOIN domains d2 ON dar2.domain_id = d2.id
-                        LEFT JOIN domain_group_assignments dga2 ON d2.id = dga2.domain_id
+                        $historicalGroupJoinClause
                         WHERE dar2.received_at < :start_time
                         $historicalWhereClause
                     )
@@ -237,7 +241,7 @@ class Alert
                     SELECT SUM(dmar.count) as value
                     FROM dmarc_aggregate_reports dar
                     JOIN domains d ON dar.domain_id = d.id
-                    LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
+                    $groupJoinClause
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
                     WHERE dar.received_at >= :start_time
                     AND dmar.spf_result != 'pass'
