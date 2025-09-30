@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feedback>
+    <report_metadata>
+        <org_name>Forensic Org</org_name>
+        <email>ruf@example.org</email>
+        <report_id>forensic-123</report_id>
+    </report_metadata>
+    <policy_published>
+        <domain>forensic.example</domain>
+        <adkim>r</adkim>
+        <aspf>r</aspf>
+        <p>none</p>
+        <pct>100</pct>
+    </policy_published>
+    <record>
+        <row>
+            <source_ip>203.0.113.9</source_ip>
+            <policy_evaluated>
+                <disposition>none</disposition>
+                <dkim>fail</dkim>
+                <spf>fail</spf>
+            </policy_evaluated>
+        </row>
+        <identifiers>
+            <header_from>forensic.example</header_from>
+        </identifiers>
+        <auth_results>
+            <dkim>
+                <domain>forensic.example</domain>
+                <selector>selector1</selector>
+                <result>fail</result>
+            </dkim>
+            <spf>
+                <domain>forensic.example</domain>
+                <result>fail</result>
+            </spf>
+        </auth_results>
+    </record>
+    <arrival_date>1700007200</arrival_date>
+    <source_ip>203.0.113.9</source_ip>
+    <original_envelope_id>envelope-123</original_envelope_id>
+    <authentication_results>spf=fail smtp.mailfrom=forensic.example; dkim=fail header.d=forensic.example</authentication_results>
+    <original_message>Raw MIME message</original_message>
+</feedback>

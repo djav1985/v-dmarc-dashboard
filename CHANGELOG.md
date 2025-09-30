@@ -27,3 +27,6 @@ All notable changes to this project will be documented in this file.
 - Updated digest schedule persistence, analytics date expressions, and user deletion handling for cross-database compatibility and safer transaction rollbacks.
 - Ensured IMAP attachment processing always cleans up temporary files and logs the failing path for diagnostics.
 - Standardized alert metrics, incident acknowledgement, and GeoIP cache cleanup to bind ISO timestamps for cross-database compatibility and added regression coverage for non-SQLite drivers.
+
+### Fixed
+- Hardened DMARC ingestion to parse forensic single-part payloads and detect gzip/ZIP attachments by signature so reports without filename extensions are still processed.
