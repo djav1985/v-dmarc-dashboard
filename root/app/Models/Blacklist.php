@@ -120,7 +120,7 @@ class Blacklist
         $db->query('
             INSERT INTO ip_blacklist (ip_address, login_attempts, blacklisted, timestamp)
             VALUES (:ip, 0, TRUE, :timestamp)
-            ON DUPLICATE KEY UPDATE blacklisted = TRUE, timestamp = :timestamp
+            ON CONFLICT(ip_address) DO UPDATE SET blacklisted = TRUE, timestamp = :timestamp
         ');
         $db->bind(':ip', $ip);
         $db->bind(':timestamp', $timestamp);
