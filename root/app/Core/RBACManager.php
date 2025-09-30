@@ -247,7 +247,13 @@ class RBACManager
     {
         if (!$this->hasPermission($permission)) {
             http_response_code(403);
-            echo "Access denied. Required permission: $permission";
+            $message = "Access denied. Required permission: $permission";
+
+            if (defined('PHPUNIT_RUNNING') && PHPUNIT_RUNNING) {
+                throw new \RuntimeException($message, 403);
+            }
+
+            echo $message;
             exit();
         }
     }

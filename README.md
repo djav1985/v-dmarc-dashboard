@@ -60,3 +60,19 @@ php cron.php hourly
 ```
 
 Add your custom logic to the switch statement inside `cron.php`.
+
+## Access Control and Data Scoping
+
+Role-based permissions are enforced at the controller entry points through `App\Core\RBACManager::requirePermission()`. Upload, IMAP ingestion, alert administration, domain group management, analytics, report browsing, and the reports management tools now check for their respective capabilities (`upload_reports`, `manage_alerts`, `manage_groups`, `view_analytics`, `view_reports`, etc.) before executing any request or submission logic. Users who lack the required permission receive an HTTP 403 response that explains which capability is missing.
+
+Domain and report data returned to the UI is also filtered through RBAC-aware helpers. The `Domain`, `DomainGroup`, and `DmarcReport` models rely on `RBACManager::getAccessibleDomains()` / `getAccessibleGroups()` (and related access checks) so scoped administrators only see the domains and groups assigned to them. Queries that back dropdowns, analytics summaries, or report detail pages automatically exclude unassigned entities, preventing limited-scope accounts from accessing or enumerating unrelated data.
+
+## Testing
+
+Execute the automated test suite from the repository root:
+
+```bash
+./vendor/bin/phpunit --configuration phpunit.xml.dist
+```
+
+The `unit/RBACPermissionTest.php` script verifies that permission checks deny unauthorised requests and that scoped users cannot retrieve domains, groups, or DMARC reports outside their assignment lists.

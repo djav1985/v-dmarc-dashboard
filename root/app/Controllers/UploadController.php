@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Utilities\DmarcParser;
 use App\Models\DmarcReport;
 use App\Helpers\MessageHelper;
+use App\Core\RBACManager;
 use Exception;
 
 class UploadController extends Controller
@@ -16,6 +17,7 @@ class UploadController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_UPLOAD_REPORTS);
         $this->render('upload');
     }
 
@@ -24,6 +26,7 @@ class UploadController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_UPLOAD_REPORTS);
         if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
             MessageHelper::addMessage('Invalid CSRF token. Please try again.');
             header('Location: /upload');

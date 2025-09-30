@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
 
 class DmarcReport
 {
@@ -88,24 +89,58 @@ class DmarcReport
      * @param int $offset
      * @return array
      */
-    public static function getAggregateReports(int $domainId = null, int $limit = 50, int $offset = 0): array
+    public static function getAggregateReports(?int $domainId = null, int $limit = 50, int $offset = 0): array
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
 
-        $whereClause = $domainId ? 'WHERE dar.domain_id = :domain_id' : '';
-
-        $db->query("
-            SELECT dar.*, d.domain 
-            FROM dmarc_aggregate_reports dar 
-            JOIN domains d ON dar.domain_id = d.id 
-            $whereClause
-            ORDER BY dar.received_at DESC 
-            LIMIT :limit OFFSET :offset
-        ");
-
-        if ($domainId) {
-            $db->bind(':domain_id', $domainId);
+        $domainId = $domainId !== null ? (int) $domainId : null;
+        if ($domainId !== null && $domainId > 0 && !$rbac->canAccessDomain($domainId)) {
+            return [];
         }
+
+        $clauses = [];
+        $bindings = [];
+
+        if ($domainId !== null && $domainId > 0) {
+            $clauses[] = 'dar.domain_id = :domain_id';
+            $bindings[':domain_id'] = $domainId;
+        }
+
+        $isAdmin = $rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN;
+
+        if (!$isAdmin && ($domainId === null || $domainId <= 0)) {
+            $accessibleDomainIds = self::getAccessibleDomainIds();
+
+            if (empty($accessibleDomainIds)) {
+                return [];
+            }
+
+            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+            $clauses[] = 'dar.domain_id IN (' . implode(', ', $placeholders) . ')';
+            $bindings = array_merge($bindings, $inBindings);
+        }
+
+        $whereClause = '';
+        if (!empty($clauses)) {
+            $whereClause = 'WHERE ' . implode(' AND ', $clauses);
+        }
+
+        $db->query(
+            "
+            SELECT dar.*, d.domain
+            FROM dmarc_aggregate_reports dar
+            JOIN domains d ON dar.domain_id = d.id
+            $whereClause
+            ORDER BY dar.received_at DESC
+            LIMIT :limit OFFSET :offset
+        "
+        );
+
+        foreach ($bindings as $param => $value) {
+            $db->bind($param, $value);
+        }
+
         $db->bind(':limit', $limit);
         $db->bind(':offset', $offset);
 
@@ -163,9 +198,26 @@ class DmarcReport
     public static function getDashboardSummary(int $days = 7): array
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        $isAdmin = $rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN;
+        $domainFilterClause = '';
+        $bindings = [];
+
+        if (!$isAdmin) {
+            $accessibleDomainIds = self::getAccessibleDomainIds();
+
+            if (empty($accessibleDomainIds)) {
+                return [];
+            }
+
+            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+            $domainFilterClause = ' AND d.id IN (' . implode(', ', $placeholders) . ')';
+            $bindings = $inBindings;
+        }
 
         $db->query('
-            SELECT 
+            SELECT
                 d.domain,
                 COUNT(dar.id) as report_count,
                 MAX(dar.date_range_end) as last_report_date,
@@ -175,12 +227,17 @@ class DmarcReport
             FROM domains d
             LEFT JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_end >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :days DAY))
+            WHERE dar.date_range_end >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :days DAY))' . $domainFilterClause . '
             GROUP BY d.id, d.domain
             ORDER BY report_count DESC
         ');
 
         $db->bind(':days', $days);
+
+        foreach ($bindings as $placeholder => $value) {
+            $db->bind($placeholder, $value);
+        }
+
         return $db->resultSet();
     }
 
@@ -193,12 +250,31 @@ class DmarcReport
     public static function getFilteredReports(array $filters): array
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        $isAdmin = $rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN;
+        $accessibleDomains = $rbac->getAccessibleDomains();
+
+        if (!$isAdmin && empty($accessibleDomains)) {
+            return [];
+        }
+
+        $accessibleDomainIds = array_map(static fn($domain) => (int) $domain['id'], $accessibleDomains);
+        $accessibleDomainMap = [];
+        foreach ($accessibleDomains as $domain) {
+            if (isset($domain['domain'])) {
+                $accessibleDomainMap[$domain['domain']] = (int) $domain['id'];
+            }
+        }
 
         $whereConditions = [];
         $bindParams = [];
 
         // Build WHERE clause based on filters
         if (!empty($filters['domain'])) {
+            if (!$isAdmin && !isset($accessibleDomainMap[$filters['domain']])) {
+                return [];
+            }
             $whereConditions[] = 'd.domain = :domain';
             $bindParams[':domain'] = $filters['domain'];
         }
@@ -216,6 +292,12 @@ class DmarcReport
         if (!empty($filters['date_to'])) {
             $whereConditions[] = 'dar.date_range_end <= UNIX_TIMESTAMP(:date_to)';
             $bindParams[':date_to'] = $filters['date_to'] . ' 23:59:59';
+        }
+
+        if (!$isAdmin && empty($filters['domain'])) {
+            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+            $whereConditions[] = 'dar.domain_id IN (' . implode(', ', $placeholders) . ')';
+            $bindParams = array_merge($bindParams, $inBindings);
         }
 
         $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
@@ -290,12 +372,31 @@ class DmarcReport
     public static function getFilteredReportsCount(array $filters): int
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        $isAdmin = $rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN;
+        $accessibleDomains = $rbac->getAccessibleDomains();
+
+        if (!$isAdmin && empty($accessibleDomains)) {
+            return 0;
+        }
+
+        $accessibleDomainIds = array_map(static fn($domain) => (int) $domain['id'], $accessibleDomains);
+        $accessibleDomainMap = [];
+        foreach ($accessibleDomains as $domain) {
+            if (isset($domain['domain'])) {
+                $accessibleDomainMap[$domain['domain']] = (int) $domain['id'];
+            }
+        }
 
         $whereConditions = [];
         $bindParams = [];
 
         // Build WHERE clause based on filters
         if (!empty($filters['domain'])) {
+            if (!$isAdmin && !isset($accessibleDomainMap[$filters['domain']])) {
+                return 0;
+            }
             $whereConditions[] = 'd.domain = :domain';
             $bindParams[':domain'] = $filters['domain'];
         }
@@ -313,6 +414,12 @@ class DmarcReport
         if (!empty($filters['date_to'])) {
             $whereConditions[] = 'dar.date_range_end <= UNIX_TIMESTAMP(:date_to)';
             $bindParams[':date_to'] = $filters['date_to'] . ' 23:59:59';
+        }
+
+        if (!$isAdmin && empty($filters['domain'])) {
+            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+            $whereConditions[] = 'dar.domain_id IN (' . implode(', ', $placeholders) . ')';
+            $bindParams = array_merge($bindParams, $inBindings);
         }
 
         $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
@@ -345,10 +452,11 @@ class DmarcReport
     public static function getReportDetails(int $reportId): ?array
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
 
         $db->query('
-            SELECT 
-                dar.*,
+            SELECT
+                dar.*, 
                 d.domain
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
@@ -358,7 +466,15 @@ class DmarcReport
         $db->bind(':report_id', $reportId);
         $result = $db->single();
 
-        return $result ?: null;
+        if (!$result) {
+            return null;
+        }
+
+        if (!$rbac->canAccessDomain((int) $result['domain_id'])) {
+            return null;
+        }
+
+        return $result;
     }
 
     /**
@@ -369,6 +485,10 @@ class DmarcReport
      */
     public static function getAggregateRecords(int $reportId): array
     {
+        if (!self::canAccessReport($reportId)) {
+            return [];
+        }
+
         $db = DatabaseManager::getInstance();
 
         $db->query('
@@ -381,4 +501,55 @@ class DmarcReport
         $db->bind(':report_id', $reportId);
         return $db->resultSet();
     }
+
+    /**
+     * Retrieve the domain IDs accessible to the current user.
+     *
+     * @return array<int>
+     */
+    private static function getAccessibleDomainIds(): array
+    {
+        $accessibleDomains = RBACManager::getInstance()->getAccessibleDomains();
+
+        return array_map(static fn($domain) => (int) $domain['id'], $accessibleDomains);
+    }
+
+    /**
+     * Build placeholders and bindings for a parameterized IN clause.
+     *
+     * @param array<int> $ids
+     * @param string $prefix
+     * @return array{0: array<int, string>, 1: array<string, int>}
+     */
+    private static function buildInClause(array $ids, string $prefix): array
+    {
+        $placeholders = [];
+        $bindings = [];
+
+        foreach (array_values($ids) as $index => $id) {
+            $placeholder = ':' . $prefix . '_' . $index;
+            $placeholders[] = $placeholder;
+            $bindings[$placeholder] = (int) $id;
+        }
+
+        return [$placeholders, $bindings];
+    }
+
+    /**
+     * Determine whether the current user can access a given report.
+     */
+    private static function canAccessReport(int $reportId): bool
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT domain_id FROM dmarc_aggregate_reports WHERE id = :report_id');
+        $db->bind(':report_id', $reportId);
+        $result = $db->single();
+
+        if (!$result) {
+            return false;
+        }
+
+        return RBACManager::getInstance()->canAccessDomain((int) $result['domain_id']);
+    }
 }
+

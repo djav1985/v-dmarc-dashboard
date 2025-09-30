@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\DmarcReport;
 use App\Models\Analytics;
+use App\Core\RBACManager;
 
 /**
  * Analytics Controller for DMARC dashboard analytics and visualizations
@@ -16,6 +17,7 @@ class AnalyticsController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_ANALYTICS);
         // Get date range from parameters (default to show sample data from 2023)
         $endDate = $_GET['end_date'] ?? '2023-10-02';
         $startDate = $_GET['start_date'] ?? '2023-09-28';
@@ -62,6 +64,7 @@ class AnalyticsController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_ANALYTICS);
         // Redirect to GET request with parameters
         $params = [];
 
