@@ -29,15 +29,15 @@ $userData = $user ?? null;
                                 <input type="hidden" name="action" value="update_details">
                                 <div class="form-group">
                                     <label class="form-label" for="first_name">First name</label>
-                                    <input type="text" class="form-input" id="first_name" name="first_name" value="<?= htmlspecialchars($userData->first_name ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="given-name">
+                                    <input type="text" class="form-input" id="first_name" name="first_name" value="<?= htmlspecialchars(is_object($userData) ? $userData->first_name : '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="given-name">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="last_name">Last name</label>
-                                    <input type="text" class="form-input" id="last_name" name="last_name" value="<?= htmlspecialchars($userData->last_name ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="family-name">
+                                    <input type="text" class="form-input" id="last_name" name="last_name" value="<?= htmlspecialchars(is_object($userData) ? $userData->last_name : '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="family-name">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="email">Email</label>
-                                    <input type="email" class="form-input" id="email" name="email" required value="<?= htmlspecialchars($userData->email ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="email">
+                                    <input type="email" class="form-input" id="email" name="email" required value="<?= htmlspecialchars(is_object($userData) ? $userData->email : '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="email">
                                 </div>
                                 <button class="btn btn-primary" type="submit">
                                     <i class="icon icon-check mr-1"></i> Save changes
