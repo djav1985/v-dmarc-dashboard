@@ -38,6 +38,9 @@ define('SMTP_PASSWORD', 'password');
 define('SMTP_FROM_EMAIL', 'no-reply@example.com');
 define('SMTP_FROM_NAME', 'DMARC Dashboard');
 
+// File storage paths
+define('PDF_REPORT_STORAGE_PATH', __DIR__ . '/storage/pdf_reports');
+
 // Application settings
 define('APP_NAME', 'DMARC Dashboard');
 define('APP_VERSION', '1.0.0');

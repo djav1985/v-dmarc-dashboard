@@ -31,6 +31,53 @@ function formatFileSize($bytes) {
     }
     return $bytes . ' B';
 }
+
+function formatScheduleFrequency(string $frequency): string {
+    if (str_starts_with($frequency, 'custom:')) {
+        $days = (int) substr($frequency, 7);
+        return 'Every ' . max(1, $days) . ' days';
+    }
+
+    return match ($frequency) {
+        'daily' => 'Daily',
+        'weekly' => 'Weekly',
+        'monthly' => 'Monthly',
+        default => ucfirst($frequency),
+    };
+}
+
+function formatScheduleStatus(array $schedule): string {
+    if ((int) ($schedule['enabled'] ?? 0) !== 1) {
+        return 'Paused';
+    }
+
+    return match ($schedule['last_status'] ?? '') {
+        'failed' => 'Last run failed',
+        'success' => 'Active',
+        default => 'Active',
+    };
+}
+
+function formatScheduleDate(?string $value): string {
+    if (empty($value)) {
+        return '—';
+    }
+
+    try {
+        return date('M j, Y H:i', strtotime($value));
+    } catch (Throwable $exception) {
+        return $value;
+    }
+}
+
+function getScheduleRecipients(?string $recipientsJson): string {
+    $decoded = json_decode($recipientsJson ?? '[]', true);
+    if (!is_array($decoded)) {
+        return '';
+    }
+
+    return implode(', ', array_filter(array_map('trim', $decoded)));
+}
 ?>
 
 <style>
@@ -103,6 +150,34 @@ function formatFileSize($bytes) {
         gap: 1rem;
     }
 }
+.schedule-item {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #fdfdfd;
+}
+.schedule-item h5 {
+    margin: 0 0 0.5rem 0;
+}
+.schedule-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+.schedule-actions {
+    margin-top: 0.75rem;
+}
+.schedule-actions form {
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+.schedule-form .form-group {
+    margin-bottom: 0.75rem;
+}
+.schedule-note {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
 </style>
 
 <?php if (isset($_SESSION['flash_message'])): ?>
@@ -146,6 +221,10 @@ function formatFileSize($bytes) {
     <div class="stat-card">
         <div class="stat-number"><?= $this->data['stats']['total_simulations'] ?></div>
         <div class="stat-label">Policy Simulations</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number"><?= $this->data['stats']['active_schedules'] ?? 0 ?></div>
+        <div class="stat-label">Active Schedules</div>
     </div>
 </div>
 
@@ -266,6 +345,192 @@ function formatFileSize($bytes) {
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Management -->
+<div class="management-card mt-2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+        <h4>
+            <i class="icon icon-calendar mr-1"></i>
+            Scheduled PDF Reports
+        </h4>
+        <span class="label label-secondary">Automation</span>
+    </div>
+    <div class="columns">
+        <div class="column col-7 col-md-12">
+            <?php if (empty($this->data['schedules'])): ?>
+                <div class="empty">
+                    <p class="empty-title">No schedules configured</p>
+                    <p class="empty-subtitle">Create a schedule to automatically deliver PDF reports to stakeholders.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($this->data['schedules'] as $schedule): ?>
+                    <?php
+                    $scheduleRecipients = getScheduleRecipients($schedule['recipients'] ?? '[]');
+                    $isEnabled = (int) ($schedule['enabled'] ?? 0) === 1;
+                    ?>
+                    <div class="schedule-item">
+                        <h5>
+                            <?= htmlspecialchars($schedule['name'] ?? 'Schedule #' . ($schedule['id'] ?? '')) ?>
+                            <?php if (!$isEnabled): ?>
+                                <span class="label label-warning ml-1">Paused</span>
+                            <?php endif; ?>
+                        </h5>
+                        <div class="schedule-meta">
+                            Template: <strong><?= htmlspecialchars($schedule['template_name'] ?? ('Template #' . ($schedule['template_id'] ?? ''))) ?></strong>
+                            &middot; Cadence: <?= htmlspecialchars(formatScheduleFrequency($schedule['frequency'] ?? '')) ?>
+                            &middot; Recipients: <?= $scheduleRecipients !== '' ? htmlspecialchars($scheduleRecipients) : '—' ?>
+                        </div>
+                        <div class="schedule-meta">
+                            Last Run: <?= htmlspecialchars(formatScheduleDate($schedule['last_run_at'] ?? null)) ?>
+                            &middot; Next Run: <?= htmlspecialchars(formatScheduleDate($schedule['next_run_at'] ?? null)) ?>
+                            &middot; Status: <?= htmlspecialchars(formatScheduleStatus($schedule)) ?>
+                        </div>
+                        <?php if (!empty($schedule['last_error'])): ?>
+                            <div class="schedule-note text-error mt-1">
+                                <?= htmlspecialchars($schedule['last_error']) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="schedule-actions mt-2">
+                            <form method="post" class="mr-1">
+                                <input type="hidden" name="action" value="run_schedule">
+                                <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
+                                <button class="btn btn-sm btn-primary" type="submit">
+                                    <i class="icon icon-activity"></i> Run Now
+                                </button>
+                            </form>
+                            <form method="post" class="mr-1">
+                                <input type="hidden" name="action" value="toggle_schedule">
+                                <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
+                                <input type="hidden" name="schedule_enabled" value="<?= $isEnabled ? 0 : 1 ?>">
+                                <button class="btn btn-sm btn-<?= $isEnabled ? 'warning' : 'success' ?>" type="submit">
+                                    <?= $isEnabled ? 'Pause' : 'Resume' ?>
+                                </button>
+                            </form>
+                            <form method="post" onsubmit="return confirm('Delete this schedule?');">
+                                <input type="hidden" name="action" value="delete_schedule">
+                                <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
+                                <button class="btn btn-sm btn-error" type="submit">Delete</button>
+                            </form>
+                        </div>
+
+                        <form method="post" class="schedule-form mt-2">
+                            <input type="hidden" name="action" value="update_schedule">
+                            <input type="hidden" name="schedule_id" value="<?= (int) ($schedule['id'] ?? 0) ?>">
+                            <div class="form-group">
+                                <label class="form-label">Display Name</label>
+                                <input type="text" class="form-input" name="schedule_name" value="<?= htmlspecialchars($schedule['name'] ?? '') ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Title</label>
+                                <input type="text" class="form-input" name="schedule_title" value="<?= htmlspecialchars($schedule['title'] ?? '') ?>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Template</label>
+                                <select class="form-select" name="schedule_template_id" required>
+                                    <?php foreach ($this->data['templates'] as $template): ?>
+                                        <option value="<?= (int) $template['id'] ?>" <?= (int) ($schedule['template_id'] ?? 0) === (int) $template['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($template['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cadence</label>
+                                <input type="text" class="form-input" name="schedule_frequency" value="<?= htmlspecialchars($schedule['frequency'] ?? 'weekly') ?>" required>
+                                <div class="schedule-note">Use daily, weekly, monthly or custom:&lt;days&gt; (e.g. custom:14).</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Recipients</label>
+                                <textarea class="form-input" name="schedule_recipients" rows="2" required><?= htmlspecialchars($scheduleRecipients) ?></textarea>
+                                <div class="schedule-note">Separate email addresses with commas or line breaks.</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Domain Filter (optional)</label>
+                                <input type="text" class="form-input" name="schedule_domain_filter" value="<?= htmlspecialchars($schedule['domain_filter'] ?? '') ?>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Group Filter</label>
+                                <select class="form-select" name="schedule_group_filter">
+                                    <option value="">All Groups</option>
+                                    <?php foreach ($this->data['groups'] as $group): ?>
+                                        <option value="<?= (int) $group['id'] ?>" <?= (int) ($schedule['group_filter'] ?? 0) === (int) $group['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($group['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Next Run (optional)</label>
+                                <input type="datetime-local" class="form-input" name="schedule_start_at" value="<?= !empty($schedule['next_run_at']) ? htmlspecialchars(date('Y-m-d\TH:i', strtotime($schedule['next_run_at']))) : '' ?>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" name="schedule_enabled" value="1" <?= $isEnabled ? 'checked' : '' ?>>
+                                    <i class="form-icon"></i> Enabled
+                                </label>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" type="submit">Save Changes</button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+        <div class="column col-5 col-md-12">
+            <h5>Create New Schedule</h5>
+            <form method="post" class="schedule-form">
+                <input type="hidden" name="action" value="create_schedule">
+                <div class="form-group">
+                    <label class="form-label">Schedule Name</label>
+                    <input type="text" class="form-input" name="schedule_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Title</label>
+                    <input type="text" class="form-input" name="schedule_title" placeholder="Defaults to schedule name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Template</label>
+                    <select class="form-select" name="schedule_template_id" required>
+                        <option value="">Select Template</option>
+                        <?php foreach ($this->data['templates'] as $template): ?>
+                            <option value="<?= (int) $template['id'] ?>"><?= htmlspecialchars($template['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cadence</label>
+                    <input type="text" class="form-input" name="schedule_frequency" value="weekly" required>
+                    <div class="schedule-note">Use daily, weekly, monthly or custom:&lt;days&gt; (e.g. custom:10).</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Recipients</label>
+                    <textarea class="form-input" name="schedule_recipients" rows="3" placeholder="security@example.com" required></textarea>
+                    <div class="schedule-note">Separate multiple recipients with commas or new lines.</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Domain Filter (optional)</label>
+                    <input type="text" class="form-input" name="schedule_domain_filter" placeholder="example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Group Filter</label>
+                    <select class="form-select" name="schedule_group_filter">
+                        <option value="">All Groups</option>
+                        <?php foreach ($this->data['groups'] as $group): ?>
+                            <option value="<?= (int) $group['id'] ?>"><?= htmlspecialchars($group['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">First Run (optional)</label>
+                    <input type="datetime-local" class="form-input" name="schedule_start_at">
+                </div>
+                <button class="btn btn-primary" type="submit">
+                    <i class="icon icon-plus"></i> Create Schedule
+                </button>
+            </form>
         </div>
     </div>
 </div>

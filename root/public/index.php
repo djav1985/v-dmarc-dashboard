@@ -1,4 +1,3 @@
-
 <?php
 // phpcs:ignoreFile PSR1.Files.SideEffects.FoundWithSymbols
 

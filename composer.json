@@ -3,7 +3,9 @@
     "description": "Development dependencies for the project workspace",
     "type": "project",
     "license": "MIT",
-    "require": {},
+    "require": {
+        "dompdf/dompdf": "^3.1"
+    },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.9",
         "phpunit/phpunit": "^10.0"
