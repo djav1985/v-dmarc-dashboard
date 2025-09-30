@@ -3,8 +3,9 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Models\DmarcReport;
 use App\Core\RBACManager;
+use App\Models\DmarcReport;
+use App\Services\GeoIPService;
 
 /**
  * Report Detail Controller for displaying individual DMARC report details
@@ -91,12 +92,20 @@ class ReportDetailController extends Controller
             return $b['total_count'] - $a['total_count'];
         });
 
+        $ipIntelligence = [];
+        $geoService = GeoIPService::getInstance();
+
+        foreach (array_keys($ipGroups) as $ip) {
+            $ipIntelligence[$ip] = $geoService->getIPIntelligence($ip);
+        }
+
         // Pass data to view
         $this->data = [
             'report' => $report,
             'records' => $records,
             'summary' => $summary,
-            'ip_groups' => $ipGroups
+            'ip_groups' => $ipGroups,
+            'ip_intelligence' => $ipIntelligence
         ];
 
         require __DIR__ . '/../Views/report_detail.php';

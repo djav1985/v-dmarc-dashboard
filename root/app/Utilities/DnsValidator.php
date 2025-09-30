@@ -6,6 +6,111 @@ use Exception;
 
 class DnsValidator
 {
+    private static ?DnsOverHttpsClient $dnsClient = null;
+
+    public static function setDnsClient(?DnsOverHttpsClient $client): void
+    {
+        self::$dnsClient = $client;
+    }
+
+    private static function getDnsClient(): DnsOverHttpsClient
+    {
+        if (self::$dnsClient === null) {
+            self::$dnsClient = new DnsOverHttpsClient();
+        }
+
+        return self::$dnsClient;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function queryDnsOverHttps(string $domain, string $type): array
+    {
+        try {
+            $records = self::getDnsClient()->query($domain, $type);
+            return $records ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function legacyDnsLookup(string $domain, int $recordType, string $type): array
+    {
+        if (!function_exists('dns_get_record')) {
+            return [];
+        }
+
+        $records = @dns_get_record($domain, $recordType);
+        if (!$records) {
+            return [];
+        }
+
+        return self::mapLegacyRecords($records, $type);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $records
+     * @return array<int, array<string, mixed>>
+     */
+    private static function mapLegacyRecords(array $records, string $type): array
+    {
+        $normalised = [];
+
+        foreach ($records as $record) {
+            switch ($type) {
+                case 'TXT':
+                    if (isset($record['txt'])) {
+                        $normalised[] = [
+                            'type' => 'TXT',
+                            'txt' => $record['txt'],
+                            'ttl' => $record['ttl'] ?? null,
+                        ];
+                    }
+                    break;
+                case 'MX':
+                    if (isset($record['pri'], $record['target'])) {
+                        $normalised[] = [
+                            'type' => 'MX',
+                            'pri' => (int) $record['pri'],
+                            'target' => rtrim($record['target'], '.'),
+                            'ttl' => $record['ttl'] ?? null,
+                        ];
+                    }
+                    break;
+                case 'SOA':
+                    if (isset($record['mname'])) {
+                        $normalised[] = [
+                            'type' => 'SOA',
+                            'mname' => $record['mname'],
+                            'rname' => $record['rname'] ?? '',
+                            'serial' => $record['serial'] ?? 0,
+                            'refresh' => $record['refresh'] ?? 0,
+                            'retry' => $record['retry'] ?? 0,
+                            'expire' => $record['expire'] ?? 0,
+                            'minimum' => $record['minimum'] ?? 0,
+                            'ttl' => $record['ttl'] ?? null,
+                        ];
+                    }
+                    break;
+                case 'A':
+                    if (isset($record['ip'])) {
+                        $normalised[] = [
+                            'type' => 'A',
+                            'ip' => $record['ip'],
+                            'ttl' => $record['ttl'] ?? null,
+                        ];
+                    }
+                    break;
+            }
+        }
+
+        return $normalised;
+    }
+
     /**
      * Check if a domain has a DMARC record.
      *
@@ -15,9 +120,12 @@ class DnsValidator
     public static function getDmarcRecord(string $domain): ?array
     {
         $dmarcDomain = "_dmarc.{$domain}";
-        $records = dns_get_record($dmarcDomain, DNS_TXT);
+        $records = self::queryDnsOverHttps($dmarcDomain, 'TXT');
+        if (empty($records)) {
+            $records = self::legacyDnsLookup($dmarcDomain, DNS_TXT, 'TXT');
+        }
 
-        if (!$records) {
+        if (empty($records)) {
             return null;
         }
 
@@ -42,9 +150,12 @@ class DnsValidator
      */
     public static function getSpfRecord(string $domain): ?array
     {
-        $records = dns_get_record($domain, DNS_TXT);
+        $records = self::queryDnsOverHttps($domain, 'TXT');
+        if (empty($records)) {
+            $records = self::legacyDnsLookup($domain, DNS_TXT, 'TXT');
+        }
 
-        if (!$records) {
+        if (empty($records)) {
             return null;
         }
 
@@ -71,9 +182,12 @@ class DnsValidator
     public static function getDkimRecord(string $selector, string $domain): ?array
     {
         $dkimDomain = "{$selector}._domainkey.{$domain}";
-        $records = dns_get_record($dkimDomain, DNS_TXT);
+        $records = self::queryDnsOverHttps($dkimDomain, 'TXT');
+        if (empty($records)) {
+            $records = self::legacyDnsLookup($dkimDomain, DNS_TXT, 'TXT');
+        }
 
-        if (!$records) {
+        if (empty($records)) {
             return null;
         }
 
@@ -99,14 +213,20 @@ class DnsValidator
      */
     public static function getMxRecords(string $domain): array
     {
-        $records = dns_get_record($domain, DNS_MX);
+        $records = self::queryDnsOverHttps($domain, 'MX');
+        if (empty($records)) {
+            $records = self::legacyDnsLookup($domain, DNS_MX, 'MX');
+        }
 
-        if (!$records) {
+        if (empty($records)) {
             return [];
         }
 
         $mxRecords = [];
         foreach ($records as $record) {
+            if (!isset($record['pri'], $record['target'])) {
+                continue;
+            }
             $mxRecords[] = [
                 'priority' => $record['pri'],
                 'target' => $record['target'],
@@ -130,21 +250,26 @@ class DnsValidator
      */
     public static function getSoaRecord(string $domain): ?array
     {
-        $records = dns_get_record($domain, DNS_SOA);
+        $records = self::queryDnsOverHttps($domain, 'SOA');
+        if (empty($records)) {
+            $records = self::legacyDnsLookup($domain, DNS_SOA, 'SOA');
+        }
 
-        if (!$records || empty($records[0])) {
+        if (empty($records) || empty($records[0])) {
             return null;
         }
 
+        $record = $records[0];
+
         return [
             'domain' => $domain,
-            'mname' => $records[0]['mname'],
-            'rname' => $records[0]['rname'],
-            'serial' => $records[0]['serial'],
-            'refresh' => $records[0]['refresh'],
-            'retry' => $records[0]['retry'],
-            'expire' => $records[0]['expire'],
-            'minimum' => $records[0]['minimum']
+            'mname' => $record['mname'],
+            'rname' => $record['rname'],
+            'serial' => $record['serial'],
+            'refresh' => $record['refresh'],
+            'retry' => $record['retry'],
+            'expire' => $record['expire'],
+            'minimum' => $record['minimum']
         ];
     }
 
