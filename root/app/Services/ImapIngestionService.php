@@ -169,29 +169,49 @@ class ImapIngestionService
     {
         $attachments = [];
 
-        for ($i = 1; $i <= $structure->parts; $i++) {
-            $part = $structure->parts[$i - 1];
+        $parts = [];
+        if (isset($structure->parts) && is_array($structure->parts)) {
+            $parts = $structure->parts;
+        }
 
-            if (isset($part->disposition) && $part->disposition == 'ATTACHMENT') {
-                $attachment = imap_fetchbody($this->connection, $uid, $i, FT_UID);
+        foreach ($parts as $index => $part) {
+            if (!isset($part->disposition) || strtoupper((string) $part->disposition) !== 'ATTACHMENT') {
+                continue;
+            }
 
-                if ($part->encoding == 3) { // Base64
-                    $attachment = base64_decode($attachment);
-                } elseif ($part->encoding == 4) { // Quoted-printable
-                    $attachment = quoted_printable_decode($attachment);
+            $attachment = imap_fetchbody($this->connection, $uid, $index + 1, FT_UID);
+
+            if ($part->encoding == 3) { // Base64
+                $attachment = base64_decode($attachment);
+            } elseif ($part->encoding == 4) { // Quoted-printable
+                $attachment = quoted_printable_decode($attachment);
+            }
+
+            $attachments[] = $attachment;
+        }
+
+        $processed = false;
+
+        foreach ($attachments as $index => $attachment) {
+            try {
+                if ($this->processAttachment($attachment)) {
+                    $processed = true;
+                    continue;
                 }
 
-                $attachments[] = $attachment;
+                ErrorManager::getInstance()->log(
+                    sprintf('Failed to process DMARC attachment %d for UID %s.', $index + 1, $uid),
+                    'warning'
+                );
+            } catch (Exception $exception) {
+                ErrorManager::getInstance()->log(
+                    sprintf('Error processing DMARC attachment %d for UID %s: %s', $index + 1, $uid, $exception->getMessage()),
+                    'error'
+                );
             }
         }
 
-        foreach ($attachments as $attachment) {
-            if ($this->processAttachment($attachment)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $processed;
     }
 
     /**
@@ -226,7 +246,7 @@ class ImapIngestionService
      * @param string $attachment
      * @return bool
      */
-    private function processAttachment(string $attachment): bool
+    protected function processAttachment(string $attachment): bool
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'dmarc_');
 

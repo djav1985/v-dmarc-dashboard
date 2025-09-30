@@ -272,12 +272,38 @@ CREATE TABLE pdf_report_generations (
     domain_filter TEXT,
     group_filter INTEGER,
     parameters TEXT,
+    file_path TEXT,
     file_size INTEGER,
     generated_by TEXT,
     generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     download_count INTEGER DEFAULT 0,
     FOREIGN KEY (template_id) REFERENCES pdf_report_templates(id) ON DELETE CASCADE,
     FOREIGN KEY (group_filter) REFERENCES domain_groups(id) ON DELETE SET NULL
+);
+
+CREATE TABLE pdf_report_schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    template_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    frequency TEXT NOT NULL,
+    recipients TEXT NOT NULL,
+    domain_filter TEXT,
+    group_filter INTEGER,
+    parameters TEXT DEFAULT '{}',
+    enabled INTEGER DEFAULT 1,
+    next_run_at DATETIME,
+    last_run_at DATETIME,
+    last_status TEXT,
+    last_error TEXT,
+    created_by TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_generation_id INTEGER,
+    FOREIGN KEY (template_id) REFERENCES pdf_report_templates(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_filter) REFERENCES domain_groups(id) ON DELETE SET NULL,
+    FOREIGN KEY (last_generation_id) REFERENCES pdf_report_generations(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(username) ON DELETE SET NULL
 );
 
 CREATE TABLE policy_simulations (

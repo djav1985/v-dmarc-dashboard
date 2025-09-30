@@ -85,6 +85,8 @@ class Users
         try {
             $db = DatabaseManager::getInstance();
 
+            $role = $userData['role'] ?? RBACManager::ROLE_VIEWER;
+
             $db->query('
                 INSERT INTO users (username, password, role, first_name, last_name, email, admin, is_active)
                 VALUES (:username, :password, :role, :first_name, :last_name, :email, :admin, 1)
@@ -92,11 +94,11 @@ class Users
 
             $db->bind(':username', $userData['username']);
             $db->bind(':password', $userData['password']); // Should be pre-hashed
-            $db->bind(':role', $userData['role'] ?? RBACManager::ROLE_VIEWER);
+            $db->bind(':role', $role);
             $db->bind(':first_name', $userData['first_name'] ?? '');
             $db->bind(':last_name', $userData['last_name'] ?? '');
             $db->bind(':email', $userData['email'] ?? '');
-            $db->bind(':admin', $userData['role'] === RBACManager::ROLE_APP_ADMIN ? 1 : 0);
+            $db->bind(':admin', $role === RBACManager::ROLE_APP_ADMIN ? 1 : 0);
 
             return $db->execute();
         } catch (\Exception $e) {

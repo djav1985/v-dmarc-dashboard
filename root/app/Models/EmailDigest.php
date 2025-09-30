@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
 use DateTimeImmutable;
+use RuntimeException;
 
 /**
  * Email Digest model for managing automated email reports
@@ -19,17 +21,82 @@ class EmailDigest
     {
         $db = DatabaseManager::getInstance();
 
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            $db->query('
+                SELECT
+                    eds.*, 
+                    dg.name as group_name,
+                    COUNT(edl.id) as sent_count
+                FROM email_digest_schedules eds
+                LEFT JOIN domain_groups dg ON eds.group_filter = dg.id
+                LEFT JOIN email_digest_logs edl ON eds.id = edl.schedule_id
+                GROUP BY eds.id
+                ORDER BY eds.created_at DESC
+            ');
+
+            return $db->resultSet();
+        }
+
+        $accessibleDomains = array_values(array_filter(array_map(
+            static fn(array $domain) => strtolower((string) ($domain['domain'] ?? '')),
+            $rbac->getAccessibleDomains()
+        )));
+
+        $accessibleGroups = array_values(array_filter(array_map(
+            static fn(array $group) => (int) ($group['id'] ?? 0),
+            $rbac->getAccessibleGroups()
+        )));
+
+        $conditions = [];
+        $bindings = [];
+
+        if (!empty($accessibleDomains)) {
+            $placeholders = [];
+            foreach ($accessibleDomains as $index => $domain) {
+                $placeholder = ':authorized_domain_' . $index;
+                $placeholders[] = $placeholder;
+                $bindings[$placeholder] = $domain;
+            }
+            $conditions[] = '(eds.domain_filter <> "" AND LOWER(eds.domain_filter) IN (' . implode(', ', $placeholders) . '))';
+        }
+
+        if (!empty($accessibleGroups)) {
+            $groupPlaceholders = [];
+            foreach ($accessibleGroups as $index => $groupId) {
+                $placeholder = ':authorized_group_' . $index;
+                $groupPlaceholders[] = $placeholder;
+                $bindings[$placeholder] = $groupId;
+            }
+            $conditions[] = '(eds.group_filter IS NOT NULL AND eds.group_filter IN (' . implode(', ', $groupPlaceholders) . '))';
+        }
+
+        if (empty($conditions)) {
+            return [];
+        }
+
+        $whereClause = 'WHERE ' . implode(' OR ', $conditions);
+
         $db->query('
-            SELECT 
-                eds.*,
+            SELECT
+                eds.*, 
                 dg.name as group_name,
                 COUNT(edl.id) as sent_count
             FROM email_digest_schedules eds
             LEFT JOIN domain_groups dg ON eds.group_filter = dg.id
             LEFT JOIN email_digest_logs edl ON eds.id = edl.schedule_id
+            ' . $whereClause . '
             GROUP BY eds.id
             ORDER BY eds.created_at DESC
         ');
+
+        foreach ($bindings as $placeholder => $value) {
+            if (str_starts_with($placeholder, ':authorized_domain_')) {
+                $db->bind($placeholder, strtolower((string) $value));
+            } else {
+                $db->bind($placeholder, $value);
+            }
+        }
 
         return $db->resultSet();
     }
@@ -44,6 +111,13 @@ class EmailDigest
     {
         $db = DatabaseManager::getInstance();
 
+        $domainFilter = trim((string) ($data['domain_filter'] ?? ''));
+        $groupFilter = isset($data['group_filter']) && $data['group_filter'] !== ''
+            ? (int) $data['group_filter']
+            : null;
+
+        self::assertFilterAccess($domainFilter, $groupFilter);
+
         $db->query('
             INSERT INTO email_digest_schedules
             (name, frequency, recipients, domain_filter, group_filter, enabled, next_scheduled)
@@ -53,8 +127,8 @@ class EmailDigest
         $db->bind(':name', $data['name']);
         $db->bind(':frequency', $data['frequency']);
         $db->bind(':recipients', json_encode($data['recipients']));
-        $db->bind(':domain_filter', $data['domain_filter'] ?? '');
-        $db->bind(':group_filter', $data['group_filter'] ?? null);
+        $db->bind(':domain_filter', $domainFilter);
+        $db->bind(':group_filter', $groupFilter);
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->bind(':next_scheduled', $data['next_scheduled'] ?? null);
         $db->execute();
@@ -80,6 +154,10 @@ class EmailDigest
         $schedule = $db->single();
 
         if (!$schedule) {
+            return [];
+        }
+
+        if (!self::scheduleIsAccessible($schedule)) {
             return [];
         }
 
@@ -339,5 +417,56 @@ class EmailDigest
         $db->bind(':next_scheduled', $nextScheduled);
         $db->bind(':id', $scheduleId);
         $db->execute();
+    }
+
+    private static function scheduleIsAccessible(array $schedule): bool
+    {
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return true;
+        }
+
+        $domainFilter = strtolower(trim((string) ($schedule['domain_filter'] ?? '')));
+        if ($domainFilter !== '') {
+            $accessibleDomains = array_map(
+                static fn(array $domain) => strtolower((string) ($domain['domain'] ?? '')),
+                $rbac->getAccessibleDomains()
+            );
+
+            if (in_array($domainFilter, $accessibleDomains, true)) {
+                return true;
+            }
+        }
+
+        $groupFilter = $schedule['group_filter'] ?? null;
+        if ($groupFilter !== null && $rbac->canAccessGroup((int) $groupFilter)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static function assertFilterAccess(?string $domainFilter, ?int $groupFilter): void
+    {
+        $rbac = RBACManager::getInstance();
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return;
+        }
+
+        $domainFilter = trim((string) $domainFilter);
+        if ($domainFilter !== '') {
+            $accessibleDomains = array_map(
+                static fn(array $domain) => strtolower((string) ($domain['domain'] ?? '')),
+                $rbac->getAccessibleDomains()
+            );
+
+            if (!in_array(strtolower($domainFilter), $accessibleDomains, true)) {
+                throw new RuntimeException('You are not authorized to create digests for the selected domain.');
+            }
+        }
+
+        if ($groupFilter !== null && !$rbac->canAccessGroup($groupFilter)) {
+            throw new RuntimeException('You are not authorized to create digests for the selected group.');
+        }
     }
 }

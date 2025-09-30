@@ -7,11 +7,16 @@ if (!defined('PHPUNIT_RUNNING')) {
     define('PHPUNIT_RUNNING', true);
 }
 
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
 require __DIR__ . '/TestHelpers.php';
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
 use App\Models\Analytics;
 use function TestHelpers\assertCountEquals;
 use function TestHelpers\assertEquals;
@@ -127,6 +132,9 @@ domainHealthFilterInsertRecord($reportC, 8, 'none');
 
 domainHealthFilterInsertRecord($reportC, 1, 'reject');
 
+$_SESSION['username'] = 'analytics_admin_' . $timestamp;
+$_SESSION['user_role'] = RBACManager::ROLE_APP_ADMIN;
+
 $groupResults = Analytics::getDomainHealthScores($startDate, $endDate, $groupAId);
 assertCountEquals(2, $groupResults, 'Group-scoped results should include both in-group domains', $failures);
 
@@ -148,6 +156,27 @@ assertCountEquals(1, $globalFiltered, 'Global filtering should surface a matchin
 if (!empty($globalFiltered)) {
     assertEquals($domainC, (string) ($globalFiltered[0]['domain'] ?? ''), 'Global filtering should match the requested domain', $failures);
 }
+
+// Simulate a non-admin session with access to only one domain and confirm unauthorized domains are hidden.
+$_SESSION['username'] = 'analytics_viewer_' . $timestamp;
+$_SESSION['user_role'] = RBACManager::ROLE_VIEWER;
+
+$db->query('INSERT INTO user_domain_assignments (user_id, domain_id) VALUES (:user_id, :domain_id)');
+$db->bind(':user_id', $_SESSION['username']);
+$db->bind(':domain_id', $domainAId);
+$db->execute();
+
+$restrictedResults = Analytics::getDomainHealthScores($startDate, $endDate);
+assertCountEquals(1, $restrictedResults, 'Viewer without a domain filter should only see authorized domains', $failures);
+if (!empty($restrictedResults)) {
+    assertEquals($domainA, (string) ($restrictedResults[0]['domain'] ?? ''), 'Unauthorized domains should be excluded automatically', $failures);
+}
+
+$db->query('DELETE FROM user_domain_assignments WHERE user_id = :user_id');
+$db->bind(':user_id', $_SESSION['username']);
+$db->execute();
+
+unset($_SESSION['username'], $_SESSION['user_role']);
 
 echo "Domain health filter coverage completed with " . ($failures === 0 ? 'no failures' : $failures . ' failure(s)') . PHP_EOL;
 
