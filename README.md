@@ -32,7 +32,7 @@ The script recreates `root/demo.db` on demand so the repository no longer needs 
 
 ### Upgrading Existing Databases
 
-Existing deployments should compare their database schema with the consolidated `root/install/install.sql` and apply any missing DDL statements (for example, the IP intelligence metadata columns) to stay aligned with the authoritative definition.
+Existing deployments should compare their database schema with the consolidated `root/install/install.sql` and apply any missing DDL statements (for example, the IP intelligence metadata columns) to stay aligned with the authoritative definition. Recent changes introduce ownership/enforcement metadata on the `domains` table and the `saved_report_filters` store—run the forward migrations in `root/app/Database/Migrations/202407010001_add_domain_metadata.php` and `202407010002_create_saved_report_filters.php` (or apply the equivalent DDL) before upgrading the application code.
 
 ## Running the Application
 
@@ -105,6 +105,18 @@ The IMAP ingestion service automatically recognises DMARC attachments by their b
 Role-based permissions are enforced at the controller entry points through `App\Core\RBACManager::requirePermission()`. Upload, IMAP ingestion, alert administration, domain group management, analytics, report browsing, and the reports management tools now check for their respective capabilities (`upload_reports`, `manage_alerts`, `manage_groups`, `view_analytics`, `view_reports`, etc.) before executing any request or submission logic. Users who lack the required permission receive an HTTP 403 response that explains which capability is missing.
 
 Domain and report data returned to the UI is also filtered through RBAC-aware helpers. The `Domain`, `DomainGroup`, and `DmarcReport` models rely on `RBACManager::getAccessibleDomains()` / `getAccessibleGroups()` (and related access checks) so scoped administrators only see the domains and groups assigned to them. Queries that back dropdowns, analytics summaries, or report detail pages automatically exclude unassigned entities, preventing limited-scope accounts from accessing or enumerating unrelated data.
+
+## Advanced Report Filtering & Saved Views
+
+The reports dashboard now exposes advanced filtering options that combine domain metadata with message-level signals. You can constrain results by ownership contact, enforcement level, reporting organisation, policy results (disposition/DKIM/SPF), observed source IPs, header/envelope addresses, date ranges, and message volume thresholds. A new “only failing traffic” toggle highlights enforcement gaps by returning reports with failed policy evaluations.
+
+Frequent filter combinations can be captured as saved views directly from the reports screen. Saved filters are persisted per user, can be renamed or overwritten with the current criteria, and are surfaced in the sidebar for one-click access. The underlying `saved_report_filters` table stores the JSON payload and is accessible via the dedicated controller routes documented in `app/Core/Router.php`.
+
+Every filtered result set can now be exported without leaving the UI. CSV output targets spreadsheet workflows, while the XLSX export produces a standards-compliant workbook with inline strings—no additional PHP extensions are required beyond `ZipArchive`.
+
+## Data Retention Management
+
+Administrators with the new `manage_retention` permission can adjust DMARC aggregate, forensic, and SMTP TLS retention windows from `/retention-settings`. The form writes through `App\Utilities\DataRetention::updateRetentionSetting()` and the scheduled cleanup job honours the updated thresholds on its next execution. Leaving a field blank keeps the existing value; providing a non-negative integer shortens or extends the window immediately.
 
 ## Group-Scoped Analytics and PDF Reports
 

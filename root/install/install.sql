@@ -24,6 +24,8 @@ CREATE TABLE ip_blacklist (
 CREATE TABLE domains (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     domain TEXT NOT NULL UNIQUE,
+    ownership_contact TEXT,
+    enforcement_level TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -152,6 +154,18 @@ CREATE TABLE retention_settings (
     setting_value TEXT NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE saved_report_filters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    filters TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, name)
+);
+
+CREATE INDEX idx_saved_filters_user ON saved_report_filters(user_id);
 
 CREATE TABLE alert_rules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

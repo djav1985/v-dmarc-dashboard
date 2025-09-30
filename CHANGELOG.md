@@ -17,6 +17,10 @@ All notable changes to this project will be documented in this file.
 - Added database compatibility regression tests covering digest timestamps, analytics bucketing, transactional deletion, and IMAP attachment cleanup.
 - Added unit coverage confirming PDF analytics respect domain-group filters across all sections.
 - Added Dompdf-backed PDF rendering with persistent storage, schedule management UI, notification templates, and end-to-end scheduler tests.
+- Added domain ownership/enforcement metadata with accessor methods and a forward migration (`202407010001_add_domain_metadata.php`).
+- Introduced saved report filters with dedicated persistence, controller routes, UI affordances, and regression coverage.
+- Added CSV and XLSX report exports powered by the new `ReportExport` utility and accompanying unit tests.
+- Added a retention settings controller/view guarded by the new `manage_retention` permission, plus tests for the update workflow.
 
 ### Changed
 - Updated documentation to explain the dual Composer environments and new directory structure.
@@ -31,6 +35,8 @@ All notable changes to this project will be documented in this file.
 - Standardized alert metrics, incident acknowledgement, and GeoIP cache cleanup to bind ISO timestamps for cross-database compatibility and added regression coverage for non-SQLite drivers.
 - Updated analytics summary, trend, compliance, health, and threat helpers plus PDF report generation to honour optional domain-group filters.
 - Extended the hourly cron job to execute scheduled PDF reports and log delivery outcomes alongside existing digest processing.
+- Redesigned the reports dashboard with advanced filtering facets, saved-filter management, and export actions.
+- Expanded `DmarcReport::getFilteredReports()` / `getFilteredReportsCount()` to honour ownership, policy, IP, and volume filters used by the new UI.
 
 ### Fixed
 - Removed the leading whitespace from the public entry point so sessions can start and error responses can set headers without runtime warnings.
