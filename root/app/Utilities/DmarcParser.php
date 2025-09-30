@@ -58,6 +58,89 @@ class DmarcParser
     }
 
     /**
+     * Parse DMARC forensic report from XML.
+     *
+     * @param string $xmlContent
+     * @return array
+     */
+    public static function parseForensicReport(string $xmlContent): array
+    {
+        if (trim($xmlContent) === '') {
+            throw new Exception('Empty forensic report payload.');
+        }
+
+        try {
+            $xml = new SimpleXMLElement($xmlContent);
+        } catch (Exception $e) {
+            throw new Exception('Failed to parse DMARC forensic report: ' . $e->getMessage());
+        }
+
+        $domain = self::getFirstNodeValue($xml, [
+            '//policy_published/domain',
+            '//identifiers/header_from',
+            '//record/identifiers/header_from',
+            '//identity/domain',
+        ]);
+
+        if ($domain === null) {
+            throw new Exception('Missing domain in forensic report.');
+        }
+
+        $sourceIp = self::getFirstNodeValue($xml, [
+            '//record/row/source_ip',
+            '//source_ip',
+        ]);
+
+        if ($sourceIp === null) {
+            throw new Exception('Missing source IP in forensic report.');
+        }
+
+        $arrivalDateValue = self::getFirstNodeValue($xml, [
+            '//arrival_date',
+            '//event_time',
+            '//record/row/date_range/begin',
+        ]);
+
+        if ($arrivalDateValue === null) {
+            throw new Exception('Missing arrival date in forensic report.');
+        }
+
+        $arrivalDate = (int) $arrivalDateValue;
+        if ($arrivalDate <= 0) {
+            throw new Exception('Invalid arrival date in forensic report.');
+        }
+
+        return [
+            'domain' => $domain,
+            'arrival_date' => $arrivalDate,
+            'source_ip' => $sourceIp,
+            'authentication_results' => self::getFirstNodeValue($xml, ['//authentication_results']) ?? null,
+            'original_envelope_id' => self::getFirstNodeValue($xml, ['//original_envelope_id']) ?? null,
+            'dkim_domain' => self::getFirstNodeValue($xml, [
+                '//dkim_auth_results/domain',
+                '//auth_results/dkim/domain',
+            ]) ?? null,
+            'dkim_selector' => self::getFirstNodeValue($xml, [
+                '//dkim_auth_results/selector',
+                '//auth_results/dkim/selector',
+            ]) ?? null,
+            'dkim_result' => self::getFirstNodeValue($xml, [
+                '//dkim_auth_results/result',
+                '//auth_results/dkim/result',
+            ]) ?? null,
+            'spf_domain' => self::getFirstNodeValue($xml, [
+                '//spf_auth_results/domain',
+                '//auth_results/spf/domain',
+            ]) ?? null,
+            'spf_result' => self::getFirstNodeValue($xml, [
+                '//spf_auth_results/result',
+                '//auth_results/spf/result',
+            ]) ?? null,
+            'raw_message' => self::getFirstNodeValue($xml, ['//original_message']) ?? null,
+        ];
+    }
+
+    /**
      * Extract and parse compressed DMARC report files.
      *
      * @param string $filePath Path to the compressed file
@@ -65,19 +148,45 @@ class DmarcParser
      */
     public static function parseCompressedReport(string $filePath): array
     {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-
-        switch (strtolower($fileExtension)) {
-            case 'gz':
-                return self::parseGzipReport($filePath);
-            case 'zip':
-                return self::parseZipReport($filePath);
-            case 'xml':
-                $xmlContent = file_get_contents($filePath);
-                return self::parseAggregateReport($xmlContent);
-            default:
-                throw new Exception("Unsupported file format: $fileExtension");
+        if (!is_readable($filePath)) {
+            throw new Exception("Unreadable report file: $filePath");
         }
+
+        $contents = file_get_contents($filePath);
+        if ($contents === false) {
+            throw new Exception("Failed to read report file: $filePath");
+        }
+
+        $prefix = substr($contents, 0, 4);
+
+        if (strncmp($prefix, "\x1f\x8b", 2) === 0) {
+            return self::parseGzipReport($filePath);
+        }
+
+        if (strncmp($prefix, "PK\x03\x04", 4) === 0) {
+            return self::parseZipReport($filePath);
+        }
+
+        if (self::looksLikeXml($contents)) {
+            return self::parseAggregateReport($contents);
+        }
+
+        $errors = [];
+
+        foreach (['parseGzipReport', 'parseZipReport'] as $method) {
+            try {
+                return self::$method($filePath);
+            } catch (Exception $e) {
+                $errors[] = $e->getMessage();
+            }
+        }
+
+        $errorMessage = 'Unsupported or corrupted DMARC report format.';
+        if (!empty($errors)) {
+            $errorMessage .= ' Details: ' . implode(' | ', array_unique($errors));
+        }
+
+        throw new Exception($errorMessage);
     }
 
     /**
@@ -88,7 +197,12 @@ class DmarcParser
      */
     private static function parseGzipReport(string $filePath): array
     {
-        $xmlContent = gzdecode(file_get_contents($filePath));
+        $rawContent = file_get_contents($filePath);
+        if ($rawContent === false) {
+            throw new Exception("Failed to read GZIP file: $filePath");
+        }
+
+        $xmlContent = @gzdecode($rawContent);
         if ($xmlContent === false) {
             throw new Exception("Failed to decompress GZIP file: $filePath");
         }
@@ -113,7 +227,7 @@ class DmarcParser
         $xmlContent = null;
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $filename = $zip->getNameIndex($i);
-            if (pathinfo($filename, PATHINFO_EXTENSION) === 'xml') {
+            if (strtolower((string) pathinfo($filename, PATHINFO_EXTENSION)) === 'xml') {
                 $xmlContent = $zip->getFromIndex($i);
                 break;
             }
@@ -126,6 +240,40 @@ class DmarcParser
         }
 
         return self::parseAggregateReport($xmlContent);
+    }
+
+    /**
+     * Locate the first non-empty node value for the provided XPath expressions.
+     *
+     * @param SimpleXMLElement $xml
+     * @param array $paths
+     * @return string|null
+     */
+    private static function getFirstNodeValue(SimpleXMLElement $xml, array $paths): ?string
+    {
+        foreach ($paths as $path) {
+            $results = $xml->xpath($path);
+            if (!empty($results)) {
+                $value = trim((string) $results[0]);
+                if ($value !== '') {
+                    return $value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Determine if the supplied content resembles XML.
+     *
+     * @param string $contents
+     * @return bool
+     */
+    private static function looksLikeXml(string $contents): bool
+    {
+        $trimmed = ltrim($contents);
+        return $trimmed !== '' && str_starts_with($trimmed, '<');
     }
 
     /**

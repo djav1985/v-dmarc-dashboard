@@ -201,6 +201,11 @@ class ImapIngestionService
     {
         $body = imap_fetchbody($this->connection, $uid, 1, FT_UID);
 
+        if ($body === false || trim($body) === '') {
+            ErrorManager::getInstance()->log('Single-part email contained no body content.', 'warning');
+            return false;
+        }
+
         try {
             // Try to parse as DMARC forensic report
             $forensicData = DmarcParser::parseForensicReport($body);

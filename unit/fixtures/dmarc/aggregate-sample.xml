@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feedback>
+    <report_metadata>
+        <org_name>Aggregate Org</org_name>
+        <email>reports@example.org</email>
+        <report_id>aggregate-123</report_id>
+        <date_range>
+            <begin>1700000000</begin>
+            <end>1700003600</end>
+        </date_range>
+    </report_metadata>
+    <policy_published>
+        <domain>aggregate.example</domain>
+        <adkim>r</adkim>
+        <aspf>r</aspf>
+        <p>none</p>
+        <sp>none</sp>
+        <pct>100</pct>
+    </policy_published>
+    <record>
+        <row>
+            <source_ip>198.51.100.23</source_ip>
+            <count>5</count>
+            <policy_evaluated>
+                <disposition>none</disposition>
+                <dkim>pass</dkim>
+                <spf>pass</spf>
+            </policy_evaluated>
+        </row>
+        <identifiers>
+            <header_from>aggregate.example</header_from>
+            <envelope_from>mail.aggregate.example</envelope_from>
+            <envelope_to>postmaster@example.org</envelope_to>
+        </identifiers>
+    </record>
+</feedback>

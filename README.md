@@ -73,6 +73,10 @@ php cron.php hourly
 
 Add your custom logic to the switch statement inside `cron.php`.
 
+## DMARC Report Ingestion
+
+The IMAP ingestion service automatically recognises DMARC attachments by their binary signature, so gzip or ZIP payloads no longer require a meaningful filename or extension. Forensic feedback that arrives as a single-part message is parsed directly from the XML body, while empty bodies are skipped with a warning to aid troubleshooting. When operating your mailbox pipeline you can safely stream attachments to temporary files (for example via `tempnam()`), and the ingestion job will still decode and store the aggregate records.
+
 ## Access Control and Data Scoping
 
 Role-based permissions are enforced at the controller entry points through `App\Core\RBACManager::requirePermission()`. Upload, IMAP ingestion, alert administration, domain group management, analytics, report browsing, and the reports management tools now check for their respective capabilities (`upload_reports`, `manage_alerts`, `manage_groups`, `view_analytics`, `view_reports`, etc.) before executing any request or submission logic. Users who lack the required permission receive an HTTP 403 response that explains which capability is missing.
