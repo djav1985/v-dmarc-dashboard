@@ -271,7 +271,20 @@ class PolicySimulation
 
         // Apply percentage (pct) if specified
         $pct = isset($simulatedPolicy['pct']) ? (int) $simulatedPolicy['pct'] : 100;
-        $randomValue = rand(1, 100);
+
+        // Deterministic sampling based on record characteristics to keep
+        // simulations repeatable across runs while still distributing
+        // partial enforcement. We hash the core identifiers and map the
+        // value to a 1-100 range instead of relying on rand().
+        $hashSource = implode('|', [
+            $record['report_id'] ?? '',
+            $record['source_ip'] ?? '',
+            $record['header_from'] ?? '',
+            $simulatedPolicy['p'] ?? '',
+            $pct,
+        ]);
+        $hash = hash('sha256', $hashSource);
+        $randomValue = (int) (hexdec(substr($hash, 0, 8)) % 100) + 1;
 
         if ($randomValue > $pct) {
             return 'none'; // Not subject to policy due to percentage

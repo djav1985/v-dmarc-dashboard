@@ -229,24 +229,36 @@ class PdfReportSchedule
     /**
      * Remove a schedule.
      */
-    public static function delete(int $id): void
+    public static function delete(int $id): bool
     {
+        $schedule = self::find($id);
+        if ($schedule === null) {
+            return false;
+        }
+
         $db = DatabaseManager::getInstance();
         $db->query('DELETE FROM pdf_report_schedules WHERE id = :id');
         $db->bind(':id', $id);
         $db->execute();
+        return $db->rowCount() > 0;
     }
 
     /**
      * Toggle enabled flag for a schedule.
      */
-    public static function setEnabled(int $id, bool $enabled): void
+    public static function setEnabled(int $id, bool $enabled): bool
     {
+        $schedule = self::find($id);
+        if ($schedule === null) {
+            return false;
+        }
+
         $db = DatabaseManager::getInstance();
         $db->query('UPDATE pdf_report_schedules SET enabled = :enabled WHERE id = :id');
         $db->bind(':enabled', $enabled ? 1 : 0);
         $db->bind(':id', $id);
         $db->execute();
+        return true;
     }
 
     private static function scheduleIsAccessible(array $schedule): bool

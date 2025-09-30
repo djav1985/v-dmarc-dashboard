@@ -616,11 +616,21 @@ class DmarcReport
             return ['abort' => true];
         }
 
-        $accessibleDomainIds = array_map(static fn($domain) => (int) $domain['id'], $accessibleDomains);
+        $accessibleDomainIds = [];
         $accessibleDomainMap = [];
         foreach ($accessibleDomains as $domain) {
-            if (isset($domain['domain'])) {
-                $accessibleDomainMap[$domain['domain']] = (int) $domain['id'];
+            $domainId = isset($domain['id']) ? (int) $domain['id'] : 0;
+            $domainName = isset($domain['domain']) ? (string) $domain['domain'] : '';
+
+            if ($domainId > 0) {
+                $accessibleDomainIds[] = $domainId;
+            }
+
+            if ($domainName !== '') {
+                $accessibleDomainMap[strtolower($domainName)] = [
+                    'id' => $domainId,
+                    'domain' => $domainName,
+                ];
             }
         }
 
@@ -632,22 +642,35 @@ class DmarcReport
         // Domain scoping
         if (!empty($filters['domain'])) {
             $domains = is_array($filters['domain']) ? $filters['domain'] : [$filters['domain']];
-            $domains = array_values(array_unique(array_filter(array_map(static fn($domain) => trim((string) $domain), $domains))));
+            $domains = array_values(array_map(static fn($domain) => trim((string) $domain), $domains));
 
-            if (empty($domains)) {
+            $originalDomains = [];
+            $normalizedDomains = [];
+            foreach ($domains as $domainName) {
+                if ($domainName === '') {
+                    continue;
+                }
+
+                $originalDomains[] = $domainName;
+                $normalizedDomains[] = strtolower($domainName);
+            }
+
+            if (empty($originalDomains)) {
                 return ['abort' => true];
             }
 
             if (!$isAdmin) {
-                foreach ($domains as $domainName) {
-                    if (!isset($accessibleDomainMap[$domainName])) {
+                foreach ($normalizedDomains as $normalized) {
+                    if (!isset($accessibleDomainMap[$normalized])) {
                         return ['abort' => true];
                     }
                 }
             }
 
+            $originalDomains = array_values(array_unique($originalDomains));
+
             $placeholders = [];
-            foreach ($domains as $index => $domainName) {
+            foreach ($originalDomains as $index => $domainName) {
                 $placeholder = ':domain_' . $index;
                 $placeholders[] = $placeholder;
                 $bindings[$placeholder] = $domainName;

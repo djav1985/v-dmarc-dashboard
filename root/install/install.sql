@@ -234,8 +234,10 @@ CREATE TABLE email_digest_schedules (
     enabled INTEGER DEFAULT 1,
     last_sent DATETIME,
     next_scheduled DATETIME,
+    created_by TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_filter) REFERENCES domain_groups(id) ON DELETE SET NULL
+    FOREIGN KEY (group_filter) REFERENCES domain_groups(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(username) ON DELETE SET NULL
 );
 
 CREATE TABLE email_digest_logs (

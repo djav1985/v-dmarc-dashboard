@@ -74,6 +74,7 @@ $accessibleScheduleId = EmailDigest::createSchedule([
     'group_filter' => null,
     'enabled' => 1,
     'next_scheduled' => null,
+    'created_by' => $_SESSION['username'],
 ]);
 
 assertTrue($accessibleScheduleId > 0, 'Accessible digest schedule should be created successfully.', $failures);
@@ -87,9 +88,23 @@ $groupScheduleId = EmailDigest::createSchedule([
     'group_filter' => $accessibleGroupId,
     'enabled' => 1,
     'next_scheduled' => null,
+    'created_by' => $_SESSION['username'],
 ]);
 
 assertTrue($groupScheduleId > 0, 'Digest schedules for accessible groups should be allowed.', $failures);
+
+$ownerScheduleId = EmailDigest::createSchedule([
+    'name' => 'Owner Digest ' . $timestamp,
+    'frequency' => 'weekly',
+    'recipients' => ['owner@example.com'],
+    'domain_filter' => '',
+    'group_filter' => null,
+    'enabled' => 1,
+    'next_scheduled' => null,
+    'created_by' => $_SESSION['username'],
+]);
+
+assertTrue($ownerScheduleId > 0, 'Users should be able to create personal digests without filters.', $failures);
 
 // Restricted schedule inserted manually to bypass guard for test coverage
 $db->query('INSERT INTO email_digest_schedules (name, frequency, recipients, domain_filter, group_filter, enabled, next_scheduled) VALUES (:name, :frequency, :recipients, :domain_filter, :group_filter, 1, NULL)');
@@ -107,10 +122,15 @@ $retrievedIds = array_map(static fn(array $row) => (int) ($row['id'] ?? 0), $sch
 
 assertTrue(in_array($accessibleScheduleId, $retrievedIds, true), 'Accessible domain schedule should be listed.', $failures);
 assertTrue(in_array($groupScheduleId, $retrievedIds, true), 'Accessible group schedule should be listed.', $failures);
+assertTrue(in_array($ownerScheduleId, $retrievedIds, true), 'Viewer should see their own unfiltered digests.', $failures);
 assertFalse(in_array($restrictedScheduleId, $retrievedIds, true), 'Schedules for unauthorized domains must be hidden.', $failures);
 
 $restrictedDigest = EmailDigest::generateDigestData($restrictedScheduleId, date('Y-m-d'), date('Y-m-d'));
 assertTrue(empty($restrictedDigest), 'Generating data for unauthorized schedules should return empty results.', $failures);
+
+assertTrue(EmailDigest::setEnabled($accessibleScheduleId, false), 'Authorized schedules should toggle successfully.', $failures);
+assertTrue(EmailDigest::setEnabled($ownerScheduleId, true), 'Owners should be able to enable their personal digests.', $failures);
+assertFalse(EmailDigest::setEnabled($restrictedScheduleId, true), 'Unauthorized schedules must not toggle.', $failures);
 
 echo 'Email digest schedule access tests completed with ' . ($failures === 0 ? 'no failures' : $failures . ' failure(s)') . PHP_EOL;
 exit($failures === 0 ? 0 : 1);

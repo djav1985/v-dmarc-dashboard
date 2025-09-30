@@ -128,7 +128,8 @@ class PdfReportScheduler
                 if ($existing <= $now) {
                     return $now->add($interval);
                 }
-                return $existing->add($interval);
+
+                return $existing;
             } catch (Throwable $exception) {
                 // continue to default path
             }

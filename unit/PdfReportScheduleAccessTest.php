@@ -198,5 +198,11 @@ assertTrue($restrictedLookup === null, 'Unauthorized schedules should not be ret
 $accessibleLookup = PdfReportSchedule::find($viewerScheduleId);
 assertTrue($accessibleLookup !== null, 'Authorized schedules should still be retrievable.', $failures);
 
+assertTrue(PdfReportSchedule::setEnabled($viewerScheduleId, false), 'Authorized schedules should toggle successfully.', $failures);
+assertFalse(PdfReportSchedule::setEnabled($restrictedDomainScheduleId, true), 'Unauthorized schedules must not toggle.', $failures);
+
+assertFalse(PdfReportSchedule::delete($restrictedDomainScheduleId), 'Unauthorized schedules must not be deleted.', $failures);
+assertTrue(PdfReportSchedule::delete($viewerScheduleId), 'Authorized schedules should be deletable.', $failures);
+
 echo 'PdfReport schedule RBAC tests completed with ' . ($failures === 0 ? 'no failures' : $failures . ' failure(s)') . PHP_EOL;
 exit($failures === 0 ? 0 : 1);

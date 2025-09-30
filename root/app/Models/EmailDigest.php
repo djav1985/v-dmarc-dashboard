@@ -4,14 +4,18 @@ namespace App\Models;
 
 use App\Core\DatabaseManager;
 use App\Core\RBACManager;
+use App\Core\SessionManager;
 use DateTimeImmutable;
 use RuntimeException;
+use Throwable;
 
 /**
  * Email Digest model for managing automated email reports
  */
 class EmailDigest
 {
+    private static ?bool $hasCreatedByColumn = null;
+
     /**
      * Get all digest schedules
      *
@@ -50,6 +54,16 @@ class EmailDigest
 
         $conditions = [];
         $bindings = [];
+        $supportsCreatedBy = self::supportsCreatedByColumn();
+
+        if ($supportsCreatedBy) {
+            $session = SessionManager::getInstance();
+            $username = (string) $session->get('username', '');
+            if ($username !== '') {
+                $conditions[] = '(eds.created_by = :current_user)';
+                $bindings[':current_user'] = $username;
+            }
+        }
 
         if (!empty($accessibleDomains)) {
             $placeholders = [];
@@ -93,9 +107,10 @@ class EmailDigest
         foreach ($bindings as $placeholder => $value) {
             if (str_starts_with($placeholder, ':authorized_domain_')) {
                 $db->bind($placeholder, strtolower((string) $value));
-            } else {
-                $db->bind($placeholder, $value);
+                continue;
             }
+
+            $db->bind($placeholder, $value);
         }
 
         return $db->resultSet();
@@ -118,11 +133,21 @@ class EmailDigest
 
         self::assertFilterAccess($domainFilter, $groupFilter);
 
-        $db->query('
-            INSERT INTO email_digest_schedules
-            (name, frequency, recipients, domain_filter, group_filter, enabled, next_scheduled)
-            VALUES (:name, :frequency, :recipients, :domain_filter, :group_filter, :enabled, :next_scheduled)
-        ');
+        $supportsCreatedBy = self::supportsCreatedByColumn();
+
+        if ($supportsCreatedBy) {
+            $db->query('
+                INSERT INTO email_digest_schedules
+                (name, frequency, recipients, domain_filter, group_filter, enabled, next_scheduled, created_by)
+                VALUES (:name, :frequency, :recipients, :domain_filter, :group_filter, :enabled, :next_scheduled, :created_by)
+            ');
+        } else {
+            $db->query('
+                INSERT INTO email_digest_schedules
+                (name, frequency, recipients, domain_filter, group_filter, enabled, next_scheduled)
+                VALUES (:name, :frequency, :recipients, :domain_filter, :group_filter, :enabled, :next_scheduled)
+            ');
+        }
 
         $db->bind(':name', $data['name']);
         $db->bind(':frequency', $data['frequency']);
@@ -131,6 +156,9 @@ class EmailDigest
         $db->bind(':group_filter', $groupFilter);
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->bind(':next_scheduled', $data['next_scheduled'] ?? null);
+        if ($supportsCreatedBy) {
+            $db->bind(':created_by', $data['created_by'] ?? null);
+        }
         $db->execute();
 
         return (int) $db->getLastInsertId();
@@ -292,7 +320,7 @@ class EmailDigest
     /**
      * Retrieve a specific schedule.
      */
-    public static function getSchedule(int $scheduleId): ?array
+    public static function getSchedule(int $scheduleId, bool $enforceAccess = false): ?array
     {
         $db = DatabaseManager::getInstance();
 
@@ -300,16 +328,28 @@ class EmailDigest
         $db->bind(':id', $scheduleId);
 
         $result = $db->single();
-        return $result ?: null;
+        if (!$result) {
+            return null;
+        }
+
+        if ($enforceAccess && !self::scheduleIsAccessible($result)) {
+            return null;
+        }
+
+        return $result;
     }
 
     /**
      * Enable or disable a schedule.
      */
-    public static function setEnabled(int $scheduleId, bool $enabled): void
+    public static function setEnabled(int $scheduleId, bool $enabled): bool
     {
-        $db = DatabaseManager::getInstance();
+        $schedule = self::getSchedule($scheduleId, true);
+        if ($schedule === null) {
+            return false;
+        }
 
+        $db = DatabaseManager::getInstance();
         $db->query('
             UPDATE email_digest_schedules
             SET enabled = :enabled
@@ -319,6 +359,7 @@ class EmailDigest
         $db->bind(':enabled', $enabled ? 1 : 0);
         $db->bind(':id', $scheduleId);
         $db->execute();
+        return true;
     }
 
     /**
@@ -427,6 +468,12 @@ class EmailDigest
             return true;
         }
 
+        $session = SessionManager::getInstance();
+        $username = (string) $session->get('username', '');
+        if ($username !== '' && ($schedule['created_by'] ?? null) === $username) {
+            return true;
+        }
+
         $domainFilter = strtolower(trim((string) ($schedule['domain_filter'] ?? '')));
         if ($domainFilter !== '') {
             $accessibleDomains = array_map(
@@ -468,6 +515,40 @@ class EmailDigest
 
         if ($groupFilter !== null && !$rbac->canAccessGroup($groupFilter)) {
             throw new RuntimeException('You are not authorized to create digests for the selected group.');
+        }
+    }
+
+    private static function supportsCreatedByColumn(): bool
+    {
+        if (self::$hasCreatedByColumn !== null) {
+            return self::$hasCreatedByColumn;
+        }
+
+        try {
+            $db = DatabaseManager::getInstance();
+            $driver = strtolower($db->getDriverName());
+
+            if (str_contains($driver, 'sqlite')) {
+                $db->query('PRAGMA table_info(email_digest_schedules)');
+                $columns = $db->resultSet();
+                foreach ($columns as $column) {
+                    $name = strtolower((string) ($column['name'] ?? ''));
+                    if ($name === 'created_by') {
+                        self::$hasCreatedByColumn = true;
+                        return true;
+                    }
+                }
+                self::$hasCreatedByColumn = false;
+                return false;
+            }
+
+            $db->query("SHOW COLUMNS FROM email_digest_schedules LIKE 'created_by'");
+            $column = $db->single();
+            self::$hasCreatedByColumn = !empty($column);
+            return self::$hasCreatedByColumn;
+        } catch (Throwable $exception) {
+            self::$hasCreatedByColumn = false;
+            return false;
         }
     }
 }
