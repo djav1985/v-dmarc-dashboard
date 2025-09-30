@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Implemented Spectre-based alert rule management, incident tracking, and rule creation views with CSRF-aware forms.
 - Added reusable HTML email templates for alert incidents, digest schedules, and ad-hoc report sends.
 - Built a digest scheduling controller/UI with supporting tests covering automated dispatch and mailer mocking.
+- Added database compatibility regression tests covering digest timestamps, analytics bucketing, transactional deletion, and IMAP attachment cleanup.
 
 ### Changed
 - Updated documentation to explain the dual Composer environments and new directory structure.
@@ -23,3 +24,5 @@ All notable changes to this project will be documented in this file.
 - Enhanced the report detail view and GeoIP service to surface RDAP contacts, DNSBL status, and reputation signals for each source IP.
 - Updated alert processing to reuse a dedicated service, expanded cron automation with alert and digest jobs, and enabled email delivery through templated mailer calls.
 - Stopped tracking the generated SQLite demo database in version control and documented how to recreate it from the consolidated installer.
+- Updated digest schedule persistence, analytics date expressions, and user deletion handling for cross-database compatibility and safer transaction rollbacks.
+- Ensured IMAP attachment processing always cleans up temporary files and logs the failing path for diagnostics.

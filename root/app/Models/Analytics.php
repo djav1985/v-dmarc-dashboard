@@ -32,9 +32,11 @@ class Analytics
             $bindParams[':domain'] = $domain;
         }
 
+        $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
+
         $query = "
-            SELECT 
-                DATE(datetime(dar.date_range_begin, 'unixepoch')) as date,
+            SELECT
+                {$dateExpression} as date,
                 COUNT(DISTINCT dar.id) as report_count,
                 SUM(dmar.count) as total_volume,
                 SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) as passed_count,
@@ -45,10 +47,10 @@ class Analytics
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
-            GROUP BY DATE(datetime(dar.date_range_begin, 'unixepoch'))
+            GROUP BY {$dateExpression}
             ORDER BY date ASC
         ";
 
@@ -243,11 +245,13 @@ class Analytics
             $bindParams[':domain'] = $domain;
         }
 
+        $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
+
         $query = "
-            SELECT 
-                DATE(datetime(dar.date_range_begin, 'unixepoch')) as date,
+            SELECT
+                {$dateExpression} as date,
                 ROUND(
-                    (SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as dkim_compliance,
                 ROUND(
@@ -261,10 +265,10 @@ class Analytics
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
-            GROUP BY DATE(datetime(dar.date_range_begin, 'unixepoch'))
+            GROUP BY {$dateExpression}
             HAVING SUM(dmar.count) > 0
             ORDER BY date ASC
         ";
@@ -275,5 +279,21 @@ class Analytics
         }
 
         return $db->resultSet();
+    }
+
+    /**
+     * Determine the SQL expression for converting a UNIX timestamp to a date.
+     */
+    private static function getDateBucketExpression(string $column): string
+    {
+        $db = DatabaseManager::getInstance();
+        $driver = strtolower($db->getDriverName());
+        $isSqlite = (defined('USE_SQLITE') && USE_SQLITE) || strpos($driver, 'sqlite') !== false;
+
+        if ($isSqlite) {
+            return "DATE(datetime($column, 'unixepoch'))";
+        }
+
+        return "DATE(FROM_UNIXTIME($column))";
     }
 }
