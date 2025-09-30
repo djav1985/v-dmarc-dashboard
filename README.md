@@ -73,6 +73,16 @@ php cron.php hourly
 
 Add your custom logic to the switch statement inside `cron.php`.
 
+## Timezone Configuration
+
+The application honours PHP's default timezone when binding timestamps for alert
+queries, digest schedules, and other scheduled tasks. Configure
+`date.timezone` in `php.ini` (or call `date_default_timezone_set()` during
+bootstrap) to match the timezone used by your database. When the database stores
+local timestamps—such as the `received_at` column for DMARC reports—ensuring the
+runtime timezone matches avoids mismatches in alert windows and notification
+scheduling.
+
 ## DMARC Report Ingestion
 
 The IMAP ingestion service automatically recognises DMARC attachments by their binary signature, so gzip or ZIP payloads no longer require a meaningful filename or extension. Forensic feedback that arrives as a single-part message is parsed directly from the XML body, while empty bodies are skipped with a warning to aid troubleshooting. When operating your mailbox pipeline you can safely stream attachments to temporary files (for example via `tempnam()`), and the ingestion job will still decode and store the aggregate records.

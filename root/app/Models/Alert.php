@@ -115,8 +115,16 @@ class Alert
     {
         $db = DatabaseManager::getInstance();
         $timeWindow = (int) $rule['time_window'];
-        $startTimestamp = time() - ($timeWindow * 60);
-        $startTime = gmdate('Y-m-d H:i:s', $startTimestamp);
+        $intervalMinutes = max(0, $timeWindow);
+
+        // Alerts operate on the application's configured timezone so the bound
+        // timestamps align with the database `received_at` values that are
+        // stored in local time (see README for configuration guidance).
+        $timezone = new \DateTimeZone(date_default_timezone_get());
+        $windowInterval = new \DateInterval('PT' . $intervalMinutes . 'M');
+        $now = new \DateTimeImmutable('now', $timezone);
+        $startTimePoint = $now->sub($windowInterval);
+        $startTime = $startTimePoint->format('Y-m-d H:i:s');
 
         // Build domain filter
         $whereClause = '';
@@ -149,8 +157,7 @@ class Alert
 
             case 'volume_increase':
                 // Compare current window to previous window
-                $prevStartTimestamp = $startTimestamp - ($timeWindow * 60);
-                $prevStartTime = gmdate('Y-m-d H:i:s', $prevStartTimestamp);
+                $prevStartTime = $startTimePoint->sub($windowInterval)->format('Y-m-d H:i:s');
                 $query = "
                     SELECT
                         CASE
