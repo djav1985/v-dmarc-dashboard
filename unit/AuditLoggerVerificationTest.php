@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
+require __DIR__ . '/TestHelpers.php';
 
 use App\Core\AuditLogger;
+use function TestHelpers\assertPredicate;
 
 /**
  * Manual verification test of the updated AuditLogger methods
@@ -13,17 +15,6 @@ use App\Core\AuditLogger;
  */
 
 $failures = 0;
-
-/**
- * Simple assertion helper that records failures and reports a helpful message.
- */
-function assertPredicate(bool $condition, string $message, int &$failures): void
-{
-    if (!$condition) {
-        fwrite(STDERR, $message . PHP_EOL);
-        $failures++;
-    }
-}
 
 // Test SQL query construction by inspecting the generated SQL and parameters
 function testSQLQueryConstruction(): string
