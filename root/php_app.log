@@ -24,3 +24,6 @@
 [2025-09-29 23:34:35] [error]: Invalid username or password.
 [2025-09-29 23:39:11] [error]: Your IP has been blacklisted due to multiple failed login attempts.
 [2025-09-29 23:39:27] [error]: Blacklisted IP attempted access: ::1
+[2025-09-30 00:31:52] [error]: Your IP has been blacklisted due to multiple failed login attempts.
+[2025-09-30 00:32:04] [error]: Your IP has been blacklisted due to multiple failed login attempts.
+[2025-09-30 00:32:14] [error]: Blacklisted IP attempted access: ::1

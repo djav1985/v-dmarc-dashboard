@@ -18,13 +18,13 @@
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             
             <div class="columns">
-                <div class="column col-lg-6 col-md-12">
+                <div class="column col-6 col-sm-12">
                     <div class="form-group">
                         <label class="form-label" for="username">Username *</label>
                         <input class="form-input" type="text" id="username" name="username" required>
                     </div>
                 </div>
-                <div class="column col-lg-6 col-md-12">
+                <div class="column col-6 col-sm-12">
                     <div class="form-group">
                         <label class="form-label" for="password">Password *</label>
                         <input class="form-input" type="password" id="password" name="password" required>
@@ -34,19 +34,19 @@
             </div>
             
             <div class="columns">
-                <div class="column col-lg-4 col-md-6 col-sm-12">
+                <div class="column col-4 col-sm-12">
                     <div class="form-group">
                         <label class="form-label" for="first_name">First Name</label>
                         <input class="form-input" type="text" id="first_name" name="first_name">
                     </div>
                 </div>
-                <div class="column col-lg-4 col-md-6 col-sm-12">
+                <div class="column col-4 col-sm-12">
                     <div class="form-group">
                         <label class="form-label" for="last_name">Last Name</label>
                         <input class="form-input" type="text" id="last_name" name="last_name">
                     </div>
                 </div>
-                <div class="column col-lg-4 col-md-12 col-sm-12">
+                <div class="column col-4 col-sm-12">
                     <div class="form-group">
                         <label class="form-label" for="email">Email</label>
                         <input class="form-input" type="email" id="email" name="email">

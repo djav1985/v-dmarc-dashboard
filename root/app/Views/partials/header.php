@@ -57,48 +57,50 @@ $brandingVars = $branding->getBrandingVars();
         </section>
         
         <section class="navbar-section navbar-center">
-            <a class="btn btn-link nav-link" href="/home">
-                <i class="icon icon-home"></i> Dashboard
-            </a>
-            
-            <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
-            <a class="btn btn-link nav-link" href="/reports">
-                <i class="icon icon-list"></i> Reports
-            </a>
-            <?php endif; ?>
-            
-            <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_ANALYTICS)): ?>
-            <a class="btn btn-link nav-link" href="/analytics">
-                <i class="icon icon-bookmark"></i> Analytics
-            </a>
-            <?php endif; ?>
-            
-            <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_GROUPS)): ?>
-            <a class="btn btn-link nav-link" href="/domain-groups">
-                <i class="icon icon-people"></i> Groups
-            </a>
-            <?php endif; ?>
-            
-            <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_ALERTS)): ?>
-            <a class="btn btn-link nav-link" href="/alerts">
-                <i class="icon icon-flag"></i> Alerts
-            </a>
-            <?php endif; ?>
-            
-            <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
-            <a class="btn btn-link nav-link" href="/reports-management">
-                <i class="icon icon-docs"></i> PDF Reports
-            </a>
-            <?php endif; ?>
-            
-            <?php if ($rbac->hasPermission(RBACManager::PERM_UPLOAD_REPORTS)): ?>
-            <a class="btn btn-link nav-link" href="/upload">
-                <i class="icon icon-upload"></i> Upload
-            </a>
-            <a class="btn btn-link nav-link" href="/imap">
-                <i class="icon icon-mail"></i> IMAP
-            </a>
-            <?php endif; ?>
+            <div class="nav">
+                <a class="nav-item" href="/home">
+                    <i class="icon icon-home"></i> Dashboard
+                </a>
+                
+                <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
+                <a class="nav-item" href="/reports">
+                    <i class="icon icon-list"></i> Reports
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_ANALYTICS)): ?>
+                <a class="nav-item" href="/analytics">
+                    <i class="icon icon-bookmark"></i> Analytics
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_GROUPS)): ?>
+                <a class="nav-item" href="/domain-groups">
+                    <i class="icon icon-people"></i> Groups
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_ALERTS)): ?>
+                <a class="nav-item" href="/alerts">
+                    <i class="icon icon-flag"></i> Alerts
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
+                <a class="nav-item" href="/reports-management">
+                    <i class="icon icon-docs"></i> PDF Reports
+                </a>
+                <?php endif; ?>
+                
+                <?php if ($rbac->hasPermission(RBACManager::PERM_UPLOAD_REPORTS)): ?>
+                <a class="nav-item" href="/upload">
+                    <i class="icon icon-upload"></i> Upload
+                </a>
+                <a class="nav-item" href="/imap">
+                    <i class="icon icon-mail"></i> IMAP
+                </a>
+                <?php endif; ?>
+            </div>
         </section>
         
         <section class="navbar-section">
