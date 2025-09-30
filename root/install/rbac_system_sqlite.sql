@@ -98,12 +98,28 @@ CREATE TABLE ip_intelligence (
     is_malicious INTEGER DEFAULT 0,
     is_tor INTEGER DEFAULT 0,
     is_proxy INTEGER DEFAULT 0,
+    rdap_registry TEXT,
+    rdap_network_range TEXT,
+    rdap_network_start TEXT,
+    rdap_network_end TEXT,
+    rdap_contacts TEXT, -- JSON stored as text
+    rdap_raw TEXT, -- JSON stored as text
+    rdap_checked_at DATETIME,
+    dnsbl_listed INTEGER DEFAULT 0,
+    dnsbl_sources TEXT, -- JSON stored as text
+    dnsbl_last_checked DATETIME,
+    reputation_score INTEGER,
+    reputation_context TEXT, -- JSON stored as text
+    reputation_last_checked DATETIME,
     last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_ip_intelligence_ip ON ip_intelligence(ip_address);
 CREATE INDEX idx_ip_intelligence_country ON ip_intelligence(country_code);
 CREATE INDEX idx_ip_intelligence_threat ON ip_intelligence(threat_score, is_malicious);
+CREATE INDEX idx_ip_intelligence_registry ON ip_intelligence(rdap_registry);
+CREATE INDEX idx_ip_intelligence_dnsbl ON ip_intelligence(dnsbl_listed, dnsbl_last_checked);
+CREATE INDEX idx_ip_intelligence_reputation ON ip_intelligence(reputation_score);
 
 -- Session management for enhanced security
 CREATE TABLE user_sessions (

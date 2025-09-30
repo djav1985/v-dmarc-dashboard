@@ -96,10 +96,26 @@ CREATE TABLE ip_intelligence (
     is_malicious BOOLEAN DEFAULT FALSE,
     is_tor BOOLEAN DEFAULT FALSE,
     is_proxy BOOLEAN DEFAULT FALSE,
+    rdap_registry VARCHAR(32),
+    rdap_network_range VARCHAR(100),
+    rdap_network_start VARCHAR(45),
+    rdap_network_end VARCHAR(45),
+    rdap_contacts JSON,
+    rdap_raw JSON,
+    rdap_checked_at TIMESTAMP NULL,
+    dnsbl_listed BOOLEAN DEFAULT FALSE,
+    dnsbl_sources JSON,
+    dnsbl_last_checked TIMESTAMP NULL,
+    reputation_score INT,
+    reputation_context JSON,
+    reputation_last_checked TIMESTAMP NULL,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_ip (ip_address),
     INDEX idx_country (country_code),
-    INDEX idx_threat (threat_score, is_malicious)
+    INDEX idx_threat (threat_score, is_malicious),
+    INDEX idx_rdap_registry (rdap_registry),
+    INDEX idx_dnsbl_status (dnsbl_listed, dnsbl_last_checked),
+    INDEX idx_reputation_score (reputation_score)
 );
 
 -- Session management for enhanced security

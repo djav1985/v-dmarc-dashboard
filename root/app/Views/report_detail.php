@@ -45,6 +45,59 @@ function formatIPAddress($ip) {
     }
     return "<code>$ip</code>";
 }
+
+function formatRegistry(?string $registry): string {
+    if (!$registry) {
+        return '<span class="text-gray">Unknown registry</span>';
+    }
+    return '<span class="chip chip-sm">' . htmlspecialchars(strtoupper($registry)) . '</span>';
+}
+
+function formatDnsblStatus(array $intel): string {
+    $listed = !empty($intel['dnsbl_listed']);
+    $class = $listed ? 'label label-error' : 'label label-success';
+    $text = $listed ? 'Spamhaus listing' : 'Spamhaus clear';
+    return '<span class="' . $class . '">' . $text . '</span>';
+}
+
+function formatReputationScore($score): string {
+    if ($score === null || $score === '') {
+        return '<span class="chip">Score: n/a</span>';
+    }
+    $score = (int) $score;
+    $class = $score >= 80 ? 'label label-error' : ($score >= 40 ? 'label label-warning' : 'label label-success');
+    return '<span class="' . $class . '">Score ' . $score . '</span>';
+}
+
+function renderRdapContacts(array $contacts): string {
+    if (empty($contacts)) {
+        return '<span class="text-gray">No published contacts</span>';
+    }
+
+    $items = [];
+    foreach ($contacts as $contact) {
+        $name = $contact['name'] ?? $contact['handle'] ?? 'Contact';
+        $segments = [htmlspecialchars((string) $name)];
+
+        if (!empty($contact['roles'])) {
+            $segments[] = '<span class="label label-secondary label-rounded text-uppercase">' . htmlspecialchars(implode(', ', (array) $contact['roles'])) . '</span>';
+        }
+
+        if (!empty($contact['email'])) {
+            $segments[] = '<span class="text-gray">' . htmlspecialchars((string) $contact['email']) . '</span>';
+        }
+
+        if (!empty($contact['phone'])) {
+            $segments[] = '<span class="text-gray">' . htmlspecialchars((string) $contact['phone']) . '</span>';
+        }
+
+        $items[] = '<li class="menu-item">' . implode(' ', $segments) . '</li>';
+    }
+
+    return '<ul class="menu menu-nav contact-list mb-0">' . implode('', $items) . '</ul>';
+}
+
+$intelMap = $this->data['ip_intelligence'] ?? [];
 ?>
 
 <style>
@@ -89,6 +142,24 @@ function formatIPAddress($ip) {
 }
 .record-row:last-child {
     border-bottom: none;
+}
+.ip-insights {
+    background: #f5f7fb;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+.ip-insights .tile {
+    margin-bottom: 0.5rem;
+}
+.contact-list {
+    list-style: none;
+    padding-left: 0;
+}
+.contact-list .menu-item {
+    padding: 0.15rem 0;
+}
+.dnsbl-notes div {
+    line-height: 1.2;
 }
 </style>
 
@@ -199,7 +270,93 @@ function formatIPAddress($ip) {
                                 <span class="chip"><?= number_format($ipGroup['total_count']) ?> messages</span>
                             </div>
                         </div>
-                        
+
+                        <?php $intel = $intelMap[$ipGroup['ip']] ?? null; ?>
+                        <?php if ($intel): ?>
+                            <div class="ip-insights">
+                                <div class="columns">
+                                    <div class="column col-4 col-sm-12">
+                                        <div class="tile tile-centered">
+                                            <div class="tile-icon"><i class="icon icon-location text-primary"></i></div>
+                                            <div class="tile-content">
+                                                <div class="tile-title">
+                                                    <?= htmlspecialchars($intel['country_name'] ?? 'Unknown location') ?>
+                                                </div>
+                                                <?php if (!empty($intel['city']) || !empty($intel['region'])): ?>
+                                                    <div class="tile-subtitle text-gray">
+                                                        <?= htmlspecialchars(trim(($intel['city'] ?? '') . (!empty($intel['region']) ? ', ' . $intel['region'] : ''))) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($intel['organization'])): ?>
+                                                    <div class="text-tiny text-secondary">Org: <?= htmlspecialchars($intel['organization']) ?></div>
+                                                <?php elseif (!empty($intel['isp'])): ?>
+                                                    <div class="text-tiny text-secondary">ISP: <?= htmlspecialchars($intel['isp']) ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($intel['asn'])): ?>
+                                                    <div class="text-tiny text-gray">ASN <?= htmlspecialchars($intel['asn']) ?><?= !empty($intel['asn_org']) ? ' (' . htmlspecialchars($intel['asn_org']) . ')' : '' ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column col-4 col-sm-12">
+                                        <div class="tile tile-centered">
+                                            <div class="tile-icon"><i class="icon icon-people text-primary"></i></div>
+                                            <div class="tile-content">
+                                                <div class="tile-title">Ownership</div>
+                                                <div class="tile-subtitle">
+                                                    <?= formatRegistry($intel['rdap_registry'] ?? null) ?>
+                                                    <?php if (!empty($intel['rdap_network_range'])): ?>
+                                                        <span class="chip chip-sm ml-1"><?= htmlspecialchars($intel['rdap_network_range']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <?php if (!empty($intel['rdap_network_start']) && !empty($intel['rdap_network_end'])): ?>
+                                                    <div class="text-tiny text-gray">
+                                                        <?= htmlspecialchars($intel['rdap_network_start']) ?> – <?= htmlspecialchars($intel['rdap_network_end']) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="mt-1">
+                                                    <?= renderRdapContacts($intel['rdap_contacts'] ?? []) ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column col-4 col-sm-12">
+                                        <div class="tile tile-centered">
+                                            <div class="tile-icon"><i class="icon icon-shield text-primary"></i></div>
+                                            <div class="tile-content">
+                                                <div class="tile-title">Reputation</div>
+                                                <div class="tile-subtitle">
+                                                    <?= formatDnsblStatus($intel) ?>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <?= formatReputationScore($intel['reputation_score'] ?? null) ?>
+                                                </div>
+                                                <?php if (!empty($intel['reputation_context']['threatlevel'])): ?>
+                                                    <div class="text-tiny text-gray">Level: <?= htmlspecialchars($intel['reputation_context']['threatlevel']) ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($intel['reputation_context']['attacks'])): ?>
+                                                    <div class="text-tiny text-gray">Recent attacks: <?= htmlspecialchars((string) $intel['reputation_context']['attacks']) ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($intel['dnsbl_sources'])): ?>
+                                                    <div class="dnsbl-notes mt-1">
+                                                        <?php foreach ($intel['dnsbl_sources'] as $source): ?>
+                                                            <?php $response = isset($source['response']) ? htmlspecialchars((string) $source['response']) : ''; ?>
+                                                            <?php if ($response !== ''): ?>
+                                                                <div><?= $response ?></div>
+                                                            <?php endif; ?>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($intel['dnsbl_last_checked'])): ?>
+                                                    <div class="text-tiny text-gray">Checked: <?= htmlspecialchars($intel['dnsbl_last_checked']) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <?php foreach ($ipGroup['records'] as $record): ?>
                             <div class="record-row">
                                 <div class="columns">
