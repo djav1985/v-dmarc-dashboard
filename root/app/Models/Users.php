@@ -24,6 +24,19 @@ class Users
     }
 
     /**
+     * Find a user by email address.
+     */
+    public static function getUserByEmail(string $email): ?object
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT * FROM users WHERE email = :email AND is_active = 1 LIMIT 1');
+        $db->bind(':email', $email);
+        $result = $db->single();
+
+        return $result ? (object) $result : null;
+    }
+
+    /**
      * Update last login timestamp for user.
      *
      * @param string $username
@@ -102,7 +115,7 @@ class Users
     {
         try {
             $db = DatabaseManager::getInstance();
-            
+
             $setParts = [];
             $params = [':username' => $username];
 
@@ -141,6 +154,23 @@ class Users
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Update profile fields for a user.
+     */
+    public static function updateProfile(string $username, array $profileData): bool
+    {
+        $fields = array_intersect_key(
+            $profileData,
+            array_flip(['first_name', 'last_name', 'email'])
+        );
+
+        if (empty($fields)) {
+            return false;
+        }
+
+        return self::updateUser($username, $fields);
     }
 
     /**

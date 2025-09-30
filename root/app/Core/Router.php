@@ -41,19 +41,29 @@ class Router
 
             $r->addRoute('GET', '/login', [\App\Controllers\LoginController::class, 'handleRequest']);
             $r->addRoute('POST', '/login', [\App\Controllers\LoginController::class, 'handleSubmission']);
-            
+
+            // Password reset flows
+            $r->addRoute('GET', '/password-reset', [\App\Controllers\PasswordResetController::class, 'handleRequest']);
+            $r->addRoute('POST', '/password-reset', [\App\Controllers\PasswordResetController::class, 'handleSubmission']);
+            $r->addRoute('GET', '/password-reset/{token}', [\App\Controllers\PasswordResetController::class, 'showResetForm']);
+            $r->addRoute('POST', '/password-reset/{token}', [\App\Controllers\PasswordResetController::class, 'processReset']);
+
             // DMARC Dashboard specific routes
             $r->addRoute('GET', '/upload', [\App\Controllers\UploadController::class, 'handleRequest']);
             $r->addRoute('POST', '/upload', [\App\Controllers\UploadController::class, 'handleSubmission']);
-            
+
             // IMAP Email Ingestion routes
             $r->addRoute('GET', '/imap', [\App\Controllers\ImapController::class, 'handleRequest']);
             $r->addRoute('POST', '/imap', [\App\Controllers\ImapController::class, 'handleSubmission']);
-            
+
+            // Profile management
+            $r->addRoute('GET', '/profile', [\App\Controllers\ProfileController::class, 'handleRequest']);
+            $r->addRoute('POST', '/profile', [\App\Controllers\ProfileController::class, 'handleSubmission']);
+
             // Reports listing and filtering
             $r->addRoute('GET', '/reports', [\App\Controllers\ReportsController::class, 'handleRequest']);
             $r->addRoute('POST', '/reports', [\App\Controllers\ReportsController::class, 'handleSubmission']);
-            
+
             // Individual report details
             $r->addRoute('GET', '/report/{id:\d+}', [\App\Controllers\ReportDetailController::class, 'handleRequest']);
             
@@ -76,11 +86,25 @@ class Router
             // Reports management and PDF generation
             $r->addRoute('GET', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleRequest']);
             $r->addRoute('POST', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleSubmission']);
-            
+
             // User management (RBAC)
             $r->addRoute('GET', '/user-management', [\App\Controllers\UserManagementController::class, 'handleRequest']);
             $r->addRoute('POST', '/user-management', [\App\Controllers\UserManagementController::class, 'handleSubmission']);
-            
+
+            // Security operations
+            $r->addRoute('GET', '/audit-logs', [\App\Controllers\AuditLogController::class, 'handleRequest']);
+            $r->addRoute('POST', '/audit-logs', [\App\Controllers\AuditLogController::class, 'handleSubmission']);
+            $r->addRoute('GET', '/blacklist', [\App\Controllers\BlacklistController::class, 'handleRequest']);
+            $r->addRoute('POST', '/blacklist', [\App\Controllers\BlacklistController::class, 'handleSubmission']);
+
+            // Forensic reports
+            $r->addRoute('GET', '/forensic-reports', [\App\Controllers\ForensicReportsController::class, 'handleRequest']);
+            $r->addRoute('GET', '/forensic-reports/{id:\d+}', [\App\Controllers\ForensicReportsController::class, 'show']);
+
+            // TLS reports
+            $r->addRoute('GET', '/tls-reports', [\App\Controllers\TlsReportsController::class, 'handleRequest']);
+            $r->addRoute('GET', '/tls-reports/{id:\d+}', [\App\Controllers\TlsReportsController::class, 'show']);
+
             // Branding settings
             $r->addRoute('GET', '/branding', [\App\Controllers\BrandingController::class, 'handleRequest']);
             $r->addRoute('POST', '/branding', [\App\Controllers\BrandingController::class, 'handleSubmission']);
@@ -125,7 +149,7 @@ class Router
 
             if (is_array($handler) && count($handler) === 2) {
                 // Only enforce auth for controller routes (skip for /login)
-                if ($uri !== '/login') {
+                if (!$this->isPublicRoute($uri)) {
                     SessionManager::getInstance()->requireAuth();
                 }
                 [$class, $action] = $handler;
@@ -140,5 +164,18 @@ class Router
             break;
     }
 }
+
+    private function isPublicRoute(string $uri): bool
+    {
+        if ($uri === '/login') {
+            return true;
+        }
+
+        if (str_starts_with($uri, '/password-reset')) {
+            return true;
+        }
+
+        return false;
+    }
 
 }
