@@ -101,9 +101,7 @@ class UploadController extends Controller
             }
         }
 
-        if (isset($files['report_file']) && $files['report_file']['error'] === UPLOAD_ERR_OK) {
-            $uploads[] = $files['report_file'];
-        }
+        // The old single-file field 'report_file' is no longer supported.
 
         return $uploads;
     }
