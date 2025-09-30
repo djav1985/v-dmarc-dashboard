@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\DomainGroup;
 use App\Models\Domain;
+use App\Core\RBACManager;
 
 /**
  * Domain Groups Controller for managing domain organization
@@ -16,6 +17,7 @@ class DomainGroupsController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_GROUPS);
         // Get all groups with analytics
         $groups = DomainGroup::getAllGroups();
         
@@ -45,6 +47,7 @@ class DomainGroupsController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_GROUPS);
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'create_group':

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\RBACManager;
 
 class Domain
 {
@@ -43,9 +44,8 @@ class Domain
      */
     public static function getAllDomains(): array
     {
-        $db = DatabaseManager::getInstance();
-        $db->query('SELECT * FROM domains ORDER BY domain ASC');
-        return $db->resultSet();
+        $rbac = RBACManager::getInstance();
+        return $rbac->getAccessibleDomains();
     }
 
     /**
@@ -64,3 +64,4 @@ class Domain
         return $result ? (object) $result : null;
     }
 }
+

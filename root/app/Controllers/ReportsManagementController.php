@@ -7,6 +7,7 @@ use App\Models\PdfReport;
 use App\Models\PolicySimulation;
 use App\Models\Domain;
 use App\Models\DomainGroup;
+use App\Core\RBACManager;
 
 /**
  * Reports Controller for PDF generation and policy simulation
@@ -18,6 +19,7 @@ class ReportsManagementController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
         $action = $_GET['action'] ?? 'dashboard';
 
         switch ($action) {
@@ -47,6 +49,7 @@ class ReportsManagementController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'generate_pdf':

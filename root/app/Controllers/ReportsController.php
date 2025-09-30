@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\DmarcReport;
 use App\Models\Domain;
+use App\Core\RBACManager;
 
 /**
  * Reports Controller for DMARC report listing and filtering
@@ -16,6 +17,7 @@ class ReportsController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
         // Get filter parameters from URL
         $domain = $_GET['domain'] ?? '';
         $disposition = $_GET['disposition'] ?? '';
@@ -81,6 +83,7 @@ class ReportsController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
         // Redirect to GET request with parameters
         $params = [];
 

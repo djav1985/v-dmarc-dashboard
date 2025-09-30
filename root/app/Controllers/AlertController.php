@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Models\Alert;
 use App\Models\DomainGroup;
 use App\Models\Domain;
+use App\Core\RBACManager;
 
 /**
  * Alert Controller for managing real-time alerting system
@@ -17,6 +18,7 @@ class AlertController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_ALERTS);
         $action = $_GET['action'] ?? 'dashboard';
 
         switch ($action) {
@@ -40,6 +42,7 @@ class AlertController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_ALERTS);
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'create_rule':

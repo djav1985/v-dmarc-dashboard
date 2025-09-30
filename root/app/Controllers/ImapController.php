@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Services\ImapIngestionService;
 use App\Helpers\MessageHelper;
+use App\Core\RBACManager;
 
 class ImapController extends Controller
 {
@@ -14,6 +15,7 @@ class ImapController extends Controller
      */
     public function handleRequest(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_UPLOAD_REPORTS);
         $this->render('imap', [
             'imap_configured' => $this->isImapConfigured(),
             'connection_status' => null
@@ -25,6 +27,7 @@ class ImapController extends Controller
      */
     public function handleSubmission(): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_UPLOAD_REPORTS);
         if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
             MessageHelper::addMessage('Invalid CSRF token. Please try again.');
             header('Location: /imap');

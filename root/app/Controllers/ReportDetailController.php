@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\DmarcReport;
+use App\Core\RBACManager;
 
 /**
  * Report Detail Controller for displaying individual DMARC report details
@@ -15,6 +16,7 @@ class ReportDetailController extends Controller
      */
     public function handleRequest($id = null): void
     {
+        RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
         // Get report ID from the route parameters
         $reportId = $id ?? null;
 
