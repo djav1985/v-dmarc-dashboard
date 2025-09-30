@@ -105,8 +105,8 @@ class DmarcParser
             throw new Exception('Missing arrival date in forensic report.');
         }
 
-        $arrivalDate = (int) $arrivalDateValue;
-        if ($arrivalDate <= 0) {
+        $arrivalDate = self::normalizeTimestamp($arrivalDateValue);
+        if ($arrivalDate === null || $arrivalDate <= 0) {
             throw new Exception('Invalid arrival date in forensic report.');
         }
 
@@ -138,6 +138,27 @@ class DmarcParser
             ]) ?? null,
             'raw_message' => self::getFirstNodeValue($xml, ['//original_message']) ?? null,
         ];
+    }
+
+    /**
+     * Convert a textual timestamp value into an integer epoch.
+     */
+    private static function normalizeTimestamp(string $value): ?int
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^-?\d+$/', $value) === 1) {
+            return (int) $value;
+        }
+
+        $parsed = strtotime($value);
+        if ($parsed === false) {
+            return null;
+        }
+
+        return $parsed;
     }
 
     /**

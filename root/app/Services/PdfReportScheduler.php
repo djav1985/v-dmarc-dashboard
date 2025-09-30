@@ -88,23 +88,28 @@ class PdfReportScheduler
     {
         $endDate = $now->format('Y-m-d');
 
+        $cadenceFloor = $parsed['type'] === 'monthly'
+            ? $now->sub(new DateInterval('P1M'))
+            : $now->sub(new DateInterval('P' . max(0, $parsed['range_days'] - 1) . 'D'));
+
         if (!empty($schedule['last_run_at'])) {
             try {
                 $lastRun = new DateTimeImmutable($schedule['last_run_at']);
-                return [$lastRun->format('Y-m-d'), $endDate];
+                $start = $lastRun->add(new DateInterval('P1D'));
+                if ($start < $cadenceFloor) {
+                    $start = $cadenceFloor;
+                }
+                if ($start > $now) {
+                    $start = $now;
+                }
+
+                return [$start->format('Y-m-d'), $endDate];
             } catch (Throwable $exception) {
                 // fall through to default handling
             }
         }
 
-        if ($parsed['type'] === 'monthly') {
-            $start = $now->sub(new DateInterval('P1M'));
-            return [$start->format('Y-m-d'), $endDate];
-        }
-
-        $days = max(0, $parsed['range_days'] - 1);
-        $start = $now->sub(new DateInterval('P' . $days . 'D'));
-        return [$start->format('Y-m-d'), $endDate];
+        return [$cadenceFloor->format('Y-m-d'), $endDate];
     }
 
     /**

@@ -5,7 +5,13 @@ declare(strict_types=1);
 
 define('PHPUNIT_RUNNING', true);
 
-require __DIR__ . '/../root/vendor/autoload.php';
+$autoloadPath = __DIR__ . '/../root/vendor/autoload.php';
+if (is_file($autoloadPath)) {
+    require $autoloadPath;
+} else {
+    require __DIR__ . '/../root/app/Utilities/DmarcParser.php';
+}
+
 require __DIR__ . '/../root/config.php';
 require __DIR__ . '/TestHelpers.php';
 
@@ -42,6 +48,26 @@ if ($forensicXml !== false) {
     assertEquals('forensic.example', $forensicReport['spf_domain'], 'Forensic parser should capture SPF domain.', $failures);
     assertEquals('fail', $forensicReport['spf_result'], 'Forensic parser should capture SPF result.', $failures);
     assertEquals('Raw MIME message', $forensicReport['raw_message'], 'Forensic parser should capture the raw message.', $failures);
+
+    $isoPayload = <<<XML
+<feedback>
+    <policy_published>
+        <domain>iso.example</domain>
+    </policy_published>
+    <record>
+        <row>
+            <source_ip>198.51.100.200</source_ip>
+        </row>
+    </record>
+    <event_time>2024-03-30T12:34:56Z</event_time>
+</feedback>
+XML;
+
+    $isoReport = DmarcParser::parseForensicReport($isoPayload);
+    assertEquals('iso.example', $isoReport['domain'], 'ISO payload should resolve the domain.', $failures);
+    assertEquals('198.51.100.200', $isoReport['source_ip'], 'ISO payload should resolve the source IP.', $failures);
+    $expectedIsoTimestamp = strtotime('2024-03-30T12:34:56Z');
+    assertEquals($expectedIsoTimestamp, $isoReport['arrival_date'], 'ISO event_time should convert via strtotime.', $failures);
 }
 
 if ($aggregateXml !== false) {
