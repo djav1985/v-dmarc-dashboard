@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\RBACManager;
 use App\Core\AuditLogger;
 use App\Core\SessionManager;
+use App\Core\Csrf;
 use App\Models\Users;
 use App\Models\DomainGroup;
 use App\Helpers\MessageHelper;
@@ -38,6 +39,13 @@ class UserManagementController extends Controller
     {
         // Require user management permission
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_USERS);
+
+        // Validate CSRF token before processing any actions
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            header('Location: /user-management');
+            exit();
+        }
 
         $action = $_POST['action'] ?? '';
         $session = SessionManager::getInstance();
@@ -116,7 +124,7 @@ class UserManagementController extends Controller
 
         if (Users::createUser($userData)) {
             MessageHelper::addMessage("User '$username' created successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_CREATE,
@@ -167,7 +175,7 @@ class UserManagementController extends Controller
 
         if (Users::updateUser($username, $userData)) {
             MessageHelper::addMessage("User '$username' updated successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_UPDATE,
@@ -198,7 +206,7 @@ class UserManagementController extends Controller
 
         if (Users::deleteUser($username)) {
             MessageHelper::addMessage("User '$username' deleted successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_DELETE,
@@ -214,7 +222,7 @@ class UserManagementController extends Controller
     {
         $username = $_POST['username'] ?? '';
         $domainId = (int) ($_POST['domain_id'] ?? 0);
-        
+
         $session = SessionManager::getInstance();
         $assignedBy = $session->get('username');
 
@@ -225,7 +233,7 @@ class UserManagementController extends Controller
 
         if (Users::assignUserToDomain($username, $domainId, $assignedBy)) {
             MessageHelper::addMessage("Domain assigned to user '$username' successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_CREATE,
@@ -242,7 +250,7 @@ class UserManagementController extends Controller
     {
         $username = $_POST['username'] ?? '';
         $groupId = (int) ($_POST['group_id'] ?? 0);
-        
+
         $session = SessionManager::getInstance();
         $assignedBy = $session->get('username');
 
@@ -253,7 +261,7 @@ class UserManagementController extends Controller
 
         if (Users::assignUserToGroup($username, $groupId, $assignedBy)) {
             MessageHelper::addMessage("Group assigned to user '$username' successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_CREATE,
@@ -278,7 +286,7 @@ class UserManagementController extends Controller
 
         if (Users::removeUserFromDomain($username, $domainId)) {
             MessageHelper::addMessage("Domain access removed from user '$username' successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_DELETE,
@@ -302,7 +310,7 @@ class UserManagementController extends Controller
 
         if (Users::removeUserFromGroup($username, $groupId)) {
             MessageHelper::addMessage("Group access removed from user '$username' successfully.", 'success');
-            
+
             // Log the action
             AuditLogger::getInstance()->log(
                 AuditLogger::ACTION_DELETE,
