@@ -118,10 +118,10 @@ class PdfReport
 
     /**
      * Generate summary data section
-     */
+    */
     private static function generateSummaryData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getSummaryStatistics($startDate, $endDate, $domainFilter);
+        return \App\Models\Analytics::getSummaryStatistics($startDate, $endDate, $domainFilter, $groupFilter);
     }
 
     /**
@@ -129,7 +129,7 @@ class PdfReport
      */
     private static function generateDomainHealthData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getDomainHealthScores($startDate, $endDate);
+        return \App\Models\Analytics::getDomainHealthScores($startDate, $endDate, $groupFilter);
     }
 
     /**
@@ -137,7 +137,7 @@ class PdfReport
      */
     private static function generateTopThreatsData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getTopThreats($startDate, $endDate, 20);
+        return \App\Models\Analytics::getTopThreats($startDate, $endDate, 20, $groupFilter);
     }
 
     /**
@@ -145,7 +145,7 @@ class PdfReport
      */
     private static function generateComplianceData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getComplianceData($startDate, $endDate, $domainFilter);
+        return \App\Models\Analytics::getComplianceData($startDate, $endDate, $domainFilter, $groupFilter);
     }
 
     /**
@@ -153,8 +153,8 @@ class PdfReport
      */
     private static function generateDetailedAnalyticsData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        $trendData = \App\Models\Analytics::getTrendData($startDate, $endDate, $domainFilter);
-        $complianceData = \App\Models\Analytics::getComplianceData($startDate, $endDate, $domainFilter);
+        $trendData = \App\Models\Analytics::getTrendData($startDate, $endDate, $domainFilter, $groupFilter);
+        $complianceData = \App\Models\Analytics::getComplianceData($startDate, $endDate, $domainFilter, $groupFilter);
         
         return [
             'trends' => $trendData,
@@ -167,7 +167,7 @@ class PdfReport
      */
     private static function generateVolumeTrendsData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getTrendData($startDate, $endDate, $domainFilter);
+        return \App\Models\Analytics::getTrendData($startDate, $endDate, $domainFilter, $groupFilter);
     }
 
     /**
@@ -188,8 +188,16 @@ class PdfReport
             $bindParams[':domain'] = $domainFilter;
         }
 
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupFilter !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupFilter;
+        }
+
         $query = "
-            SELECT 
+            SELECT
                 dmar.dkim_result,
                 dmar.spf_result,
                 dmar.disposition,
@@ -197,10 +205,12 @@ class PdfReport
                 COUNT(DISTINCT dmar.source_ip) as unique_ips
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
+            $groupJoin
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
+            $groupClause
             GROUP BY dmar.dkim_result, dmar.spf_result, dmar.disposition
             ORDER BY volume DESC
         ";

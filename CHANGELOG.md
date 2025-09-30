@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Added reusable HTML email templates for alert incidents, digest schedules, and ad-hoc report sends.
 - Built a digest scheduling controller/UI with supporting tests covering automated dispatch and mailer mocking.
 - Added database compatibility regression tests covering digest timestamps, analytics bucketing, transactional deletion, and IMAP attachment cleanup.
+- Added unit coverage confirming PDF analytics respect domain-group filters across all sections.
 
 ### Changed
 - Updated documentation to explain the dual Composer environments and new directory structure.
@@ -27,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Updated digest schedule persistence, analytics date expressions, and user deletion handling for cross-database compatibility and safer transaction rollbacks.
 - Ensured IMAP attachment processing always cleans up temporary files and logs the failing path for diagnostics.
 - Standardized alert metrics, incident acknowledgement, and GeoIP cache cleanup to bind ISO timestamps for cross-database compatibility and added regression coverage for non-SQLite drivers.
+- Updated analytics summary, trend, compliance, health, and threat helpers plus PDF report generation to honour optional domain-group filters.
 
 ### Fixed
 - Hardened DMARC ingestion to parse forensic single-part payloads and detect gzip/ZIP attachments by signature so reports without filename extensions are still processed.

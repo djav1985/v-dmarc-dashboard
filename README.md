@@ -93,6 +93,10 @@ Role-based permissions are enforced at the controller entry points through `App\
 
 Domain and report data returned to the UI is also filtered through RBAC-aware helpers. The `Domain`, `DomainGroup`, and `DmarcReport` models rely on `RBACManager::getAccessibleDomains()` / `getAccessibleGroups()` (and related access checks) so scoped administrators only see the domains and groups assigned to them. Queries that back dropdowns, analytics summaries, or report detail pages automatically exclude unassigned entities, preventing limited-scope accounts from accessing or enumerating unrelated data.
 
+## Group-Scoped Analytics and PDF Reports
+
+Analytics helpers now accept an optional domain group identifier so dashboards and PDF exports can be constrained to a curated set of domains. Pass the group ID to `Analytics::getSummaryStatistics()`, `Analytics::getTrendData()`, `Analytics::getComplianceData()`, `Analytics::getDomainHealthScores()`, and `Analytics::getTopThreats()` to automatically join `domain_group_assignments` and limit the result set. When building scheduled or ad-hoc PDFs, call `PdfReport::generateReportData()` with the same group ID—the summary, compliance, recommendations, and authentication breakdown sections all honour the filter so cross-tenant data never leaks into a scoped report.
+
 ## IP Ownership and Reputation Insights
 
 The report detail view now surfaces rich ownership metadata alongside reputation indicators for every observed source IP. `GeoIPService` performs keyless RDAP lookups via the IANA registry, enriches ownership records with RIR contact details, and checks Spamhaus’ ZEN DNSBL using DNS-over-HTTPS queries (Google as primary, Cloudflare as fallback). Open threat intelligence from the SANS ISC JSON feed is merged into the cache to provide a lightweight reputation score and summary context.
