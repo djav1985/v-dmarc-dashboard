@@ -69,10 +69,10 @@ class AlertController extends Controller
     {
         // Get alert rules summary
         $rules = Alert::getAllRules();
-        
+
         // Get recent incidents
         $incidents = Alert::getOpenIncidents();
-        
+
         // Calculate summary statistics
         $totalRules = count($rules);
         $enabledRules = count(array_filter($rules, fn($r) => $r['enabled']));
@@ -120,12 +120,12 @@ class AlertController extends Controller
     {
         $domains = Domain::getAllDomains();
         $groups = DomainGroup::getAllGroups();
-        
+
         $this->data = [
             'domains' => $domains,
             'groups' => $groups
         ];
-        
+
         require __DIR__ . '/../Views/create_alert_rule.php';
     }
 

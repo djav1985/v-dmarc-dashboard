@@ -45,8 +45,8 @@ require __DIR__ . '/../partials/header.php';
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($report['policies'])): ?>
-                                    <?php foreach ($report['policies'] as $policy): ?>
+                                <?php if (!empty($report['policies'])) : ?>
+                                    <?php foreach ($report['policies'] as $policy) : ?>
                                         <tr>
                                             <td><?= htmlspecialchars($policy['policy_type']); ?></td>
                                             <td><code><?= htmlspecialchars($policy['policy_string'] ?? ''); ?></code></td>
@@ -55,7 +55,7 @@ require __DIR__ . '/../partials/header.php';
                                             <td><?= (int) ($policy['failure_session_count'] ?? 0); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else: ?>
+                                <?php else : ?>
                                     <tr>
                                         <td colspan="5" class="text-center text-gray">No policy breakdown available.</td>
                                     </tr>
@@ -63,7 +63,7 @@ require __DIR__ . '/../partials/header.php';
                             </tbody>
                         </table>
                     </div>
-                    <?php if (!empty($report['raw_json'])): ?>
+                    <?php if (!empty($report['raw_json'])) : ?>
                         <div class="divider" data-content="RAW JSON"></div>
                         <pre class="code" style="max-height: 320px; overflow:auto;"><?= htmlspecialchars($report['raw_json']); ?></pre>
                     <?php endif; ?>

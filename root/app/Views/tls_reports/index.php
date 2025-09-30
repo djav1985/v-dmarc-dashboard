@@ -23,8 +23,8 @@ require __DIR__ . '/../partials/header.php';
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($reports)): ?>
-                                    <?php foreach ($reports as $report): ?>
+                                <?php if (!empty($reports)) : ?>
+                                    <?php foreach ($reports as $report) : ?>
                                         <?php $success = (int) ($report['success_sessions'] ?? 0); ?>
                                         <?php $failure = (int) ($report['failure_sessions'] ?? 0); ?>
                                         <tr>
@@ -48,7 +48,7 @@ require __DIR__ . '/../partials/header.php';
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else: ?>
+                                <?php else : ?>
                                     <tr>
                                         <td colspan="7" class="text-center text-gray">No TLS reports ingested yet.</td>
                                     </tr>

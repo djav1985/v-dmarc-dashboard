@@ -1,4 +1,5 @@
 <?php
+
 use App\Core\SessionManager;
 use App\Helpers\MessageHelper;
 
@@ -41,7 +42,7 @@ $csrf = SessionManager::getInstance()->get('csrf_token');
                     <a href="/login" class="btn btn-link">Back to sign in</a>
                 </div>
             </div>
-            <?php foreach (MessageHelper::getMessages() as $message): ?>
+            <?php foreach (MessageHelper::getMessages() as $message) : ?>
                 <div class="toast mt-2 <?= $message['type'] === 'error' ? 'toast-error' : 'toast-' . htmlspecialchars($message['type']); ?>">
                     <?= htmlspecialchars($message['text']); ?>
                 </div>

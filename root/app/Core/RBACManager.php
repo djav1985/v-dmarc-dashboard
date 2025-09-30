@@ -120,7 +120,7 @@ class RBACManager
     public function canAccessDomain(int $domainId): bool
     {
         $userRole = $this->getCurrentUserRole();
-        
+
         // App admins can access all domains
         if ($userRole === self::ROLE_APP_ADMIN) {
             return true;
@@ -128,19 +128,19 @@ class RBACManager
 
         $session = SessionManager::getInstance();
         $username = $session->get('username');
-        
+
         if (!$username) {
             return false;
         }
 
         $db = DatabaseManager::getInstance();
-        
+
         // Check direct domain assignment
         $db->query('SELECT 1 FROM user_domain_assignments WHERE user_id = :username AND domain_id = :domain_id');
         $db->bind(':username', $username);
         $db->bind(':domain_id', $domainId);
         $directAccess = $db->single();
-        
+
         if ($directAccess) {
             return true;
         }
@@ -154,7 +154,7 @@ class RBACManager
         $db->bind(':username', $username);
         $db->bind(':domain_id', $domainId);
         $groupAccess = $db->single();
-        
+
         return (bool) $groupAccess;
     }
 
@@ -164,7 +164,7 @@ class RBACManager
     public function canAccessGroup(int $groupId): bool
     {
         $userRole = $this->getCurrentUserRole();
-        
+
         // App admins can access all groups
         if ($userRole === self::ROLE_APP_ADMIN) {
             return true;
@@ -172,7 +172,7 @@ class RBACManager
 
         $session = SessionManager::getInstance();
         $username = $session->get('username');
-        
+
         if (!$username) {
             return false;
         }
@@ -182,7 +182,7 @@ class RBACManager
         $db->bind(':username', $username);
         $db->bind(':group_id', $groupId);
         $result = $db->single();
-        
+
         return (bool) $result;
     }
 
@@ -192,7 +192,7 @@ class RBACManager
     public function getAccessibleDomains(): array
     {
         $userRole = $this->getCurrentUserRole();
-        
+
         // App admins can access all domains
         if ($userRole === self::ROLE_APP_ADMIN) {
             $db = DatabaseManager::getInstance();
@@ -202,7 +202,7 @@ class RBACManager
 
         $session = SessionManager::getInstance();
         $username = $session->get('username');
-        
+
         if (!$username) {
             return [];
         }
@@ -226,7 +226,7 @@ class RBACManager
     public function getAccessibleGroups(): array
     {
         $userRole = $this->getCurrentUserRole();
-        
+
         // App admins can access all groups
         if ($userRole === self::ROLE_APP_ADMIN) {
             $db = DatabaseManager::getInstance();
@@ -236,7 +236,7 @@ class RBACManager
 
         $session = SessionManager::getInstance();
         $username = $session->get('username');
-        
+
         if (!$username) {
             return [];
         }
@@ -277,7 +277,7 @@ class RBACManager
     {
         return [
             self::ROLE_APP_ADMIN => 'Application Administrator',
-            self::ROLE_DOMAIN_ADMIN => 'Domain Administrator', 
+            self::ROLE_DOMAIN_ADMIN => 'Domain Administrator',
             self::ROLE_GROUP_ADMIN => 'Group Administrator',
             self::ROLE_VIEWER => 'Viewer'
         ];

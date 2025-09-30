@@ -84,7 +84,7 @@ class Users
     {
         try {
             $db = DatabaseManager::getInstance();
-            
+
             $db->query('
                 INSERT INTO users (username, password, role, first_name, last_name, email, admin, is_active)
                 VALUES (:username, :password, :role, :first_name, :last_name, :email, :admin, 1)
@@ -145,7 +145,7 @@ class Users
             $setClause = implode(', ', $setParts);
 
             $db->query("UPDATE users SET $setClause WHERE username = :username");
-            
+
             foreach ($params as $param => $value) {
                 $db->bind($param, $value);
             }

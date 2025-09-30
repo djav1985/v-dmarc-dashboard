@@ -102,7 +102,7 @@
                 <h5 class="card-title">Logo</h5>
             </div>
             <div class="card-body">
-                <?php if (!empty($settings['app_logo_url'])): ?>
+                <?php if (!empty($settings['app_logo_url'])) : ?>
                     <div class="text-center mb-2">
                         <img src="<?= htmlspecialchars($settings['app_logo_url']) ?>" 
                              alt="Current Logo" style="max-width: 200px; max-height: 100px;">

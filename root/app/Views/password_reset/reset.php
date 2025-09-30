@@ -1,4 +1,5 @@
 <?php
+
 use App\Core\SessionManager;
 use App\Helpers\MessageHelper;
 
@@ -45,7 +46,7 @@ $csrf = SessionManager::getInstance()->get('csrf_token');
                     <small class="text-gray">Resetting for <?= htmlspecialchars($email ?? 'your account', ENT_QUOTES, 'UTF-8'); ?></small>
                 </div>
             </div>
-            <?php foreach (MessageHelper::getMessages() as $message): ?>
+            <?php foreach (MessageHelper::getMessages() as $message) : ?>
                 <div class="toast mt-2 <?= $message['type'] === 'error' ? 'toast-error' : 'toast-' . htmlspecialchars($message['type']); ?>">
                     <?= htmlspecialchars($message['text']); ?>
                 </div>

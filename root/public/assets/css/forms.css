@@ -16,7 +16,7 @@
 .form-input:focus {
     outline: none;
     border-color: #5755d9;
-    box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.25);
+    box-shadow: 0 0 0 0.1rem rgb(87 85 217 / 25%);
 }
 
 .form-label {
@@ -45,7 +45,7 @@
 /* File input styling */
 .form-input[type="file"] {
     padding: 0.375rem 0.75rem;
-    background: #ffffff;
+    background: #fff;
     border: 2px dashed #ced4da;
     border-radius: 6px;
     transition: border-color 0.2s ease;
@@ -57,5 +57,5 @@
 
 .form-input[type="file"]:focus {
     border-color: #5755d9;
-    box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.25);
+    box-shadow: 0 0 0 0.1rem rgb(87 85 217 / 25%);
 }

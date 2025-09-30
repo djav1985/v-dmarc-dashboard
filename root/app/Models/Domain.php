@@ -61,4 +61,3 @@ class Domain
         return $result ? (object) $result : null;
     }
 }
-

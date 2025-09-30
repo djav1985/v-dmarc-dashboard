@@ -42,22 +42,22 @@ $csrf = $session->get('csrf_token');
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($entries)): ?>
-                                    <?php foreach ($entries as $entry): ?>
+                                <?php if (!empty($entries)) : ?>
+                                    <?php foreach ($entries as $entry) : ?>
                                         <tr>
                                             <td><?= htmlspecialchars($entry['ip_address']); ?></td>
                                             <td><?= (int) $entry['login_attempts']; ?></td>
                                             <td>
-                                                <?php if (!empty($entry['blacklisted'])): ?>
+                                                <?php if (!empty($entry['blacklisted'])) : ?>
                                                     <span class="label label-rounded label-error">Blacklisted</span>
-                                                <?php else: ?>
+                                                <?php else : ?>
                                                     <span class="label label-rounded label-success">Allowed</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td><?= htmlspecialchars(date('Y-m-d H:i:s', (int) $entry['timestamp'])); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else: ?>
+                                <?php else : ?>
                                     <tr>
                                         <td colspan="4" class="text-center text-gray">No blacklist entries found.</td>
                                     </tr>

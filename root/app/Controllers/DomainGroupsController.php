@@ -20,15 +20,15 @@ class DomainGroupsController extends Controller
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_GROUPS);
         // Get all groups with analytics
         $groups = DomainGroup::getAllGroups();
-        
+
         // Get group analytics for the last 30 days
         $endDate = date('Y-m-d');
         $startDate = date('Y-m-d', strtotime('-30 days'));
         $groupAnalytics = DomainGroup::getGroupAnalytics($startDate, $endDate);
-        
+
         // Get unassigned domains
         $unassignedDomains = DomainGroup::getUnassignedDomains();
-        
+
         // Get all domains for assignment
         $allDomains = Domain::getAllDomains();
 

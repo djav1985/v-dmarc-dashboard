@@ -25,7 +25,7 @@ $csrf = $session->get('csrf_token');
                                 <label class="form-label" for="filter-action">Action</label>
                                 <select id="filter-action" name="action" class="form-select">
                                     <option value="">All actions</option>
-                                    <?php foreach ($actions as $actionName): ?>
+                                    <?php foreach ($actions as $actionName) : ?>
                                         <option value="<?= htmlspecialchars($actionName, ENT_QUOTES, 'UTF-8'); ?>" <?= ($filters['action'] ?? '') === $actionName ? 'selected' : ''; ?>>
                                             <?= htmlspecialchars(str_replace('_', ' ', $actionName)); ?>
                                         </option>
@@ -57,13 +57,13 @@ $csrf = $session->get('csrf_token');
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($logs)): ?>
-                                    <?php foreach ($logs as $log): ?>
+                                <?php if (!empty($logs)) : ?>
+                                    <?php foreach ($logs as $log) : ?>
                                         <tr>
                                             <td><?= htmlspecialchars($log['timestamp']); ?></td>
                                             <td>
                                                 <?= htmlspecialchars($log['user_id'] ?? 'system'); ?>
-                                                <?php if (!empty($log['first_name']) || !empty($log['last_name'])): ?>
+                                                <?php if (!empty($log['first_name']) || !empty($log['last_name'])) : ?>
                                                     <br><small class="text-gray"><?= htmlspecialchars(trim(($log['first_name'] ?? '') . ' ' . ($log['last_name'] ?? ''))); ?></small>
                                                 <?php endif; ?>
                                             </td>
@@ -73,9 +73,9 @@ $csrf = $session->get('csrf_token');
                                                 <small class="text-gray">ID: <?= htmlspecialchars($log['resource_id'] ?? '—'); ?></small>
                                             </td>
                                             <td>
-                                                <?php if (!empty($log['details'])): ?>
+                                                <?php if (!empty($log['details'])) : ?>
                                                     <code><?= htmlspecialchars($log['details']); ?></code>
-                                                <?php else: ?>
+                                                <?php else : ?>
                                                     <span class="text-gray">—</span>
                                                 <?php endif; ?>
                                             </td>
@@ -83,7 +83,7 @@ $csrf = $session->get('csrf_token');
                                             <td class="text-break"><?= htmlspecialchars($log['user_agent'] ?? '—'); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else: ?>
+                                <?php else : ?>
                                     <tr>
                                         <td colspan="7" class="text-center text-gray">No audit events found for the selected filters.</td>
                                     </tr>
