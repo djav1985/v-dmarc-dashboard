@@ -3,9 +3,11 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csrf;
+use App\Core\RBACManager;
+use App\Helpers\MessageHelper;
 use App\Models\DomainGroup;
 use App\Models\Domain;
-use App\Core\RBACManager;
 
 /**
  * Domain Groups Controller for managing domain organization
@@ -48,6 +50,13 @@ class DomainGroupsController extends Controller
     public function handleSubmission(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_GROUPS);
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            header('Location: /domain-groups');
+            exit();
+        }
+
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'create_group':
