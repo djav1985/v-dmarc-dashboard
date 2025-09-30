@@ -833,10 +833,12 @@ class GeoIPService
 
         try {
             $db = DatabaseManager::getInstance();
+            $cutoff = date('Y-m-d H:i:s', strtotime('-' . $daysToKeep . ' days'));
             $db->query('
                 DELETE FROM ip_intelligence
-                WHERE last_updated < datetime("now", "-' . $daysToKeep . ' days")
+                WHERE last_updated < :cutoff
             ');
+            $db->bind(':cutoff', $cutoff);
             $db->execute();
             return $db->rowCount();
         } catch (Exception $e) {

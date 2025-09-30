@@ -115,8 +115,9 @@ class Alert
     {
         $db = DatabaseManager::getInstance();
         $timeWindow = (int) $rule['time_window'];
-        $startTime = time() - ($timeWindow * 60);
-        
+        $startTimestamp = time() - ($timeWindow * 60);
+        $startTime = date('Y-m-d H:i:s', $startTimestamp);
+
         // Build domain filter
         $whereClause = '';
         $bindParams = [':start_time' => $startTime];
@@ -141,14 +142,15 @@ class Alert
                     JOIN domains d ON dar.domain_id = d.id
                     LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                    WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
+                    WHERE dar.received_at >= :start_time
                     $whereClause
                 ";
                 break;
 
             case 'volume_increase':
                 // Compare current window to previous window
-                $prevStartTime = $startTime - ($timeWindow * 60);
+                $prevStartTimestamp = $startTimestamp - ($timeWindow * 60);
+                $prevStartTime = date('Y-m-d H:i:s', $prevStartTimestamp);
                 $query = "
                     SELECT
                         CASE
@@ -164,7 +166,7 @@ class Alert
                              JOIN domains d ON dar.domain_id = d.id
                              LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                              LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                             WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
+                             WHERE dar.received_at >= :start_time
                              $whereClause
                             ) as curr_volume,
                             (SELECT SUM(dmar.count)
@@ -172,8 +174,8 @@ class Alert
                              JOIN domains d ON dar.domain_id = d.id
                              LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                              LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                             WHERE dar.received_at >= datetime(:prev_start_time, 'unixepoch')
-                             AND dar.received_at < datetime(:start_time, 'unixepoch')
+                             WHERE dar.received_at >= :prev_start_time
+                             AND dar.received_at < :start_time
                              $whereClause
                             ) as prev_volume
                     )
@@ -188,13 +190,13 @@ class Alert
                     JOIN domains d ON dar.domain_id = d.id
                     LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                    WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
+                    WHERE dar.received_at >= :start_time
                     AND dmar.disposition IN ('quarantine', 'reject')
                     AND dmar.source_ip NOT IN (
                         SELECT DISTINCT source_ip
                         FROM dmarc_aggregate_records dmar2
                         JOIN dmarc_aggregate_reports dar2 ON dmar2.report_id = dar2.id
-                        WHERE dar2.received_at < datetime(:start_time, 'unixepoch')
+                        WHERE dar2.received_at < :start_time
                     )
                     $whereClause
                 ";
@@ -207,7 +209,7 @@ class Alert
                     JOIN domains d ON dar.domain_id = d.id
                     LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                    WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
+                    WHERE dar.received_at >= :start_time
                     AND dmar.spf_result != 'pass'
                     $whereClause
                 ";
