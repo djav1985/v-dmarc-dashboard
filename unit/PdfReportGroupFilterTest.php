@@ -199,6 +199,15 @@ if (!empty($volumeTrends)) {
     assertEquals(10, (int) ($firstVolumeTrend['total_volume'] ?? -1), 'Volume trends should only include in-group mail', $failures);
 }
 
+$singleDomainReport = PdfReport::generateReportData($templateId, $startDate, $endDate, $domainA1, null);
+$singleDomainThreats = $singleDomainReport['sections']['top_threats'] ?? [];
+assertCountEquals(1, $singleDomainThreats, 'Domain-filtered report should only list threats for the selected domain', $failures);
+if (!empty($singleDomainThreats)) {
+    $singleThreat = $singleDomainThreats[0];
+    assertEquals('198.51.100.1', $singleThreat['source_ip'] ?? '', 'Domain-filtered threats should include the matching IP', $failures);
+    assertTrue(strpos($singleThreat['affected_domains'] ?? '', $domainA2) === false, 'Domain-filtered threats should not mention other domains', $failures);
+}
+
 $breakdown = $sections['authentication_breakdown'] ?? [];
 assertCountEquals(2, $breakdown, 'Authentication breakdown should ignore out-of-group combinations', $failures);
 foreach ($breakdown as $row) {

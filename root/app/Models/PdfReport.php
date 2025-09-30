@@ -143,7 +143,9 @@ class PdfReport
      */
     private static function generateTopThreatsData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
-        return \App\Models\Analytics::getTopThreats($startDate, $endDate, 20, $groupFilter);
+        $domain = $domainFilter !== '' ? $domainFilter : null;
+
+        return \App\Models\Analytics::getTopThreats($startDate, $endDate, 20, $groupFilter, $domain);
     }
 
     /**
