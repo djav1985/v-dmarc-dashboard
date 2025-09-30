@@ -15,10 +15,15 @@ class Analytics
      * @param string $startDate
      * @param string $endDate
      * @param string $domain
+     * @param int|null $groupId
      * @return array
      */
-    public static function getTrendData(string $startDate, string $endDate, string $domain = ''): array
-    {
+    public static function getTrendData(
+        string $startDate,
+        string $endDate,
+        string $domain = '',
+        ?int $groupId = null
+    ): array {
         $db = DatabaseManager::getInstance();
 
         $whereClause = '';
@@ -30,6 +35,14 @@ class Analytics
         if (!empty($domain)) {
             $whereClause = 'AND d.domain = :domain';
             $bindParams[':domain'] = $domain;
+        }
+
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupId !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupId;
         }
 
         $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
@@ -46,10 +59,12 @@ class Analytics
                 SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
+            $groupJoin
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
             WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
+            $groupClause
             GROUP BY {$dateExpression}
             ORDER BY date ASC
         ";
@@ -67,14 +82,22 @@ class Analytics
      *
      * @param string $startDate
      * @param string $endDate
+     * @param int|null $groupId
      * @return array
      */
-    public static function getDomainHealthScores(string $startDate, string $endDate): array
+    public static function getDomainHealthScores(string $startDate, string $endDate, ?int $groupId = null): array
     {
         $db = DatabaseManager::getInstance();
 
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupId !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+        }
+
         $query = "
-            SELECT 
+            SELECT
                 d.domain,
                 COUNT(DISTINCT dar.id) as report_count,
                 SUM(dmar.count) as total_volume,
@@ -84,14 +107,16 @@ class Analytics
                 SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) as dkim_pass_count,
                 SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count,
                 ROUND(
-                    (SUM(CASE WHEN dmar.disposition = 'none' AND dmar.dkim_result = 'pass' AND dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.disposition = 'none' AND dmar.dkim_result = 'pass' AND dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as health_score
             FROM domains d
             JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
+            $groupJoin
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
+            $groupClause
             GROUP BY d.id, d.domain
             HAVING total_volume > 0
             ORDER BY health_score DESC
@@ -100,6 +125,9 @@ class Analytics
         $db->query($query);
         $db->bind(':start_date', strtotime($startDate));
         $db->bind(':end_date', strtotime($endDate . ' 23:59:59'));
+        if ($groupId !== null) {
+            $db->bind(':group_id', $groupId);
+        }
 
         $results = $db->resultSet();
 
@@ -130,10 +158,15 @@ class Analytics
      * @param string $startDate
      * @param string $endDate
      * @param string $domain
+     * @param int|null $groupId
      * @return array
      */
-    public static function getSummaryStatistics(string $startDate, string $endDate, string $domain = ''): array
-    {
+    public static function getSummaryStatistics(
+        string $startDate,
+        string $endDate,
+        string $domain = '',
+        ?int $groupId = null
+    ): array {
         $db = DatabaseManager::getInstance();
 
         $whereClause = '';
@@ -147,8 +180,16 @@ class Analytics
             $bindParams[':domain'] = $domain;
         }
 
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupId !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupId;
+        }
+
         $query = "
-            SELECT 
+            SELECT
                 COUNT(DISTINCT d.id) as domain_count,
                 COUNT(DISTINCT dar.id) as report_count,
                 SUM(dmar.count) as total_volume,
@@ -157,15 +198,17 @@ class Analytics
                 SUM(CASE WHEN dmar.disposition = 'quarantine' THEN dmar.count ELSE 0 END) as quarantined_count,
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 ROUND(
-                    (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as pass_rate
             FROM domains d
             JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
+            $groupJoin
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
+            $groupClause
         ";
 
         $db->query($query);
@@ -183,14 +226,26 @@ class Analytics
      * @param string $startDate
      * @param string $endDate
      * @param int $limit
+     * @param int|null $groupId
      * @return array
      */
-    public static function getTopThreats(string $startDate, string $endDate, int $limit = 10): array
-    {
+    public static function getTopThreats(
+        string $startDate,
+        string $endDate,
+        int $limit = 10,
+        ?int $groupId = null
+    ): array {
         $db = DatabaseManager::getInstance();
 
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupId !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+        }
+
         $query = "
-            SELECT 
+            SELECT
                 dmar.source_ip,
                 COUNT(DISTINCT dar.id) as report_count,
                 SUM(dmar.count) as total_volume,
@@ -198,16 +253,18 @@ class Analytics
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 (SUM(CASE WHEN dmar.disposition IN ('quarantine', 'reject') THEN dmar.count ELSE 0 END)) as threat_volume,
                 ROUND(
-                    (SUM(CASE WHEN dmar.disposition IN ('quarantine', 'reject') THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.disposition IN ('quarantine', 'reject') THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as threat_rate,
                 GROUP_CONCAT(DISTINCT d.domain) as affected_domains
             FROM dmarc_aggregate_records dmar
             JOIN dmarc_aggregate_reports dar ON dmar.report_id = dar.id
             JOIN domains d ON dar.domain_id = d.id
-            WHERE dar.date_range_begin >= :start_date 
+            $groupJoin
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             AND dmar.disposition IN ('quarantine', 'reject')
+            $groupClause
             GROUP BY dmar.source_ip
             HAVING threat_volume > 0
             ORDER BY threat_volume DESC, threat_rate DESC
@@ -217,6 +274,9 @@ class Analytics
         $db->query($query);
         $db->bind(':start_date', strtotime($startDate));
         $db->bind(':end_date', strtotime($endDate . ' 23:59:59'));
+        if ($groupId !== null) {
+            $db->bind(':group_id', $groupId);
+        }
         $db->bind(':limit', $limit);
 
         return $db->resultSet();
@@ -228,10 +288,15 @@ class Analytics
      * @param string $startDate
      * @param string $endDate
      * @param string $domain
+     * @param int|null $groupId
      * @return array
      */
-    public static function getComplianceData(string $startDate, string $endDate, string $domain = ''): array
-    {
+    public static function getComplianceData(
+        string $startDate,
+        string $endDate,
+        string $domain = '',
+        ?int $groupId = null
+    ): array {
         $db = DatabaseManager::getInstance();
 
         $whereClause = '';
@@ -245,6 +310,14 @@ class Analytics
             $bindParams[':domain'] = $domain;
         }
 
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupId !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupId;
+        }
+
         $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
 
         $query = "
@@ -255,19 +328,21 @@ class Analytics
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as dkim_compliance,
                 ROUND(
-                    (SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as spf_compliance,
                 ROUND(
-                    (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as dmarc_compliance
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
+            $groupJoin
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
             WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
+            $groupClause
             GROUP BY {$dateExpression}
             HAVING SUM(dmar.count) > 0
             ORDER BY date ASC
