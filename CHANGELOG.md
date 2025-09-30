@@ -35,3 +35,4 @@ All notable changes to this project will be documented in this file.
 - Corrected alert metric scheduling to respect the configured application timezone when calculating window boundaries.
 - Fixed email digest aggregation to prevent duplicated volumes when domains belong to multiple groups.
 - Resolved digest summaries, domain breakdowns, and threat rollups to skip domain-group joins unless filtering so multi-group domains do not inflate totals.
+- Unified UPSERT handling through the DatabaseManager helper so blacklist bans and retention updates run on both SQLite and MySQL, with dedicated regression coverage.

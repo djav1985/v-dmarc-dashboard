@@ -99,25 +99,27 @@ class DataRetention
     {
         try {
             $db = DatabaseManager::getInstance();
-            $driver = $db->getDriverName();
+            $upsert = $db->buildUpsertQuery(
+                'retention_settings',
+                [
+                    'setting_name' => $settingName,
+                    'setting_value' => $settingValue,
+                ],
+                [
+                    'setting_value' => DatabaseManager::useInsertValue('setting_value'),
+                    'updated_at' => DatabaseManager::rawExpression([
+                        'sqlite' => 'CURRENT_TIMESTAMP',
+                        'mysql' => 'NOW()',
+                        'default' => 'CURRENT_TIMESTAMP',
+                    ]),
+                ],
+                'setting_name'
+            );
 
-            if (str_contains($driver, 'sqlite')) {
-                $db->query('
-                    INSERT INTO retention_settings (setting_name, setting_value)
-                    VALUES (:name, :value)
-                    ON CONFLICT(setting_name) DO UPDATE SET
-                        setting_value = excluded.setting_value,
-                        updated_at = CURRENT_TIMESTAMP
-                ');
-            } else {
-                $db->query('
-                    INSERT INTO retention_settings (setting_name, setting_value)
-                    VALUES (:name, :value)
-                    ON DUPLICATE KEY UPDATE setting_value = :value, updated_at = NOW()
-                ');
+            $db->query($upsert['sql']);
+            foreach ($upsert['bindings'] as $param => $value) {
+                $db->bind(':' . $param, $value);
             }
-            $db->bind(':name', $settingName);
-            $db->bind(':value', $settingValue);
             return $db->execute();
         } catch (Exception $e) {
             ErrorManager::getInstance()->log(

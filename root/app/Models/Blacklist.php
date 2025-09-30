@@ -117,13 +117,25 @@ class Blacklist
         $timestamp = time();
         $db = DatabaseManager::getInstance();
 
-        $db->query('
-            INSERT INTO ip_blacklist (ip_address, login_attempts, blacklisted, timestamp)
-            VALUES (:ip, 0, TRUE, :timestamp)
-            ON CONFLICT(ip_address) DO UPDATE SET blacklisted = TRUE, timestamp = :timestamp
-        ');
-        $db->bind(':ip', $ip);
-        $db->bind(':timestamp', $timestamp);
+        $upsert = $db->buildUpsertQuery(
+            'ip_blacklist',
+            [
+                'ip_address' => $ip,
+                'login_attempts' => 0,
+                'blacklisted' => true,
+                'timestamp' => $timestamp,
+            ],
+            [
+                'blacklisted' => DatabaseManager::useInsertValue('blacklisted'),
+                'timestamp' => DatabaseManager::useInsertValue('timestamp'),
+            ],
+            'ip_address'
+        );
+
+        $db->query($upsert['sql']);
+        foreach ($upsert['bindings'] as $param => $value) {
+            $db->bind(':' . $param, $value);
+        }
 
         return $db->execute();
     }
