@@ -25,7 +25,7 @@ body {
 .card {
     border: 1px solid #e9ecef;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
     background: white;
     overflow: hidden;
 }
@@ -73,7 +73,7 @@ body {
 .form-input:focus {
     border-color: #5755d9;
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(87, 85, 217, 0.15);
+    box-shadow: 0 0 0 0.2rem rgb(87 85 217 / 15%);
 }
 
 .btn {
@@ -103,7 +103,7 @@ body {
     background-color: #4b48d6;
     border-color: #4b48d6;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
 }
 
 .btn-block {
@@ -141,7 +141,7 @@ body {
 }
 
 /* Mobile responsiveness */
-@media (max-width: 600px) {
+@media (width <= 600px) {
     body {
         padding: 1rem 0.5rem;
         min-height: 100vh;
@@ -165,7 +165,7 @@ body {
     }
 }
 
-@media (max-width: 400px) {
+@media (width <= 400px) {
     body {
         padding: 0.5rem;
     }

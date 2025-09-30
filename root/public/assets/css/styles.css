@@ -5,9 +5,9 @@ body {
 }
 
 .navbar {
-    background-color: #ffffff;
+    background-color: #fff;
     border-bottom: 1px solid #e9ecef;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
 
 .navbar-brand {
@@ -24,13 +24,13 @@ main {
 .card {
     border: 1px solid #e9ecef;
     border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
     background: white;
     transition: box-shadow 0.2s ease;
 }
 
 .card:hover {
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
 }
 
 .card-header {
@@ -74,7 +74,7 @@ main {
 }
 
 .text-light {
-    color: #ffffff !important;
+    color: #fff !important;
 }
 
 .text-primary {
@@ -89,7 +89,7 @@ main {
 }
 
 /* Responsive improvements */
-@media (max-width: 768px) {
+@media (width <= 768px) {
     .navbar-section .btn {
         padding: 0.4rem 0.6rem;
         font-size: 0.8rem;

@@ -59,7 +59,7 @@
                     <div class="form-group">
                         <label class="form-label" for="role">Role</label>
                         <select class="form-select" id="role" name="role">
-                            <?php foreach ($roles as $roleKey => $roleLabel): ?>
+                            <?php foreach ($roles as $roleKey => $roleLabel) : ?>
                                 <option value="<?= htmlspecialchars($roleKey) ?>">
                                     <?= htmlspecialchars($roleLabel) ?>
                                 </option>
@@ -100,11 +100,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($users as $user): ?>
+                    <?php foreach ($users as $user) : ?>
                     <tr>
                         <td><?= htmlspecialchars($user['username']) ?></td>
                         <td>
-                            <?php 
+                            <?php
                             $name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
                             echo htmlspecialchars($name ?: '-');
                             ?>
@@ -116,16 +116,16 @@
                             </span>
                         </td>
                         <td>
-                            <?php if ($user['is_active']): ?>
+                            <?php if ($user['is_active']) : ?>
                                 <span class="badge badge-success">Active</span>
-                            <?php else: ?>
+                            <?php else : ?>
                                 <span class="badge badge-secondary">Inactive</span>
                             <?php endif; ?>
                         </td>
                         <td>
-                            <?php if ($user['last_login']): ?>
+                            <?php if ($user['last_login']) : ?>
                                 <small><?= date('M j, Y H:i', strtotime($user['last_login'])) ?></small>
-                            <?php else: ?>
+                            <?php else : ?>
                                 <small class="text-gray">Never</small>
                             <?php endif; ?>
                         </td>
@@ -134,7 +134,7 @@
                                 <button class="btn btn-sm btn-primary" onclick="editUser('<?= htmlspecialchars($user['username']) ?>')">
                                     <i class="icon icon-edit"></i>
                                 </button>
-                                <?php if ($user['username'] !== ($_SESSION['username'] ?? '')): ?>
+                                <?php if ($user['username'] !== ($_SESSION['username'] ?? '')) : ?>
                                 <button class="btn btn-sm btn-error" onclick="deleteUser('<?= htmlspecialchars($user['username']) ?>')">
                                     <i class="icon icon-delete"></i>
                                 </button>
@@ -166,7 +166,7 @@
                 <div class="form-group">
                     <label class="form-label">Role</label>
                     <select class="form-select" name="role" id="edit-role">
-                        <?php foreach ($roles as $roleKey => $roleLabel): ?>
+                        <?php foreach ($roles as $roleKey => $roleLabel) : ?>
                             <option value="<?= htmlspecialchars($roleKey) ?>">
                                 <?= htmlspecialchars($roleLabel) ?>
                             </option>

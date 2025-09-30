@@ -83,7 +83,9 @@ class TlsReport
     {
         $rbac = RBACManager::getInstance();
         $domains = $rbac->getAccessibleDomains();
-        return array_map(function ($domain) { return (int) $domain['id']; }, $domains);
+        return array_map(function ($domain) {
+            return (int) $domain['id'];
+        }, $domains);
     }
 
     private static function buildInClause(array $ids, string $prefix): array

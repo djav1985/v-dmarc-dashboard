@@ -83,7 +83,7 @@ class PolicySimulation
 
         $currentPolicy = json_decode($simulation['current_policy'], true);
         $simulatedPolicy = json_decode($simulation['simulated_policy'], true);
-        
+
         $startTime = strtotime($simulation['simulation_period_start']);
         $endTime = strtotime($simulation['simulation_period_end'] . ' 23:59:59');
 
@@ -106,7 +106,7 @@ class PolicySimulation
 
         // Simulate policy impact
         $results = self::simulatePolicyImpact($records, $currentPolicy, $simulatedPolicy);
-        
+
         // Generate recommendations
         $recommendations = self::generatePolicyRecommendations($results, $currentPolicy, $simulatedPolicy);
 
@@ -164,7 +164,9 @@ class PolicySimulation
 
             // Simulate new policy impact
             $simulatedDisposition = self::calculateSimulatedDisposition(
-                $record, $simulatedPolicy, $currentPolicy
+                $record,
+                $simulatedPolicy,
+                $currentPolicy
             );
 
             if ($simulatedDisposition === 'quarantine') {
@@ -175,7 +177,7 @@ class PolicySimulation
 
             // Analyze legitimacy (heuristic based on authentication results)
             $isLegitimate = self::assessMessageLegitimacy($record);
-            
+
             if ($simulatedDisposition !== 'none' && $record['disposition'] === 'none') {
                 if ($isLegitimate) {
                     $results['legitimate_affected'] += $volume;
@@ -206,7 +208,7 @@ class PolicySimulation
         // Calculate effectiveness
         $totalBlocked = $results['spam_blocked'];
         $totalAffected = $results['legitimate_affected'] + $results['spam_blocked'];
-        $results['policy_effectiveness'] = $totalAffected > 0 ? 
+        $results['policy_effectiveness'] = $totalAffected > 0 ?
             round(($totalBlocked / $totalAffected) * 100, 2) : 0;
 
         return $results;
@@ -224,14 +226,14 @@ class PolicySimulation
     {
         $dkimPass = $record['dkim_result'] === 'pass';
         $spfPass = $record['spf_result'] === 'pass';
-        
+
         // DMARC alignment check (simplified)
         $dkimAligned = $dkimPass; // Simplified - actual implementation would check domain alignment
         $spfAligned = $spfPass;   // Simplified - actual implementation would check domain alignment
-        
+
         // Check if DMARC passes under simulated policy
         $dmarcPass = false;
-        
+
         if (isset($simulatedPolicy['aspf']) && $simulatedPolicy['aspf'] === 's') {
             // Strict SPF alignment
             $dmarcPass = $dmarcPass || $spfAligned;
@@ -239,7 +241,7 @@ class PolicySimulation
             // Relaxed SPF alignment
             $dmarcPass = $dmarcPass || $spfPass;
         }
-        
+
         if (isset($simulatedPolicy['adkim']) && $simulatedPolicy['adkim'] === 's') {
             // Strict DKIM alignment
             $dmarcPass = $dmarcPass || $dkimAligned;
@@ -255,7 +257,7 @@ class PolicySimulation
         // Apply percentage (pct) if specified
         $pct = isset($simulatedPolicy['pct']) ? (int) $simulatedPolicy['pct'] : 100;
         $randomValue = rand(1, 100);
-        
+
         if ($randomValue > $pct) {
             return 'none'; // Not subject to policy due to percentage
         }
@@ -313,7 +315,7 @@ class PolicySimulation
         // Check legitimate impact
         if ($results['legitimate_affected'] > 0) {
             $impactPercentage = round(($results['legitimate_affected'] / $results['total_messages']) * 100, 2);
-            
+
             if ($impactPercentage > 5) {
                 $recommendations[] = [
                     'type' => 'warning',
@@ -355,7 +357,7 @@ class PolicySimulation
         // Check if policy is too aggressive
         $totalBlocked = $results['simulated_quarantined'] + $results['simulated_rejected'];
         $blockPercentage = round(($totalBlocked / $results['total_messages']) * 100, 2);
-        
+
         if ($blockPercentage > 20) {
             $recommendations[] = [
                 'type' => 'warning',

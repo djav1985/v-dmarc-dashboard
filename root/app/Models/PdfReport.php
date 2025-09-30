@@ -42,10 +42,10 @@ class PdfReport
      * @return array
      */
     public static function generateReportData(
-        int $templateId, 
-        string $startDate, 
-        string $endDate, 
-        string $domainFilter = '', 
+        int $templateId,
+        string $startDate,
+        string $endDate,
+        string $domainFilter = '',
         ?int $groupFilter = null
     ): array {
         $db = DatabaseManager::getInstance();
@@ -70,7 +70,11 @@ class PdfReport
         // Generate data for each section
         foreach ($sections as $section) {
             $reportData['sections'][$section] = self::generateSectionData(
-                $section, $startDate, $endDate, $domainFilter, $groupFilter
+                $section,
+                $startDate,
+                $endDate,
+                $domainFilter,
+                $groupFilter
             );
         }
 
@@ -88,10 +92,10 @@ class PdfReport
      * @return array
      */
     private static function generateSectionData(
-        string $section, 
-        string $startDate, 
-        string $endDate, 
-        string $domainFilter, 
+        string $section,
+        string $startDate,
+        string $endDate,
+        string $domainFilter,
         ?int $groupFilter
     ): array {
         switch ($section) {
@@ -155,7 +159,7 @@ class PdfReport
     {
         $trendData = \App\Models\Analytics::getTrendData($startDate, $endDate, $domainFilter, $groupFilter);
         $complianceData = \App\Models\Analytics::getComplianceData($startDate, $endDate, $domainFilter, $groupFilter);
-        
+
         return [
             'trends' => $trendData,
             'compliance' => $complianceData
@@ -176,7 +180,7 @@ class PdfReport
     private static function generateAuthenticationBreakdownData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
         $db = DatabaseManager::getInstance();
-        
+
         $whereClause = '';
         $bindParams = [
             ':start_date' => strtotime($startDate),
@@ -231,7 +235,7 @@ class PdfReport
         $healthScores = self::generateDomainHealthData($startDate, $endDate, $domainFilter, $groupFilter);
         $threats = self::generateTopThreatsData($startDate, $endDate, $domainFilter, $groupFilter);
         $compliance = self::generateComplianceData($startDate, $endDate, $domainFilter, $groupFilter);
-        
+
         $recommendations = [];
 
         // Analyze health scores for recommendations

@@ -20,7 +20,7 @@ $csrf = $session->get('csrf_token');
                                 <label class="form-label" for="domain">Domain filter</label>
                                 <select name="domain" id="domain" class="form-select">
                                     <option value="">All accessible domains</option>
-                                    <?php foreach ($domains as $domain): ?>
+                                    <?php foreach ($domains as $domain) : ?>
                                         <option value="<?= (int) $domain['id']; ?>" <?= ($selectedDomain ?? '') == $domain['id'] ? 'selected' : ''; ?>>
                                             <?= htmlspecialchars($domain['domain']); ?>
                                         </option>
@@ -46,8 +46,8 @@ $csrf = $session->get('csrf_token');
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($reports)): ?>
-                                    <?php foreach ($reports as $report): ?>
+                                <?php if (!empty($reports)) : ?>
+                                    <?php foreach ($reports as $report) : ?>
                                         <tr>
                                             <td><?= htmlspecialchars($report['arrival_date']); ?></td>
                                             <td><?= htmlspecialchars($report['domain']); ?></td>
@@ -63,7 +63,7 @@ $csrf = $session->get('csrf_token');
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else: ?>
+                                <?php else : ?>
                                     <tr>
                                         <td colspan="5" class="text-center text-gray">No forensic reports available for the current filters.</td>
                                     </tr>

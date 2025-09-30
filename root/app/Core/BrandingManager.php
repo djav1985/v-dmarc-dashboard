@@ -43,7 +43,7 @@ class BrandingManager
 
             foreach ($results as $setting) {
                 $value = $setting['setting_value'];
-                
+
                 // Convert based on type
                 switch ($setting['setting_type']) {
                     case 'boolean':
@@ -102,9 +102,9 @@ class BrandingManager
     {
         try {
             $oldValue = $this->getSetting($key);
-            
+
             $db = DatabaseManager::getInstance();
-            
+
             // Check if setting exists
             $db->query('SELECT 1 FROM app_settings WHERE setting_key = :key');
             $db->bind(':key', $key);
@@ -139,7 +139,7 @@ class BrandingManager
             if ($result) {
                 // Update local cache
                 $this->settings[$key] = $value;
-                
+
                 // Log the change
                 AuditLogger::getInstance()->logSettingsChange($key, $oldValue, $value);
             }
@@ -181,10 +181,10 @@ class BrandingManager
     public function getCustomCSS(): string
     {
         $css = '';
-        
+
         $primaryColor = $this->getSetting('primary_color', '#5755d9');
         $secondaryColor = $this->getSetting('secondary_color', '#f1f3f4');
-        
+
         // Generate CSS variables for theming
         $css .= ":root {\n";
         $css .= "  --primary-color: $primaryColor;\n";
@@ -257,7 +257,7 @@ class BrandingManager
             $extension = pathinfo($fileData['name'], PATHINFO_EXTENSION);
             $filename = 'logo_' . time() . '.' . $extension;
             $uploadDir = __DIR__ . '/../../public/assets/images/';
-            
+
             // Create directory if it doesn't exist
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -277,7 +277,6 @@ class BrandingManager
             $result['success'] = true;
             $result['url'] = $logoUrl;
             $result['message'] = 'Logo uploaded successfully';
-
         } catch (\Exception $e) {
             $result['message'] = $e->getMessage();
         }
