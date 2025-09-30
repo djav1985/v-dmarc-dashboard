@@ -202,11 +202,12 @@ class DmarcReport
             $bindings[':domain_id'] = $domainId;
         } else {
             $accessibleDomainIds = self::getAccessibleDomainIds();
-            if (!empty($accessibleDomainIds)) {
-                [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
-                $clauses[] = 'dfr.domain_id IN (' . implode(', ', $placeholders) . ')';
-                $bindings = array_merge($bindings, $inBindings);
+            if (empty($accessibleDomainIds)) {
+                return [];
             }
+            [$placeholders, $inBindings] = self::buildInClause($accessibleDomainIds, 'domain_id');
+            $clauses[] = 'dfr.domain_id IN (' . implode(', ', $placeholders) . ')';
+            $bindings = array_merge($bindings, $inBindings);
         }
 
         $whereClause = '';
@@ -644,4 +645,3 @@ class DmarcReport
         return RBACManager::getInstance()->canAccessDomain((int) $result['domain_id']);
     }
 }
-
