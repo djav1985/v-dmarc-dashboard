@@ -95,14 +95,28 @@ class EmailDigest
             $bindParams[':domain_filter'] = $schedule['domain_filter'];
         }
 
+        $groupFilterClause = '';
+
         if (!empty($schedule['group_filter'])) {
-            $whereClause .= ' AND dga.group_id = :group_filter';
+            $groupFilterClause = '
+                AND EXISTS (
+                    SELECT 1
+                    FROM domain_group_assignments dga
+                    WHERE dga.domain_id = d.id
+                    AND dga.group_id = :group_filter
+                )';
             $bindParams[':group_filter'] = $schedule['group_filter'];
         }
 
+        $bindAllParams = static function (DatabaseManager $manager, array $params): void {
+            foreach ($params as $param => $value) {
+                $manager->bind($param, $value);
+            }
+        };
+
         // Get summary data
         $summaryQuery = "
-            SELECT 
+            SELECT
                 COUNT(DISTINCT d.id) as domain_count,
                 COUNT(DISTINCT dar.id) as report_count,
                 SUM(dmar.count) as total_volume,
@@ -111,23 +125,21 @@ class EmailDigest
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 COUNT(DISTINCT dmar.source_ip) as unique_ips
             FROM domains d
-            LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
             JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
+            $groupFilterClause
         ";
 
         $db->query($summaryQuery);
-        foreach ($bindParams as $param => $value) {
-            $db->bind($param, $value);
-        }
+        $bindAllParams($db, $bindParams);
         $summary = $db->single();
 
         // Get domain breakdown
         $domainQuery = "
-            SELECT 
+            SELECT
                 d.domain,
                 COUNT(DISTINCT dar.id) as report_count,
                 SUM(dmar.count) as total_volume,
@@ -135,49 +147,45 @@ class EmailDigest
                 SUM(CASE WHEN dmar.disposition = 'quarantine' THEN dmar.count ELSE 0 END) as quarantined_count,
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 ROUND(
-                    (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as pass_rate
             FROM domains d
-            LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
             JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             $whereClause
+            $groupFilterClause
             GROUP BY d.id, d.domain
             ORDER BY total_volume DESC
         ";
 
         $db->query($domainQuery);
-        foreach ($bindParams as $param => $value) {
-            $db->bind($param, $value);
-        }
+        $bindAllParams($db, $bindParams);
         $domains = $db->resultSet();
 
         // Get top threats
         $threatsQuery = "
-            SELECT 
+            SELECT
                 dmar.source_ip,
                 SUM(CASE WHEN dmar.disposition IN ('quarantine', 'reject') THEN dmar.count ELSE 0 END) as threat_volume,
                 COUNT(DISTINCT d.domain) as affected_domains
             FROM dmarc_aggregate_records dmar
             JOIN dmarc_aggregate_reports dar ON dmar.report_id = dar.id
             JOIN domains d ON dar.domain_id = d.id
-            LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
-            WHERE dar.date_range_begin >= :start_date 
+            WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             AND dmar.disposition IN ('quarantine', 'reject')
             $whereClause
+            $groupFilterClause
             GROUP BY dmar.source_ip
             ORDER BY threat_volume DESC
             LIMIT 10
         ";
 
         $db->query($threatsQuery);
-        foreach ($bindParams as $param => $value) {
-            $db->bind($param, $value);
-        }
+        $bindAllParams($db, $bindParams);
         $threats = $db->resultSet();
 
         return [
