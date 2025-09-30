@@ -48,22 +48,26 @@ class ReportExport
             return '';
         }
 
-        if ($zip->open($tempFile, \ZipArchive::OVERWRITE | \ZipArchive::CREATE) !== true) {
-            return '';
+        try {
+            if ($zip->open($tempFile, \ZipArchive::OVERWRITE | \ZipArchive::CREATE) !== true) {
+                return '';
+            }
+
+            $zip->addFromString('[Content_Types].xml', self::buildContentTypesXml());
+            $zip->addFromString('_rels/.rels', self::buildRelsXml());
+            $zip->addFromString('xl/workbook.xml', self::buildWorkbookXml());
+            $zip->addFromString('xl/_rels/workbook.xml.rels', self::buildWorkbookRelsXml());
+            $zip->addFromString('xl/styles.xml', self::buildStylesXml());
+            $zip->addFromString('xl/worksheets/sheet1.xml', self::buildSheetXml($rows));
+            $zip->close();
+
+            $binary = file_get_contents($tempFile);
+            return $binary !== false ? $binary : '';
+        } finally {
+            if (is_string($tempFile) && $tempFile !== '' && file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
         }
-
-        $zip->addFromString('[Content_Types].xml', self::buildContentTypesXml());
-        $zip->addFromString('_rels/.rels', self::buildRelsXml());
-        $zip->addFromString('xl/workbook.xml', self::buildWorkbookXml());
-        $zip->addFromString('xl/_rels/workbook.xml.rels', self::buildWorkbookRelsXml());
-        $zip->addFromString('xl/styles.xml', self::buildStylesXml());
-        $zip->addFromString('xl/worksheets/sheet1.xml', self::buildSheetXml($rows));
-        $zip->close();
-
-        $binary = file_get_contents($tempFile);
-        unlink($tempFile);
-
-        return $binary !== false ? $binary : '';
     }
 
     /**

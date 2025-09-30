@@ -31,15 +31,24 @@ class ImapIngestionService
         $port = defined('IMAP_PORT') ? IMAP_PORT : 143;
         $ssl = defined('IMAP_SSL') ? IMAP_SSL : false;
         $mailbox = defined('IMAP_MAILBOX') ? IMAP_MAILBOX : 'INBOX';
+        $validateCertConfig = defined('IMAP_VALIDATE_CERT') ? IMAP_VALIDATE_CERT : true;
+
+        $sslEnabled = is_bool($ssl)
+            ? $ssl
+            : (filter_var($ssl, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? (bool) $ssl);
 
         $flags = '/imap';
-        if ($ssl) {
+        if ($sslEnabled || (int) $port === 993) {
             $flags .= '/ssl';
         }
-        if ($port == 993) {
-            $flags .= '/ssl';
+
+        $validateCert = is_bool($validateCertConfig)
+            ? $validateCertConfig
+            : (filter_var($validateCertConfig, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? (bool) $validateCertConfig);
+
+        if (!$validateCert) {
+            $flags .= '/novalidate-cert';
         }
-        $flags .= '/novalidate-cert';
 
         return "{{$host}:{$port}{$flags}}{$mailbox}";
     }
@@ -167,14 +176,19 @@ class ImapIngestionService
      */
     private function processMultipartEmail(string $uid, object $structure): bool
     {
-        $attachments = [];
-
-        $parts = [];
-        if (isset($structure->parts) && is_array($structure->parts)) {
-            $parts = $structure->parts;
+        if (!property_exists($structure, 'parts') || !is_array($structure->parts) || count($structure->parts) === 0) {
+            return false;
         }
 
-        foreach ($parts as $index => $part) {
+        $attachments = [];
+        $partsCount = count($structure->parts);
+
+        for ($index = 0; $index < $partsCount; $index++) {
+            $part = $structure->parts[$index] ?? null;
+            if (!is_object($part)) {
+                continue;
+            }
+
             if (!isset($part->disposition) || strtoupper((string) $part->disposition) !== 'ATTACHMENT') {
                 continue;
             }

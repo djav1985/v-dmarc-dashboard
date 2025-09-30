@@ -8,6 +8,7 @@ use App\Models\Domain;
 use App\Models\SavedReportFilter;
 use App\Core\RBACManager;
 use App\Core\Mailer;
+use App\Core\Csrf;
 use App\Helpers\MessageHelper;
 use App\Utilities\ReportExport;
 
@@ -105,6 +106,17 @@ class ReportsController extends Controller
     public function handleSubmission(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_REPORTS);
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+
+            if (defined('PHPUNIT_RUNNING') && PHPUNIT_RUNNING) {
+                return;
+            }
+
+            header('Location: /reports');
+            exit();
+        }
 
         if (($_POST['action'] ?? '') === 'send_report_email') {
             $this->sendReportByEmail();

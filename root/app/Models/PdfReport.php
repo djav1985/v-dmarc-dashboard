@@ -59,13 +59,25 @@ class PdfReport
             return [];
         }
 
-        $sections = json_decode($template['sections'], true);
         $reportData = [
             'template' => $template,
             'period' => ['start' => $startDate, 'end' => $endDate],
             'filters' => ['domain' => $domainFilter, 'group' => $groupFilter],
             'sections' => []
         ];
+
+        $sections = json_decode($template['sections'], true);
+        if ($sections === null) {
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return $reportData;
+            }
+
+            $sections = [];
+        }
+
+        if (!is_array($sections)) {
+            $sections = [];
+        }
 
         // Generate data for each section
         foreach ($sections as $section) {

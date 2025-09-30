@@ -399,7 +399,14 @@ class Alert
         }
 
         $channels = json_decode($incident['notification_channels'], true);
+        if (!is_array($channels)) {
+            $channels = [];
+        }
+
         $recipients = json_decode($incident['notification_recipients'], true);
+        if (!is_array($recipients)) {
+            $recipients = [];
+        }
         $success = true;
 
         foreach ($channels as $channel) {

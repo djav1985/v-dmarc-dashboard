@@ -3,9 +3,11 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Models\DmarcReport;
-use App\Models\Analytics;
+use App\Core\Csrf;
 use App\Core\RBACManager;
+use App\Helpers\MessageHelper;
+use App\Models\Analytics;
+use App\Models\DmarcReport;
 
 /**
  * Analytics Controller for DMARC dashboard analytics and visualizations
@@ -70,6 +72,11 @@ class AnalyticsController extends Controller
     public function handleSubmission(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_VIEW_ANALYTICS);
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            header('Location: /analytics');
+            exit();
+        }
         // Redirect to GET request with parameters
         $params = [];
 
