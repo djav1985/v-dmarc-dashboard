@@ -84,6 +84,9 @@ $brandingVars = $branding->getBrandingVars();
                 <a class="nav-item" href="/alerts">
                     <i class="icon icon-flag"></i> Alerts
                 </a>
+                <a class="nav-item" href="/email-digests">
+                    <i class="icon icon-mail"></i> Digests
+                </a>
                 <?php endif; ?>
                 
                 <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>

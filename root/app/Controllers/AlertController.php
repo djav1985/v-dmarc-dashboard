@@ -7,6 +7,7 @@ use App\Models\Alert;
 use App\Models\DomainGroup;
 use App\Models\Domain;
 use App\Core\RBACManager;
+use App\Services\AlertService;
 
 /**
  * Alert Controller for managing real-time alerting system
@@ -160,12 +161,7 @@ class AlertController extends Controller
      */
     private function testAlerts(): void
     {
-        $incidents = Alert::checkAlertRules();
-        
-        // Send notifications for any triggered incidents
-        foreach ($incidents as $incident) {
-            Alert::sendNotifications($incident['incident_id']);
-        }
+        AlertService::runAlertChecks();
     }
 
     /**

@@ -44,9 +44,9 @@ class EmailDigest
         $db = DatabaseManager::getInstance();
 
         $db->query('
-            INSERT INTO email_digest_schedules 
-            (name, frequency, recipients, domain_filter, group_filter, enabled) 
-            VALUES (:name, :frequency, :recipients, :domain_filter, :group_filter, :enabled)
+            INSERT INTO email_digest_schedules
+            (name, frequency, recipients, domain_filter, group_filter, enabled, next_scheduled)
+            VALUES (:name, :frequency, :recipients, :domain_filter, :group_filter, :enabled, :next_scheduled)
         ');
 
         $db->bind(':name', $data['name']);
@@ -55,9 +55,14 @@ class EmailDigest
         $db->bind(':domain_filter', $data['domain_filter'] ?? '');
         $db->bind(':group_filter', $data['group_filter'] ?? null);
         $db->bind(':enabled', $data['enabled'] ?? 1);
+        $db->bind(':next_scheduled', $data['next_scheduled'] ?? null);
         $db->execute();
 
-        $db->query('SELECT LAST_INSERT_ID() as id');
+        if (defined('USE_SQLITE') && USE_SQLITE) {
+            $db->query('SELECT last_insert_rowid() as id');
+        } else {
+            $db->query('SELECT LAST_INSERT_ID() as id');
+        }
         $result = $db->single();
         return (int) $result['id'];
     }
@@ -190,6 +195,57 @@ class EmailDigest
     }
 
     /**
+     * Retrieve all enabled schedules for background processing.
+     */
+    public static function getEnabledSchedules(): array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            SELECT *
+            FROM email_digest_schedules
+            WHERE enabled = 1
+            ORDER BY
+                CASE WHEN next_scheduled IS NULL THEN 1 ELSE 0 END,
+                next_scheduled
+        ');
+
+        return $db->resultSet();
+    }
+
+    /**
+     * Retrieve a specific schedule.
+     */
+    public static function getSchedule(int $scheduleId): ?array
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('SELECT * FROM email_digest_schedules WHERE id = :id');
+        $db->bind(':id', $scheduleId);
+
+        $result = $db->single();
+        return $result ?: null;
+    }
+
+    /**
+     * Enable or disable a schedule.
+     */
+    public static function setEnabled(int $scheduleId, bool $enabled): void
+    {
+        $db = DatabaseManager::getInstance();
+
+        $db->query('
+            UPDATE email_digest_schedules
+            SET enabled = :enabled
+            WHERE id = :id
+        ');
+
+        $db->bind(':enabled', $enabled ? 1 : 0);
+        $db->bind(':id', $scheduleId);
+        $db->execute();
+    }
+
+    /**
      * Log digest send attempt
      *
      * @param int $scheduleId
@@ -227,7 +283,11 @@ class EmailDigest
         $db->bind(':error_message', $errorMessage);
         $db->execute();
 
-        $db->query('SELECT LAST_INSERT_ID() as id');
+        if (defined('USE_SQLITE') && USE_SQLITE) {
+            $db->query('SELECT last_insert_rowid() as id');
+        } else {
+            $db->query('SELECT LAST_INSERT_ID() as id');
+        }
         $result = $db->single();
         return (int) $result['id'];
     }
@@ -238,16 +298,28 @@ class EmailDigest
      * @param int $scheduleId
      * @return void
      */
-    public static function updateLastSent(int $scheduleId): void
+    public static function updateLastSent(int $scheduleId, ?string $nextScheduled = null): void
     {
         $db = DatabaseManager::getInstance();
 
+        if ($nextScheduled === null) {
+            $db->query('
+                UPDATE email_digest_schedules
+                SET last_sent = datetime("now"), next_scheduled = NULL
+                WHERE id = :id
+            ');
+            $db->bind(':id', $scheduleId);
+            $db->execute();
+            return;
+        }
+
         $db->query('
-            UPDATE email_digest_schedules 
-            SET last_sent = datetime("now")
+            UPDATE email_digest_schedules
+            SET last_sent = datetime("now"), next_scheduled = :next_scheduled
             WHERE id = :id
         ');
 
+        $db->bind(':next_scheduled', $nextScheduled);
         $db->bind(':id', $scheduleId);
         $db->execute();
     }

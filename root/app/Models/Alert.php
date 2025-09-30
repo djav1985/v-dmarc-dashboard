@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Core\Mailer;
 
 /**
  * Alerting system model for real-time monitoring and notifications
@@ -71,7 +72,11 @@ class Alert
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->execute();
 
-        $db->query('SELECT LAST_INSERT_ID() as id');
+        if (defined('USE_SQLITE') && USE_SQLITE) {
+            $db->query('SELECT last_insert_rowid() as id');
+        } else {
+            $db->query('SELECT LAST_INSERT_ID() as id');
+        }
         $result = $db->single();
         return (int) $result['id'];
     }
@@ -135,14 +140,14 @@ class Alert
         switch ($rule['metric']) {
             case 'dmarc_failure_rate':
                 $query = "
-                    SELECT 
-                        (SUM(CASE WHEN dmar.disposition IN ('quarantine', 'reject') THEN dmar.count ELSE 0 END) * 100.0) / 
+                    SELECT
+                        (SUM(CASE WHEN dmar.disposition IN ('quarantine', 'reject') THEN dmar.count ELSE 0 END) * 100.0) /
                         NULLIF(SUM(dmar.count), 0) as value
                     FROM dmarc_aggregate_reports dar
                     JOIN domains d ON dar.domain_id = d.id
                     LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                    WHERE dar.created_at >= datetime(:start_time, 'unixepoch')
+                    WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
                     $whereClause
                 ";
                 break;
@@ -151,30 +156,30 @@ class Alert
                 // Compare current window to previous window
                 $prevStartTime = $startTime - ($timeWindow * 60);
                 $query = "
-                    SELECT 
-                        CASE 
-                            WHEN prev_volume = 0 THEN 
+                    SELECT
+                        CASE
+                            WHEN prev_volume = 0 THEN
                                 CASE WHEN curr_volume > 0 THEN 999.0 ELSE 0.0 END
-                            ELSE 
+                            ELSE
                                 ((curr_volume - prev_volume) * 100.0) / prev_volume
                         END as value
                     FROM (
-                        SELECT 
-                            (SELECT SUM(dmar.count) 
+                        SELECT
+                            (SELECT SUM(dmar.count)
                              FROM dmarc_aggregate_reports dar
                              JOIN domains d ON dar.domain_id = d.id
                              LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                              LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                             WHERE dar.created_at >= datetime(:start_time, 'unixepoch')
+                             WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
                              $whereClause
                             ) as curr_volume,
-                            (SELECT SUM(dmar.count) 
+                            (SELECT SUM(dmar.count)
                              FROM dmarc_aggregate_reports dar
                              JOIN domains d ON dar.domain_id = d.id
                              LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                              LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                             WHERE dar.created_at >= datetime(:prev_start_time, 'unixepoch')
-                             AND dar.created_at < datetime(:start_time, 'unixepoch')
+                             WHERE dar.received_at >= datetime(:prev_start_time, 'unixepoch')
+                             AND dar.received_at < datetime(:start_time, 'unixepoch')
                              $whereClause
                             ) as prev_volume
                     )
@@ -189,13 +194,13 @@ class Alert
                     JOIN domains d ON dar.domain_id = d.id
                     LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                    WHERE dar.created_at >= datetime(:start_time, 'unixepoch')
+                    WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
                     AND dmar.disposition IN ('quarantine', 'reject')
                     AND dmar.source_ip NOT IN (
-                        SELECT DISTINCT source_ip 
+                        SELECT DISTINCT source_ip
                         FROM dmarc_aggregate_records dmar2
                         JOIN dmarc_aggregate_reports dar2 ON dmar2.report_id = dar2.id
-                        WHERE dar2.created_at < datetime(:start_time, 'unixepoch')
+                        WHERE dar2.received_at < datetime(:start_time, 'unixepoch')
                     )
                     $whereClause
                 ";
@@ -208,7 +213,7 @@ class Alert
                     JOIN domains d ON dar.domain_id = d.id
                     LEFT JOIN domain_group_assignments dga ON d.id = dga.domain_id
                     LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-                    WHERE dar.created_at >= datetime(:start_time, 'unixepoch')
+                    WHERE dar.received_at >= datetime(:start_time, 'unixepoch')
                     AND dmar.spf_result != 'pass'
                     $whereClause
                 ";
@@ -286,7 +291,11 @@ class Alert
         $db->bind(':details', $details);
         $db->execute();
 
-        $db->query('SELECT LAST_INSERT_ID() as id');
+        if (defined('USE_SQLITE') && USE_SQLITE) {
+            $db->query('SELECT last_insert_rowid() as id');
+        } else {
+            $db->query('SELECT LAST_INSERT_ID() as id');
+        }
         $result = $db->single();
         return (int) $result['id'];
     }
@@ -401,26 +410,34 @@ class Alert
     private static function sendEmailNotification(int $incidentId, string $recipient, array $incident): bool
     {
         $db = DatabaseManager::getInstance();
+        $subject = 'DMARC Alert: ' . $incident['message'];
+        $details = json_decode($incident['details'] ?? '[]', true) ?? [];
 
-        // In a real implementation, you would use PHPMailer or similar
-        // For demo purposes, we'll just log the notification
-        $subject = "DMARC Alert: " . $incident['message'];
-        $body = "A DMARC alert has been triggered:\n\n" . $incident['message'] . "\n\nTriggered at: " . $incident['triggered_at'];
+        $success = Mailer::sendTemplate(
+            $recipient,
+            $subject,
+            'alert_incident',
+            [
+                'subject' => $subject,
+                'incident' => $incident,
+                'details' => $details,
+            ]
+        );
 
-        // Log the notification attempt
         $db->query('
-            INSERT INTO alert_notifications 
-            (incident_id, channel, recipient, success) 
-            VALUES (:incident_id, :channel, :recipient, :success)
+            INSERT INTO alert_notifications
+            (incident_id, channel, recipient, success, error_message)
+            VALUES (:incident_id, :channel, :recipient, :success, :error_message)
         ');
 
         $db->bind(':incident_id', $incidentId);
         $db->bind(':channel', 'email');
         $db->bind(':recipient', $recipient);
-        $db->bind(':success', 1); // Assume success for demo
+        $db->bind(':success', $success ? 1 : 0);
+        $db->bind(':error_message', $success ? '' : 'Email delivery failed');
         $db->execute();
 
-        return true;
+        return $success;
     }
 
     /**

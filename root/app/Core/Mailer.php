@@ -20,6 +20,11 @@ use App\Core\ErrorManager;
 class Mailer
 {
     /**
+     * @var callable|null Custom transport used for testing.
+     */
+    private static $transportOverride = null;
+
+    /**
      * Send an email via configured SMTP server.
      *
      * @param string $to      Recipient address
@@ -29,6 +34,10 @@ class Mailer
      */
     public static function send(string $to, string $subject, string $body, bool $html = false): bool
     {
+        if (self::$transportOverride !== null) {
+            return (bool) call_user_func(self::$transportOverride, $to, $subject, $body, $html);
+        }
+
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
@@ -95,5 +104,13 @@ class Mailer
         $body = ob_get_clean();
 
         return self::send($to, $subject, $body, true);
+    }
+
+    /**
+     * Override the transport handler (used for automated tests).
+     */
+    public static function setTransportOverride(?callable $transport): void
+    {
+        self::$transportOverride = $transport;
     }
 }

@@ -25,6 +25,9 @@ require_once __DIR__ . '/vendor/autoload.php';
 use App\Core\ErrorManager;
 use App\Utilities\DataRetention;
 use App\Services\ImapIngestionService;
+use App\Services\AlertService;
+use App\Services\EmailDigestService;
+use Throwable;
 
 // Apply configured runtime limits after loading settings
 ini_set('max_execution_time', (string) (defined('CRON_MAX_EXECUTION_TIME') ? CRON_MAX_EXECUTION_TIME : 0));
@@ -93,8 +96,34 @@ if (!in_array($jobType, $validJobTypes)) {
         case 'hourly':
             // Add tasks that should run once per hour
             echo "Running hourly DMARC Dashboard tasks...\n";
-            // Future: Email ingestion, report processing, etc.
-            echo "No hourly tasks configured yet.\n";
+            try {
+                $alertResults = AlertService::runAlertChecks();
+                if (!empty($alertResults)) {
+                    echo 'Alert checks triggered ' . count($alertResults) . " incident(s).\n";
+                } else {
+                    echo "No new alert incidents detected.\n";
+                }
+            } catch (Throwable $exception) {
+                echo "Error running alert checks: " . $exception->getMessage() . "\n";
+            }
+
+            try {
+                $digestResults = EmailDigestService::processDueDigests();
+                if (!empty($digestResults)) {
+                    foreach ($digestResults as $result) {
+                        $status = $result['success'] ? 'sent' : 'failed';
+                        $next = $result['next_run'] ?? 'unscheduled';
+                        echo "Digest schedule #{$result['schedule_id']} {$status}; next run {$next}.\n";
+                        if (!$result['success'] && !empty($result['message'])) {
+                            echo "  Reason: {$result['message']}\n";
+                        }
+                    }
+                } else {
+                    echo "No digests due this hour.\n";
+                }
+            } catch (Throwable $exception) {
+                echo "Error processing digests: " . $exception->getMessage() . "\n";
+            }
             break;
             
         case 'imap':

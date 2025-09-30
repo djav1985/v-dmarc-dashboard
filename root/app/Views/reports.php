@@ -82,6 +82,16 @@ function getAuthResultBadge($result, $total) {
 .sort-header:hover {
     background-color: #f1f3f4;
 }
+.send-report-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+}
+.send-report-form .form-input {
+    max-width: 220px;
+}
 </style>
 
 <div class="columns">
@@ -298,6 +308,16 @@ function getAuthResultBadge($result, $total) {
                                             <a href="/report/<?= $report['id'] ?>" class="btn btn-sm btn-primary" title="View Details">
                                                 <i class="icon icon-eye"></i>
                                             </a>
+                                            <form method="POST" action="/reports" class="send-report-form">
+                                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                                <input type="hidden" name="action" value="send_report_email">
+                                                <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
+                                                <input type="text" name="recipients" class="form-input" placeholder="Emails" required>
+                                                <button type="submit" class="btn btn-sm btn-secondary">
+                                                    <i class="icon icon-send"></i> Send by Email
+                                                </button>
+                                            </form>
+                                            <small class="text-gray">Separate multiple addresses with commas.</small>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
