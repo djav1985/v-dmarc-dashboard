@@ -91,7 +91,7 @@ class Alert
 
         foreach ($rules as $rule) {
             $metricValue = self::calculateMetric($rule);
-            
+
             if (self::evaluateThreshold($metricValue, $rule['threshold_value'], $rule['threshold_operator'])) {
                 $incidentId = self::createIncident($rule, $metricValue);
                 $triggeredIncidents[] = [
@@ -116,17 +116,17 @@ class Alert
         $db = DatabaseManager::getInstance();
         $timeWindow = (int) $rule['time_window'];
         $startTimestamp = time() - ($timeWindow * 60);
-        $startTime = date('Y-m-d H:i:s', $startTimestamp);
+        $startTime = gmdate('Y-m-d H:i:s', $startTimestamp);
 
         // Build domain filter
         $whereClause = '';
         $bindParams = [':start_time' => $startTime];
-        
+
         if (!empty($rule['domain_filter'])) {
             $whereClause .= ' AND d.domain = :domain_filter';
             $bindParams[':domain_filter'] = $rule['domain_filter'];
         }
-        
+
         if (!empty($rule['group_filter'])) {
             $whereClause .= ' AND dga.group_id = :group_filter';
             $bindParams[':group_filter'] = $rule['group_filter'];
@@ -150,7 +150,7 @@ class Alert
             case 'volume_increase':
                 // Compare current window to previous window
                 $prevStartTimestamp = $startTimestamp - ($timeWindow * 60);
-                $prevStartTime = date('Y-m-d H:i:s', $prevStartTimestamp);
+                $prevStartTime = gmdate('Y-m-d H:i:s', $prevStartTimestamp);
                 $query = "
                     SELECT
                         CASE

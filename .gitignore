@@ -7,6 +7,13 @@ root/.env
 .idea/
 .DS_Store
 
+# Composer dependencies
+vendor/
+root/vendor/
+
+# Node dependencies
+node_modules/
+
 # Coverage and build artifacts
 coverage/
 build/
