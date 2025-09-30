@@ -73,37 +73,40 @@ function topThreatsInsertRecord(int $reportId, string $sourceIp, int $count, str
 
 $db = DatabaseManager::getInstance();
 $timestamp = time();
+$microtime = (int) (microtime(true) * 1000000); // Use microseconds for uniqueness
 
-$startDate = date('Y-m-d', $timestamp - 3600);
+// Use a very specific date range for this test to avoid conflicts with other test data
+$startDate = date('Y-m-d', $timestamp);
 $endDate = date('Y-m-d', $timestamp);
 
-$domainA = 'threat-domain-a-' . $timestamp . '.example';
-$domainB = 'threat-domain-b-' . $timestamp . '.example';
+$domainA = 'threat-domain-a-' . $microtime . '.example';
+$domainB = 'threat-domain-b-' . $microtime . '.example';
 
 $domainAId = topThreatsInsertDomain($domainA);
 $domainBId = topThreatsInsertDomain($domainB);
 
-$rangeStart = strtotime($startDate . ' 00:00:00');
-$rangeEnd = strtotime($endDate . ' 23:59:59');
+// Use current timestamp for reports to ensure they fall within our test date range
+$rangeStart = $timestamp;
+$rangeEnd = $timestamp;
 
 // Create reports with threatening IPs
-$reportA = topThreatsInsertReport($domainAId, $rangeStart, $rangeEnd, 'threat-report-a-' . $timestamp);
+$reportA = topThreatsInsertReport($domainAId, $rangeStart, $rangeEnd, 'threat-report-a-' . $microtime);
 topThreatsInsertRecord($reportA, '192.0.2.100', 15, 'reject');
 topThreatsInsertRecord($reportA, '192.0.2.101', 8, 'quarantine');
 
-$reportB = topThreatsInsertReport($domainBId, $rangeStart, $rangeEnd, 'threat-report-b-' . $timestamp);
+$reportB = topThreatsInsertReport($domainBId, $rangeStart, $rangeEnd, 'threat-report-b-' . $microtime);
 topThreatsInsertRecord($reportB, '192.0.2.200', 20, 'reject');
 topThreatsInsertRecord($reportB, '192.0.2.201', 5, 'quarantine');
 
 // Test as app admin - should see all threats
-$_SESSION['username'] = 'threat_admin_' . $timestamp;
+$_SESSION['username'] = 'threat_admin_' . $microtime;
 $_SESSION['user_role'] = RBACManager::ROLE_APP_ADMIN;
 
 $adminResults = Analytics::getTopThreats($startDate, $endDate, 10);
 assertCountEquals(4, $adminResults, 'Admin should see all threat IPs from all domains', $failures);
 
 // Test as viewer with access to only domain A - should see only threats from domain A
-$_SESSION['username'] = 'threat_viewer_' . $timestamp;
+$_SESSION['username'] = 'threat_viewer_' . $microtime;
 $_SESSION['user_role'] = RBACManager::ROLE_VIEWER;
 
 $db->query('INSERT INTO user_domain_assignments (user_id, domain_id) VALUES (:user_id, :domain_id)');
@@ -127,7 +130,7 @@ $noAccessResults = Analytics::getTopThreats($startDate, $endDate, 10);
 assertCountEquals(0, $noAccessResults, 'Viewer with no domain access should see no threats', $failures);
 
 // Test with domain filter - should bypass RBAC for that specific domain
-$_SESSION['username'] = 'threat_admin_' . $timestamp;
+$_SESSION['username'] = 'threat_admin_' . $microtime;
 $_SESSION['user_role'] = RBACManager::ROLE_APP_ADMIN;
 
 $filteredResults = Analytics::getTopThreats($startDate, $endDate, 10, null, $domainB);
