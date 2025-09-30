@@ -329,6 +329,19 @@ class Analytics
             $domainClause = 'AND d.domain = :domain';
         }
 
+        $authorizationClause = '';
+        $authorizationBindings = [];
+        if ($domainFilter === null || $domainFilter === '') {
+            $authorization = self::buildAuthorizationConstraint($authorizationBindings, 'd.id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $authorizationClause = 'AND ' . $authorization['clause'];
+            }
+        }
+
         $query = "
             SELECT
                 dmar.source_ip,
