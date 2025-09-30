@@ -72,13 +72,7 @@ class Alert
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->execute();
 
-        if (defined('USE_SQLITE') && USE_SQLITE) {
-            $db->query('SELECT last_insert_rowid() as id');
-        } else {
-            $db->query('SELECT LAST_INSERT_ID() as id');
-        }
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**
@@ -291,13 +285,7 @@ class Alert
         $db->bind(':details', $details);
         $db->execute();
 
-        if (defined('USE_SQLITE') && USE_SQLITE) {
-            $db->query('SELECT last_insert_rowid() as id');
-        } else {
-            $db->query('SELECT LAST_INSERT_ID() as id');
-        }
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**

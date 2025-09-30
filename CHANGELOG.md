@@ -22,3 +22,4 @@ All notable changes to this project will be documented in this file.
 - Enforced RBAC permission checks on privileged controllers and filtered domain/group/report queries to the current user's accessible assignments.
 - Enhanced the report detail view and GeoIP service to surface RDAP contacts, DNSBL status, and reputation signals for each source IP.
 - Updated alert processing to reuse a dedicated service, expanded cron automation with alert and digest jobs, and enabled email delivery through templated mailer calls.
+- Stopped tracking the generated SQLite demo database in version control and documented how to recreate it from the consolidated installer.

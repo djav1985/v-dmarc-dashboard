@@ -23,3 +23,5 @@ root/vendor/
 
 # Temporary files
 /tmp/
+demo.db
+root/demo.db

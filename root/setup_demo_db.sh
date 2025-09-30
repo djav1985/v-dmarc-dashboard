@@ -3,7 +3,6 @@
 # Script to set up a demo SQLite database for the DMARC Dashboard
 
 cd "$(dirname "$0")"
-cd ..
 
 # Remove existing demo database if it exists
 if [ -f "demo.db" ]; then
@@ -13,7 +12,7 @@ fi
 
 # Create the database using SQLite
 echo "Creating SQLite database..."
-sqlite3 demo.db < install/install_sqlite.sql
+sqlite3 demo.db < install/install.sql
 
 # Add some sample data for demonstration
 echo "Adding sample data..."
@@ -57,5 +56,5 @@ INSERT INTO dmarc_aggregate_records
 
 EOF
 
-echo "Demo database created successfully at demo.db"
+echo "Demo database created successfully at root/demo.db"
 echo "You can now start the application and test the reports functionality."

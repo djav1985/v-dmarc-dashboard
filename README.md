@@ -22,9 +22,17 @@ php root/install/install.php
 
 The script will stop with a helpful message if any required credentials are missing, ensuring the connection details are correct before attempting to load `install/install.sql` into your database.
 
+For demo purposes you can populate the bundled SQLite configuration by generating a fresh database from the consolidated schema and seed data:
+
+```bash
+bash root/setup_demo_db.sh
+```
+
+The script recreates `root/demo.db` on demand so the repository no longer needs to ship the binary database itself.
+
 ### Upgrading Existing Databases
 
-Existing deployments should run the forward migration at `root/install/migrations/20241010_add_ip_intelligence_metadata.sql` to add the RDAP, DNSBL, and reputation metadata columns used by the new IP intelligence cache. Execute the MySQL or SQLite section that matches your environment after upgrading the application code.
+Existing deployments should compare their database schema with the consolidated `root/install/install.sql` and apply any missing DDL statements (for example, the IP intelligence metadata columns) to stay aligned with the authoritative definition.
 
 ## Running the Application
 

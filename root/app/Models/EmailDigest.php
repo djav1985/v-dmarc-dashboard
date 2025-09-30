@@ -58,13 +58,7 @@ class EmailDigest
         $db->bind(':next_scheduled', $data['next_scheduled'] ?? null);
         $db->execute();
 
-        if (defined('USE_SQLITE') && USE_SQLITE) {
-            $db->query('SELECT last_insert_rowid() as id');
-        } else {
-            $db->query('SELECT LAST_INSERT_ID() as id');
-        }
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**
@@ -283,13 +277,7 @@ class EmailDigest
         $db->bind(':error_message', $errorMessage);
         $db->execute();
 
-        if (defined('USE_SQLITE') && USE_SQLITE) {
-            $db->query('SELECT last_insert_rowid() as id');
-        } else {
-            $db->query('SELECT LAST_INSERT_ID() as id');
-        }
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**

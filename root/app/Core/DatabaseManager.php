@@ -225,6 +225,32 @@ class DatabaseManager
     }
 
     /**
+     * Retrieve the last inserted ID from the current connection.
+     *
+     * @param string|null $sequenceName Optional sequence name for databases that require it
+     * @return string
+     */
+    public function getLastInsertId(?string $sequenceName = null): string
+    {
+        $this->connect();
+
+        try {
+            self::$lastUsedTime = time();
+            return self::$dbh->lastInsertId($sequenceName);
+        } catch (DBALException $e) {
+            if ($this->isConnectionError($e)) {
+                ErrorManager::getInstance()->log(
+                    'Database connection lost while retrieving last insert ID. Attempting to reconnect...',
+                    'warning'
+                );
+                $this->reconnect();
+                return self::$dbh->lastInsertId($sequenceName);
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Start a database transaction.
      *
      * @return bool
