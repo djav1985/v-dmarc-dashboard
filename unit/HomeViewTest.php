@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../root/vendor/autoload.php';
 require __DIR__ . '/../root/config.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {

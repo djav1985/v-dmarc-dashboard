@@ -6,12 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
-    'Psr\\Cache\\' => array($vendorDir . '/psr/cache/src'),
     'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
-    'Doctrine\\Deprecations\\' => array($vendorDir . '/doctrine/deprecations/src'),
-    'Doctrine\\DBAL\\' => array($vendorDir . '/doctrine/dbal/src'),
-    'Doctrine\\Common\\' => array($vendorDir . '/doctrine/event-manager/src'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
     'App\\' => array($baseDir . '/root/app'),
 );
