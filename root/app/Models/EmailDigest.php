@@ -84,29 +84,29 @@ class EmailDigest
         }
 
         // Build filters
-        $whereClause = '';
+        $conditions = [
+            'dar.date_range_begin >= :start_date',
+            'dar.date_range_end <= :end_date'
+        ];
+
         $bindParams = [
             ':start_date' => strtotime($startDate),
             ':end_date' => strtotime($endDate . ' 23:59:59')
         ];
 
         if (!empty($schedule['domain_filter'])) {
-            $whereClause .= ' AND d.domain = :domain_filter';
+            $conditions[] = 'd.domain = :domain_filter';
             $bindParams[':domain_filter'] = $schedule['domain_filter'];
         }
 
-        $groupFilterClause = '';
+        $groupJoinClause = '';
 
         if (!empty($schedule['group_filter'])) {
-            $groupFilterClause = '
-                AND EXISTS (
-                    SELECT 1
-                    FROM domain_group_assignments dga
-                    WHERE dga.domain_id = d.id
-                    AND dga.group_id = :group_filter
-                )';
+            $groupJoinClause = "\n            JOIN domain_group_assignments dga ON dga.domain_id = d.id AND dga.group_id = :group_filter";
             $bindParams[':group_filter'] = $schedule['group_filter'];
         }
+
+        $whereClause = '            ' . implode("\n            AND ", $conditions);
 
         $bindAllParams = static function (DatabaseManager $manager, array $params): void {
             foreach ($params as $param => $value) {
@@ -125,12 +125,10 @@ class EmailDigest
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 COUNT(DISTINCT dmar.source_ip) as unique_ips
             FROM domains d
-            JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
+            JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id$groupJoinClause
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date
-            AND dar.date_range_end <= :end_date
+            WHERE
             $whereClause
-            $groupFilterClause
         ";
 
         $db->query($summaryQuery);
@@ -151,12 +149,10 @@ class EmailDigest
                     NULLIF(SUM(dmar.count), 0), 2
                 ) as pass_rate
             FROM domains d
-            JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id
+            JOIN dmarc_aggregate_reports dar ON d.id = dar.domain_id$groupJoinClause
             LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
-            WHERE dar.date_range_begin >= :start_date
-            AND dar.date_range_end <= :end_date
+            WHERE
             $whereClause
-            $groupFilterClause
             GROUP BY d.id, d.domain
             ORDER BY total_volume DESC
         ";
@@ -173,12 +169,10 @@ class EmailDigest
                 COUNT(DISTINCT d.domain) as affected_domains
             FROM dmarc_aggregate_records dmar
             JOIN dmarc_aggregate_reports dar ON dmar.report_id = dar.id
-            JOIN domains d ON dar.domain_id = d.id
-            WHERE dar.date_range_begin >= :start_date
-            AND dar.date_range_end <= :end_date
-            AND dmar.disposition IN ('quarantine', 'reject')
+            JOIN domains d ON dar.domain_id = d.id$groupJoinClause
+            WHERE
             $whereClause
-            $groupFilterClause
+            AND dmar.disposition IN ('quarantine', 'reject')
             GROUP BY dmar.source_ip
             ORDER BY threat_volume DESC
             LIMIT 10

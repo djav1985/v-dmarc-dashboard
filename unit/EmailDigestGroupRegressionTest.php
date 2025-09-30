@@ -97,11 +97,44 @@ function emailDigestRegressionInsertRecord(
     $db->execute();
 }
 
+function emailDigestRegressionCleanup(): void
+{
+    $db = DatabaseManager::getInstance();
+    $pattern = 'digest-dup-%';
+
+    $db->query('DELETE FROM dmarc_aggregate_records WHERE report_id IN (SELECT id FROM dmarc_aggregate_reports WHERE domain_id IN (SELECT id FROM domains WHERE domain LIKE :pattern))');
+    $db->bind(':pattern', $pattern);
+    $db->execute();
+
+    $db->query('DELETE FROM dmarc_aggregate_reports WHERE domain_id IN (SELECT id FROM domains WHERE domain LIKE :pattern)');
+    $db->bind(':pattern', $pattern);
+    $db->execute();
+
+    $db->query('DELETE FROM domain_group_assignments WHERE domain_id IN (SELECT id FROM domains WHERE domain LIKE :pattern)');
+    $db->bind(':pattern', $pattern);
+    $db->execute();
+
+    $db->query('DELETE FROM domains WHERE domain LIKE :pattern');
+    $db->bind(':pattern', $pattern);
+    $db->execute();
+
+    $db->query('DELETE FROM domain_groups WHERE name LIKE :group_pattern');
+    $db->bind(':group_pattern', 'Digest Regression %');
+    $db->execute();
+
+    $db->query('DELETE FROM email_digest_schedules WHERE name LIKE :schedule_pattern');
+    $db->bind(':schedule_pattern', 'Digest Regression%');
+    $db->execute();
+}
+
 $timestamp = time();
+emailDigestRegressionCleanup();
 $rangeStart = $timestamp - 3600;
 $rangeEnd = $timestamp;
 $startDate = date('Y-m-d', $rangeStart);
 $endDate = date('Y-m-d', $rangeEnd);
+$startTimestamp = strtotime($startDate);
+$endTimestamp = strtotime($endDate . ' 23:59:59');
 
 $domainName = 'digest-dup-' . $timestamp . '.example';
 $domainId = emailDigestRegressionInsertDomain($domainName);
@@ -147,6 +180,62 @@ assertCountEquals(1, $threats, 'Threat aggregation should produce one source IP 
 $threat = $threats[0] ?? [];
 assertEquals(3, (int) ($threat['threat_volume'] ?? 0), 'Threat aggregation should respect raw reject volume', $failures);
 assertEquals(1, (int) ($threat['affected_domains'] ?? 0), 'Threat aggregation should count the affected domain once', $failures);
+
+$globalScheduleId = EmailDigest::createSchedule([
+    'name' => 'Digest Regression Global ' . $timestamp,
+    'frequency' => 'daily',
+    'recipients' => ['digest-regression-global@example.com'],
+    'domain_filter' => '',
+    'group_filter' => null,
+    'enabled' => 1,
+    'next_scheduled' => date('Y-m-d H:i:s', $rangeEnd),
+]);
+
+$globalDigestData = EmailDigest::generateDigestData($globalScheduleId, $startDate, $endDate);
+assertTrue(!empty($globalDigestData), 'Global digest data should be generated without a group filter', $failures);
+$globalSummary = $globalDigestData['summary'] ?? [];
+
+$db = DatabaseManager::getInstance();
+$db->query('
+    SELECT COALESCE(SUM(dmar.count), 0) AS total_volume
+    FROM dmarc_aggregate_reports dar
+    LEFT JOIN dmarc_aggregate_records dmar ON dar.id = dmar.report_id
+    WHERE dar.date_range_begin >= :start_date
+    AND dar.date_range_end <= :end_date
+');
+$db->bind(':start_date', $startTimestamp);
+$db->bind(':end_date', $endTimestamp);
+$rawTotals = $db->single();
+$rawTotalVolume = (int) ($rawTotals['total_volume'] ?? 0);
+assertEquals(
+    $rawTotalVolume,
+    (int) ($globalSummary['total_volume'] ?? 0),
+    'Global summary should reflect raw total volume without duplication',
+    $failures
+);
+
+$globalDomains = $globalDigestData['domains'] ?? [];
+$matchedDomains = array_values(array_filter(
+    $globalDomains,
+    static function (array $domainRow) use ($domainName): bool {
+        return ($domainRow['domain'] ?? '') === $domainName;
+    }
+));
+assertTrue(!empty($matchedDomains), 'Global digest should include the seeded domain', $failures);
+$matchedDomain = $matchedDomains[0];
+assertEquals(8, (int) ($matchedDomain['total_volume'] ?? 0), 'Global domain aggregation should match raw counts', $failures);
+
+$globalThreats = $globalDigestData['threats'] ?? [];
+$matchedThreats = array_values(array_filter(
+    $globalThreats,
+    static function (array $threatRow): bool {
+        return ($threatRow['source_ip'] ?? '') === '198.51.100.25';
+    }
+));
+assertTrue(!empty($matchedThreats), 'Global threat aggregation should include the seeded source IP', $failures);
+$matchedThreat = $matchedThreats[0];
+assertEquals(3, (int) ($matchedThreat['threat_volume'] ?? 0), 'Global threat aggregation should avoid duplicate counts', $failures);
+assertEquals(1, (int) ($matchedThreat['affected_domains'] ?? 0), 'Global threat aggregation should count the domain once', $failures);
 
 echo 'EmailDigest group assignment duplication regression completed with ' . ($failures === 0 ? 'no failures' : $failures . ' failure(s)') . PHP_EOL;
 
