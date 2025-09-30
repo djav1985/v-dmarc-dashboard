@@ -98,14 +98,29 @@ try {
     $scheduleRow = $db->single();
 
     assertTrue(is_array($scheduleRow), 'Schedule row should be retrievable after update.', $failures);
+    $initialLastSent = null;
     if (is_array($scheduleRow)) {
         $lastSent = $scheduleRow['last_sent'] ?? null;
+        $initialLastSent = $lastSent;
         assertTrue(
             is_string($lastSent) && abs(strtotime($lastSent) - $expectedFirstUpdate) <= 3,
             'Last sent timestamp should be set using PHP time.',
             $failures
         );
         assertEquals($nextRun, $scheduleRow['next_scheduled'] ?? null, 'Next scheduled time should be updated.', $failures);
+    }
+
+    $retryNextRun = date('Y-m-d H:i:s', time() + 7200);
+    EmailDigest::updateLastSent($scheduleId, $retryNextRun, false);
+
+    $db->query('SELECT last_sent, next_scheduled FROM email_digest_schedules WHERE id = :id');
+    $db->bind(':id', $scheduleId);
+    $retryRow = $db->single();
+
+    assertTrue(is_array($retryRow), 'Schedule row should be retrievable after retry scheduling.', $failures);
+    if (is_array($retryRow)) {
+        assertEquals($initialLastSent, $retryRow['last_sent'] ?? null, 'Retry scheduling should preserve previous last_sent.', $failures);
+        assertEquals($retryNextRun, $retryRow['next_scheduled'] ?? null, 'Retry scheduling should update next_scheduled.', $failures);
     }
 
     $expectedSecondUpdate = time();

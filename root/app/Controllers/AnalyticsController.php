@@ -35,7 +35,7 @@ class AnalyticsController extends Controller
         $summaryStats = Analytics::getSummaryStatistics($startDate, $endDate, $domain);
 
         // Get top threats (IPs with most failures)
-        $topThreats = Analytics::getTopThreats($startDate, $endDate, 10);
+        $topThreats = Analytics::getTopThreats($startDate, $endDate, 10, null, $domainFilter);
 
         // Get compliance trends
         $complianceData = Analytics::getComplianceData($startDate, $endDate, $domain);

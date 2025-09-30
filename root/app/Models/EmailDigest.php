@@ -289,18 +289,43 @@ class EmailDigest
      * @param int $scheduleId
      * @return void
      */
-    public static function updateLastSent(int $scheduleId, ?string $nextScheduled = null): void
+    public static function updateLastSent(int $scheduleId, ?string $nextScheduled = null, bool $updateLastSent = true): void
     {
         $db = DatabaseManager::getInstance();
         $timestamp = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
 
+        if ($updateLastSent) {
+            if ($nextScheduled === null) {
+                $db->query('
+                    UPDATE email_digest_schedules
+                    SET last_sent = :last_sent, next_scheduled = NULL
+                    WHERE id = :id
+                ');
+                $db->bind(':last_sent', $timestamp);
+                $db->bind(':id', $scheduleId);
+                $db->execute();
+                return;
+            }
+
+            $db->query('
+                UPDATE email_digest_schedules
+                SET last_sent = :last_sent, next_scheduled = :next_scheduled
+                WHERE id = :id
+            ');
+
+            $db->bind(':last_sent', $timestamp);
+            $db->bind(':next_scheduled', $nextScheduled);
+            $db->bind(':id', $scheduleId);
+            $db->execute();
+            return;
+        }
+
         if ($nextScheduled === null) {
             $db->query('
                 UPDATE email_digest_schedules
-                SET last_sent = :last_sent, next_scheduled = NULL
+                SET next_scheduled = NULL
                 WHERE id = :id
             ');
-            $db->bind(':last_sent', $timestamp);
             $db->bind(':id', $scheduleId);
             $db->execute();
             return;
@@ -308,11 +333,9 @@ class EmailDigest
 
         $db->query('
             UPDATE email_digest_schedules
-            SET last_sent = :last_sent, next_scheduled = :next_scheduled
+            SET next_scheduled = :next_scheduled
             WHERE id = :id
         ');
-
-        $db->bind(':last_sent', $timestamp);
         $db->bind(':next_scheduled', $nextScheduled);
         $db->bind(':id', $scheduleId);
         $db->execute();

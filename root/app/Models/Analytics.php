@@ -252,13 +252,15 @@ class Analytics
      * @param string $endDate
      * @param int $limit
      * @param int|null $groupId
+     * @param string|null $domainFilter
      * @return array
      */
     public static function getTopThreats(
         string $startDate,
         string $endDate,
         int $limit = 10,
-        ?int $groupId = null
+        ?int $groupId = null,
+        ?string $domainFilter = null
     ): array {
         $db = DatabaseManager::getInstance();
 
@@ -267,6 +269,11 @@ class Analytics
         if ($groupId !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
+        }
+
+        $domainClause = '';
+        if ($domainFilter !== null && $domainFilter !== '') {
+            $domainClause = 'AND d.domain = :domain';
         }
 
         $query = "
@@ -289,6 +296,7 @@ class Analytics
             WHERE dar.date_range_begin >= :start_date
             AND dar.date_range_end <= :end_date
             AND dmar.disposition IN ('quarantine', 'reject')
+            $domainClause
             $groupClause
             GROUP BY dmar.source_ip
             HAVING threat_volume > 0
@@ -301,6 +309,9 @@ class Analytics
         $db->bind(':end_date', strtotime($endDate . ' 23:59:59'));
         if ($groupId !== null) {
             $db->bind(':group_id', $groupId);
+        }
+        if ($domainFilter !== null && $domainFilter !== '') {
+            $db->bind(':domain', $domainFilter);
         }
         $db->bind(':limit', $limit);
 

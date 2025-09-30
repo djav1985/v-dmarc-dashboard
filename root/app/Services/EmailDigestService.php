@@ -90,9 +90,12 @@ class EmailDigestService
                 $errorMessage
             );
 
+            $nextRunValue = $nextRun ? $nextRun->format('Y-m-d H:i:s') : null;
+
             EmailDigest::updateLastSent(
                 (int) $schedule['id'],
-                $nextRun ? $nextRun->format('Y-m-d H:i:s') : null
+                $nextRunValue,
+                $success
             );
 
             $results[] = [
@@ -102,7 +105,7 @@ class EmailDigestService
                 'failed_recipients' => $failedRecipients,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'next_run' => $nextRun ? $nextRun->format('Y-m-d H:i:s') : null,
+                'next_run' => $nextRunValue,
                 'message' => $errorMessage,
             ];
         }

@@ -251,6 +251,66 @@ $db->bind(':schedule_id', $scheduleId);
 $logCount = $db->single();
 assertTrue(($logCount['total'] ?? 0) > 0, 'Digest logs should record send attempts.', $failures);
 
+$db->query('SELECT last_sent, next_scheduled FROM email_digest_schedules WHERE id = :schedule_id');
+$db->bind(':schedule_id', $scheduleId);
+$successSchedule = $db->single();
+assertTrue(is_array($successSchedule), 'Successful digest run should persist schedule timing fields.', $failures);
+if (is_array($successSchedule)) {
+    assertPredicate(!empty($successSchedule['last_sent']), 'Successful digest should stamp last_sent.', $failures);
+    assertPredicate(!empty($successSchedule['next_scheduled']), 'Successful digest should compute next_scheduled.', $failures);
+}
+
+$failureScheduleId = EmailDigest::createSchedule([
+    'name' => 'Weekly Digest Failure ' . $timestamp,
+    'frequency' => 'weekly',
+    'recipients' => ['digest-failure@example.com'],
+    'domain_filter' => $domainName,
+    'group_filter' => null,
+    'enabled' => 1,
+    'next_scheduled' => date('Y-m-d H:i:s', time() - 60),
+]);
+
+$previousLastSent = date('Y-m-d H:i:s', time() - 86400);
+$db->query('UPDATE email_digest_schedules SET last_sent = :last_sent WHERE id = :id');
+$db->bind(':last_sent', $previousLastSent);
+$db->bind(':id', $failureScheduleId);
+$db->execute();
+
+$failedAttempts = [];
+Mailer::setTransportOverride(static function (string $to, string $subject) use (&$failedAttempts): bool {
+    $failedAttempts[] = ['to' => $to, 'subject' => $subject];
+    return false;
+});
+
+$failureResults = EmailDigestService::processDueDigests();
+assertPredicate(!empty($failureResults), 'Digest service should report failed attempts.', $failures);
+
+$failureResult = null;
+foreach ($failureResults as $result) {
+    if ((int) ($result['schedule_id'] ?? 0) === (int) $failureScheduleId) {
+        $failureResult = $result;
+        break;
+    }
+}
+
+assertTrue(is_array($failureResult) && $failureResult['success'] === false, 'Failed sends should be marked unsuccessful.', $failures);
+assertTrue(!empty($failedAttempts), 'Failed digest sends should still attempt delivery.', $failures);
+
+$db->query('SELECT last_sent, next_scheduled FROM email_digest_schedules WHERE id = :schedule_id');
+$db->bind(':schedule_id', $failureScheduleId);
+$failureSchedule = $db->single();
+assertTrue(is_array($failureSchedule), 'Failed digest run should persist schedule row.', $failures);
+if (is_array($failureSchedule)) {
+    assertEquals($previousLastSent, $failureSchedule['last_sent'] ?? null, 'Failed digest should preserve last_sent.', $failures);
+    $scheduledTime = $failureSchedule['next_scheduled'] ?? null;
+    assertPredicate(!empty($scheduledTime), 'Failed digest should compute a retry time.', $failures);
+    if (!empty($scheduledTime)) {
+        assertTrue(strtotime($scheduledTime) >= time(), 'Retry time should not be set in the past.', $failures);
+    }
+}
+
+Mailer::setTransportOverride(null);
+
 // Exercise report email action.
 $_POST = [
     'action' => 'send_report_email',
