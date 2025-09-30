@@ -15,6 +15,8 @@ class GeoIPService
     private const IP_API_FIELDS = 'status,country,countryCode,region,regionName,city,'
         . 'timezone,isp,org,as,query';
 
+    private const DYNAMIC_CACHE_TTL = 86400; // 24 hours per dynamic section
+
     private static ?GeoIPService $instance = null;
 
     /** @var callable|null */
@@ -58,19 +60,9 @@ class GeoIPService
         $this->cacheEnabled = $enabled;
     }
 
-    /**
-     * Get comprehensive IP intelligence
-     */
-    public function getIPIntelligence(string $ipAddress): array
+    private function getDefaultIntelligence(string $ipAddress): array
     {
-        // Check cache first
-        $cached = $this->cacheEnabled ? $this->getCachedIntelligence($ipAddress) : null;
-        if ($cached && $this->isCacheValid($cached)) {
-            return $cached;
-        }
-
-        // Gather intelligence from multiple sources
-        $intelligence = [
+        return [
             'ip_address' => $ipAddress,
             'country_code' => null,
             'country_name' => null,
@@ -99,18 +91,71 @@ class GeoIPService
             'reputation_score' => null,
             'reputation_context' => [],
             'reputation_last_checked' => null,
-            'last_updated' => date('Y-m-d H:i:s')
+            'last_updated' => null,
+        ];
+    }
+
+    private function shouldRefreshGeoData(array $intelligence): bool
+    {
+        $geoFields = [
+            'country_code',
+            'country_name',
+            'region',
+            'city',
+            'timezone',
+            'isp',
+            'organization',
+            'asn',
+            'asn_org',
         ];
 
-        // Try multiple data sources
-        $geoData = $this->getGeoLocationData($ipAddress);
-        if ($geoData) {
-            $intelligence = array_merge($intelligence, $geoData);
+        foreach ($geoFields as $field) {
+            if (!isset($intelligence[$field]) || $intelligence[$field] === null || $intelligence[$field] === '') {
+                return true;
+            }
         }
 
-        $threatData = $this->getThreatIntelligence($ipAddress);
-        if ($threatData) {
-            $intelligence = array_merge($intelligence, $threatData);
+        return false;
+    }
+
+    private function needsRefresh(?string $timestamp, int $ttlSeconds): bool
+    {
+        if (empty($timestamp)) {
+            return true;
+        }
+
+        $parsed = strtotime($timestamp);
+        if ($parsed === false) {
+            return true;
+        }
+
+        return (time() - $parsed) >= $ttlSeconds;
+    }
+
+    /**
+     * Get comprehensive IP intelligence
+     */
+    public function getIPIntelligence(string $ipAddress): array
+    {
+        $cached = $this->cacheEnabled ? $this->getCachedIntelligence($ipAddress) : null;
+
+        $intelligence = $this->getDefaultIntelligence($ipAddress);
+        if ($cached) {
+            $intelligence = array_merge($intelligence, $cached);
+        }
+
+        if (!$cached || $this->shouldRefreshGeoData($intelligence)) {
+            $geoData = $this->getGeoLocationData($ipAddress);
+            if ($geoData) {
+                $intelligence = array_merge($intelligence, $geoData);
+            }
+        }
+
+        if (empty($intelligence['rdap_checked_at'])) {
+            $rdapData = $this->fetchRdapInfo($ipAddress);
+            if ($rdapData) {
+                $intelligence = array_merge($intelligence, $rdapData);
+            }
         }
 
         $asnData = $this->getASNData($ipAddress);
@@ -118,8 +163,22 @@ class GeoIPService
             $intelligence = array_merge($intelligence, $asnData);
         }
 
-        // Cache the results
-        $this->cacheIntelligence($intelligence);
+        if ($this->needsRefresh($intelligence['dnsbl_last_checked'] ?? null, self::DYNAMIC_CACHE_TTL)) {
+            $dnsblData = $this->checkSpamhausDnsbl($ipAddress);
+            $intelligence = array_merge($intelligence, $dnsblData);
+        }
+
+        if ($this->needsRefresh($intelligence['reputation_last_checked'] ?? null, self::DYNAMIC_CACHE_TTL)) {
+            $reputationData = $this->fetchSansReputation($ipAddress);
+            if (!empty($reputationData)) {
+                $intelligence = array_merge($intelligence, $reputationData);
+            }
+        }
+
+        $intelligence = $this->recalculateThreatAssessment($ipAddress, $intelligence);
+        $intelligence['last_updated'] = date('Y-m-d H:i:s');
+
+        $this->cacheIntelligence($intelligence, $cached);
 
         return $intelligence;
     }
@@ -543,6 +602,66 @@ class GeoIPService
         return $result;
     }
 
+    private function recalculateThreatAssessment(string $ipAddress, array $intelligence): array
+    {
+        $baseline = $this->basicThreatCheck($ipAddress);
+        $categories = $baseline['threat_categories'];
+        $score = $baseline['threat_score'];
+        $isMalicious = $baseline['is_malicious'];
+        $isTor = $intelligence['is_tor'] ?? $baseline['is_tor'];
+        $isProxy = $intelligence['is_proxy'] ?? $baseline['is_proxy'];
+
+        $existingCategories = $intelligence['threat_categories'] ?? [];
+        $preservedCategories = array_filter(
+            $existingCategories,
+            fn(string $category) => !$this->isDynamicThreatCategory($category)
+        );
+
+        if (!empty($preservedCategories)) {
+            $categories = array_merge($categories, $preservedCategories);
+        }
+
+        if (!empty($intelligence['dnsbl_listed'])) {
+            $categories[] = 'dnsbl:spamhaus';
+            $score = max($score, 90);
+            $isMalicious = true;
+        }
+
+        if (isset($intelligence['reputation_score'])) {
+            $reputationScore = (int) $intelligence['reputation_score'];
+            if ($reputationScore > 0) {
+                $score = max($score, $reputationScore);
+                if ($reputationScore >= 30) {
+                    $categories[] = 'reputation:sans';
+                }
+                if ($reputationScore >= 60) {
+                    $isMalicious = true;
+                }
+            }
+        }
+
+        if (!empty($preservedCategories) && !empty($intelligence['is_malicious'])) {
+            $isMalicious = true;
+        }
+
+        if (!empty($preservedCategories) && isset($intelligence['threat_score'])) {
+            $score = max($score, (int) $intelligence['threat_score']);
+        }
+
+        $intelligence['threat_categories'] = array_values(array_unique(array_filter($categories)));
+        $intelligence['threat_score'] = $score;
+        $intelligence['is_malicious'] = $isMalicious;
+        $intelligence['is_tor'] = $isTor;
+        $intelligence['is_proxy'] = $isProxy;
+
+        return $intelligence;
+    }
+
+    private function isDynamicThreatCategory(string $category): bool
+    {
+        return str_starts_with($category, 'dnsbl:') || str_starts_with($category, 'reputation:');
+    }
+
     private function mapThreatLevelToScore(?string $level, mixed $attacks): ?int
     {
         $numericAttacks = is_numeric($attacks) ? (int) $attacks : null;
@@ -632,7 +751,7 @@ class GeoIPService
     /**
      * Cache intelligence data
      */
-    private function cacheIntelligence(array $intelligence): void
+    private function cacheIntelligence(array $intelligence, ?array $existing = null): void
     {
         if (!$this->cacheEnabled) {
             return;
@@ -641,19 +760,36 @@ class GeoIPService
         try {
             $db = DatabaseManager::getInstance();
 
-            $db->query('SELECT 1 FROM ip_intelligence WHERE ip_address = :ip');
-            $db->bind(':ip', $intelligence['ip_address']);
-            $exists = $db->single();
+            $existing ??= $this->getCachedIntelligence($intelligence['ip_address']);
+            $hasExisting = $existing !== null;
 
-            $rdapContacts = json_encode($intelligence['rdap_contacts'] ?? []);
-            $rdapRaw = isset($intelligence['rdap_raw']) && $intelligence['rdap_raw'] !== []
-                ? json_encode($intelligence['rdap_raw'])
-                : null;
-            $dnsblSources = json_encode($intelligence['dnsbl_sources'] ?? []);
-            $reputationContext = json_encode($intelligence['reputation_context'] ?? []);
-            $threatCategories = json_encode($intelligence['threat_categories'] ?? []);
+            $payload = $hasExisting
+                ? $this->mergeIntelligenceRecords($existing, $intelligence)
+                : array_merge($this->getDefaultIntelligence($intelligence['ip_address']), $intelligence);
 
-            if ($exists) {
+            $payload['threat_categories'] = is_array($payload['threat_categories'] ?? null)
+                ? $payload['threat_categories']
+                : [];
+            $payload['rdap_contacts'] = is_array($payload['rdap_contacts'] ?? null)
+                ? $payload['rdap_contacts']
+                : [];
+            $payload['rdap_raw'] = is_array($payload['rdap_raw'] ?? null)
+                ? $payload['rdap_raw']
+                : [];
+            $payload['dnsbl_sources'] = is_array($payload['dnsbl_sources'] ?? null)
+                ? $payload['dnsbl_sources']
+                : [];
+            $payload['reputation_context'] = is_array($payload['reputation_context'] ?? null)
+                ? $payload['reputation_context']
+                : [];
+
+            $rdapContacts = json_encode($payload['rdap_contacts']);
+            $rdapRaw = $payload['rdap_raw'] !== [] ? json_encode($payload['rdap_raw']) : null;
+            $dnsblSources = json_encode($payload['dnsbl_sources']);
+            $reputationContext = json_encode($payload['reputation_context']);
+            $threatCategories = json_encode($payload['threat_categories']);
+
+            if ($hasExisting) {
                 $db->query('
                     UPDATE ip_intelligence SET
                         country_code = :country_code,
@@ -708,38 +844,72 @@ class GeoIPService
                 ');
             }
 
-            $db->bind(':ip_address', $intelligence['ip_address']);
-            $db->bind(':country_code', $intelligence['country_code']);
-            $db->bind(':country_name', $intelligence['country_name']);
-            $db->bind(':region', $intelligence['region']);
-            $db->bind(':city', $intelligence['city']);
-            $db->bind(':timezone', $intelligence['timezone']);
-            $db->bind(':isp', $intelligence['isp']);
-            $db->bind(':organization', $intelligence['organization']);
-            $db->bind(':asn', $intelligence['asn']);
-            $db->bind(':asn_org', $intelligence['asn_org']);
-            $db->bind(':threat_score', $intelligence['threat_score']);
+            $db->bind(':ip_address', $payload['ip_address']);
+            $db->bind(':country_code', $payload['country_code']);
+            $db->bind(':country_name', $payload['country_name']);
+            $db->bind(':region', $payload['region']);
+            $db->bind(':city', $payload['city']);
+            $db->bind(':timezone', $payload['timezone']);
+            $db->bind(':isp', $payload['isp']);
+            $db->bind(':organization', $payload['organization']);
+            $db->bind(':asn', $payload['asn']);
+            $db->bind(':asn_org', $payload['asn_org']);
+            $db->bind(':threat_score', $payload['threat_score']);
             $db->bind(':threat_categories', $threatCategories);
-            $db->bind(':is_malicious', $intelligence['is_malicious'] ? 1 : 0);
-            $db->bind(':is_tor', $intelligence['is_tor'] ? 1 : 0);
-            $db->bind(':is_proxy', $intelligence['is_proxy'] ? 1 : 0);
-            $db->bind(':rdap_registry', $intelligence['rdap_registry']);
-            $db->bind(':rdap_network_range', $intelligence['rdap_network_range']);
-            $db->bind(':rdap_network_start', $intelligence['rdap_network_start']);
-            $db->bind(':rdap_network_end', $intelligence['rdap_network_end']);
+            $db->bind(':is_malicious', !empty($payload['is_malicious']) ? 1 : 0);
+            $db->bind(':is_tor', !empty($payload['is_tor']) ? 1 : 0);
+            $db->bind(':is_proxy', !empty($payload['is_proxy']) ? 1 : 0);
+            $db->bind(':rdap_registry', $payload['rdap_registry']);
+            $db->bind(':rdap_network_range', $payload['rdap_network_range']);
+            $db->bind(':rdap_network_start', $payload['rdap_network_start']);
+            $db->bind(':rdap_network_end', $payload['rdap_network_end']);
             $db->bind(':rdap_contacts', $rdapContacts);
             $db->bind(':rdap_raw', $rdapRaw);
-            $db->bind(':rdap_checked_at', $intelligence['rdap_checked_at']);
-            $db->bind(':dnsbl_listed', $intelligence['dnsbl_listed'] ? 1 : 0);
+            $db->bind(':rdap_checked_at', $payload['rdap_checked_at']);
+            $db->bind(':dnsbl_listed', !empty($payload['dnsbl_listed']) ? 1 : 0);
             $db->bind(':dnsbl_sources', $dnsblSources);
-            $db->bind(':dnsbl_last_checked', $intelligence['dnsbl_last_checked']);
-            $db->bind(':reputation_score', $intelligence['reputation_score']);
+            $db->bind(':dnsbl_last_checked', $payload['dnsbl_last_checked']);
+            $db->bind(':reputation_score', $payload['reputation_score']);
             $db->bind(':reputation_context', $reputationContext);
-            $db->bind(':reputation_last_checked', $intelligence['reputation_last_checked']);
+            $db->bind(':reputation_last_checked', $payload['reputation_last_checked']);
             $db->execute();
         } catch (Exception $e) {
             // Silently fail
         }
+    }
+
+    private function mergeIntelligenceRecords(array $existing, array $updates): array
+    {
+        $merged = $existing;
+
+        $staticFields = [
+            'country_code',
+            'country_name',
+            'region',
+            'city',
+            'timezone',
+            'isp',
+            'organization',
+            'asn',
+            'asn_org',
+            'rdap_registry',
+            'rdap_network_range',
+            'rdap_network_start',
+            'rdap_network_end',
+            'rdap_contacts',
+            'rdap_raw',
+            'rdap_checked_at',
+        ];
+
+        foreach ($updates as $field => $value) {
+            if (in_array($field, $staticFields, true) && ($value === null || $value === [])) {
+                continue;
+            }
+
+            $merged[$field] = $value;
+        }
+
+        return $merged;
     }
 
     /**
@@ -774,16 +944,6 @@ class GeoIPService
         }
 
         return null;
-    }
-
-    /**
-     * Check if cached data is still valid (24 hours)
-     */
-    private function isCacheValid(array $cached): bool
-    {
-        $lastUpdated = strtotime($cached['last_updated']);
-        $cacheExpiry = 24 * 60 * 60; // 24 hours
-        return (time() - $lastUpdated) < $cacheExpiry;
     }
 
     /**
