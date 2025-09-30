@@ -142,9 +142,10 @@ class EmailDigest
      * @param int $scheduleId
      * @param string $startDate
      * @param string $endDate
+     * @param bool $bypassRbac Skip RBAC checks (for background jobs)
      * @return array
      */
-    public static function generateDigestData(int $scheduleId, string $startDate, string $endDate): array
+    public static function generateDigestData(int $scheduleId, string $startDate, string $endDate, bool $bypassRbac = false): array
     {
         $db = DatabaseManager::getInstance();
 
@@ -157,7 +158,7 @@ class EmailDigest
             return [];
         }
 
-        if (!self::scheduleIsAccessible($schedule)) {
+        if (!$bypassRbac && !self::scheduleIsAccessible($schedule)) {
             return [];
         }
 

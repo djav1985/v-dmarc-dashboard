@@ -316,7 +316,8 @@ Mailer::setTransportOverride(null);
 $_POST = [
     'action' => 'send_report_email',
     'report_id' => $reportId,
-    'recipients' => 'reports@example.com'
+    'recipients' => 'reports@example.com',
+    'csrf_token' => $_SESSION['csrf_token']
 ];
 
 $sentEmails = [];
