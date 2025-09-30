@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\RBACManager;
 use App\Core\BrandingManager;
+use App\Core\Csrf;
 use App\Helpers\MessageHelper;
 
 /**
@@ -30,6 +31,13 @@ class BrandingController extends Controller
     {
         // Require settings management permission
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_SETTINGS);
+
+        // Validate CSRF token
+        if (!Csrf::validate($_POST['csrf_token'] ?? '')) {
+            MessageHelper::addMessage('Invalid CSRF token. Please try again.', 'error');
+            header('Location: /branding');
+            exit();
+        }
 
         $action = $_POST['action'] ?? '';
         $branding = BrandingManager::getInstance();
@@ -72,7 +80,7 @@ class BrandingController extends Controller
             if ($key === 'custom_css') {
                 $type = 'text';
             }
-            
+
             if (!$branding->setSetting($key, $value, $type)) {
                 $success = false;
             }
@@ -98,7 +106,7 @@ class BrandingController extends Controller
         }
 
         $result = $branding->uploadLogo($_FILES['logo']);
-        
+
         if ($result['success']) {
             MessageHelper::addMessage($result['message'], 'success');
         } else {
