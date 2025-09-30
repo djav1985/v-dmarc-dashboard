@@ -220,10 +220,17 @@ class ImapIngestionService
      */
     private function processAttachment(string $attachment): bool
     {
+        $tempFile = tempnam(sys_get_temp_dir(), 'dmarc_');
+
+        if ($tempFile === false) {
+            ErrorManager::getInstance()->log('Failed to create temporary file for DMARC attachment.', 'warning');
+            return false;
+        }
+
         try {
-            // Create temporary file for processing
-            $tempFile = tempnam(sys_get_temp_dir(), 'dmarc_');
-            file_put_contents($tempFile, $attachment);
+            if (file_put_contents($tempFile, $attachment) === false) {
+                throw new Exception('Failed to write attachment to temporary file.');
+            }
 
             // Try to parse as DMARC aggregate report
             $reportData = DmarcParser::parseCompressedReport($tempFile);
@@ -235,13 +242,17 @@ class ImapIngestionService
                 DmarcReport::storeAggregateRecords($reportId, $reportData['records']);
             }
 
-            // Clean up temp file
-            unlink($tempFile);
-
             return true;
         } catch (Exception $e) {
-            ErrorManager::getInstance()->log("Failed to process attachment: " . $e->getMessage(), 'warning');
+            ErrorManager::getInstance()->log(
+                "Failed to process attachment at $tempFile: " . $e->getMessage(),
+                'warning'
+            );
             return false;
+        } finally {
+            if (is_string($tempFile) && $tempFile !== '' && file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
         }
     }
 

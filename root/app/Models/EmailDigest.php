@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use DateTimeImmutable;
 
 /**
  * Email Digest model for managing automated email reports
@@ -289,13 +290,15 @@ class EmailDigest
     public static function updateLastSent(int $scheduleId, ?string $nextScheduled = null): void
     {
         $db = DatabaseManager::getInstance();
+        $timestamp = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
 
         if ($nextScheduled === null) {
             $db->query('
                 UPDATE email_digest_schedules
-                SET last_sent = datetime("now"), next_scheduled = NULL
+                SET last_sent = :last_sent, next_scheduled = NULL
                 WHERE id = :id
             ');
+            $db->bind(':last_sent', $timestamp);
             $db->bind(':id', $scheduleId);
             $db->execute();
             return;
@@ -303,10 +306,11 @@ class EmailDigest
 
         $db->query('
             UPDATE email_digest_schedules
-            SET last_sent = datetime("now"), next_scheduled = :next_scheduled
+            SET last_sent = :last_sent, next_scheduled = :next_scheduled
             WHERE id = :id
         ');
 
+        $db->bind(':last_sent', $timestamp);
         $db->bind(':next_scheduled', $nextScheduled);
         $db->bind(':id', $scheduleId);
         $db->execute();

@@ -189,12 +189,12 @@ class Users
      */
     public static function deleteUser(string $username): bool
     {
+        $db = DatabaseManager::getInstance();
+        $transactionStarted = false;
+
         try {
-            $db = DatabaseManager::getInstance();
-            
-            // Start transaction
-            $db->query('BEGIN TRANSACTION');
-            
+            $transactionStarted = $db->beginTransaction();
+
             // Delete domain assignments
             $db->query('DELETE FROM user_domain_assignments WHERE user_id = :username');
             $db->bind(':username', $username);
@@ -210,10 +210,20 @@ class Users
             $db->bind(':username', $username);
             $db->execute();
 
-            $db->query('COMMIT');
+            if ($transactionStarted) {
+                $db->commit();
+            }
+
             return true;
-        } catch (\Exception $e) {
-            $db->query('ROLLBACK');
+        } catch (\Throwable $e) {
+            if ($transactionStarted) {
+                try {
+                    $db->rollBack();
+                } catch (\Throwable) {
+                    // Ignore rollback errors to preserve original exception context
+                }
+            }
+
             return false;
         }
     }
