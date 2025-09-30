@@ -30,3 +30,4 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Hardened DMARC ingestion to parse forensic single-part payloads and detect gzip/ZIP attachments by signature so reports without filename extensions are still processed.
+- Corrected alert metric scheduling to respect the configured application timezone when calculating window boundaries.

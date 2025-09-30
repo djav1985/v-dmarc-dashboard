@@ -182,6 +182,49 @@ $db->query('SELECT COUNT(*) as total FROM alert_incidents');
 $incidentCount = $db->single();
 assertTrue(($incidentCount['total'] ?? 0) > 0, 'Incident table should contain entries after running checks.', $failures);
 
+// Simulate a non-UTC environment to ensure alert metrics honour the configured timezone.
+$originalTimezone = date_default_timezone_get();
+date_default_timezone_set('America/New_York');
+
+$tzTimestamp = time();
+$tzDomainName = 'alerts-tz-' . $tzTimestamp . '.example';
+$tzDomainId = insertDomain($tzDomainName);
+$tzGroupId = insertGroup('Alert TZ Group ' . $tzTimestamp);
+
+$db->query('INSERT INTO domain_group_assignments (domain_id, group_id) VALUES (:domain_id, :group_id)');
+$db->bind(':domain_id', $tzDomainId);
+$db->bind(':group_id', $tzGroupId);
+$db->execute();
+
+$tzRuleId = Alert::createRule([
+    'name' => 'Timezone SPF Failures',
+    'description' => 'Trigger when SPF failures exceed one in a non-UTC timezone.',
+    'rule_type' => 'threshold',
+    'metric' => 'spf_failures',
+    'threshold_value' => 1,
+    'threshold_operator' => '>=',
+    'time_window' => 60,
+    'domain_filter' => $tzDomainName,
+    'group_filter' => $tzGroupId,
+    'severity' => 'high',
+    'notification_channels' => ['email'],
+    'notification_recipients' => ['alerts@example.com'],
+    'webhook_url' => '',
+    'enabled' => 1,
+]);
+
+$tzReportId = insertDmarcReport($tzDomainId, 'report-tz-' . $tzTimestamp);
+insertDmarcRecord($tzReportId, '198.51.100.42', 3, 'reject', 'fail', 'fail');
+
+$timezoneIncidents = Alert::checkAlertRules();
+$matchingIncident = array_filter($timezoneIncidents, static function (array $incident) use ($tzRuleId): bool {
+    return isset($incident['rule']['id']) && (int) $incident['rule']['id'] === $tzRuleId;
+});
+
+assertPredicate(!empty($matchingIncident), 'Alert::checkAlertRules() should trigger in non-UTC timezone environments.', $failures);
+
+date_default_timezone_set($originalTimezone);
+
 // Validate digest scheduling and execution.
 $sentEmails = [];
 Mailer::setTransportOverride(static function (string $to, string $subject) use (&$sentEmails): bool {
