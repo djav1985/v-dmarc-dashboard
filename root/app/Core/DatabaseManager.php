@@ -20,6 +20,7 @@ use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Result;
 use Exception;
+use InvalidArgumentException;
 use App\Core\ErrorManager;
 class DatabaseManager
 {
@@ -117,6 +118,137 @@ class DatabaseManager
     {
         $this->closeConnection();
         $this->connect();
+    }
+
+    /**
+     * Build a portable SQL UPSERT statement with bindings for the active driver.
+     *
+     * @param string            $table          Table name to target.
+     * @param array<string,mixed> $insertData   Column => value pairs for the insert section.
+     * @param array<string,mixed> $updateData   Column => value pairs or helper descriptors for the update clause.
+     * @param array<int,string>|string|null $conflictTarget Optional conflict target for SQLite drivers.
+     *
+     * @return array{sql:string,bindings:array<string,mixed>}
+     */
+    public function buildUpsertQuery(
+        string $table,
+        array $insertData,
+        array $updateData,
+        array|string|null $conflictTarget = null
+    ): array {
+        if ($table === '') {
+            throw new InvalidArgumentException('Table name is required for UPSERT operations.');
+        }
+
+        if (empty($insertData)) {
+            throw new InvalidArgumentException('Insert data cannot be empty when building an UPSERT statement.');
+        }
+
+        if (empty($updateData)) {
+            throw new InvalidArgumentException('Update data cannot be empty when building an UPSERT statement.');
+        }
+
+        $driver = strtolower($this->getDriverName());
+        $normalizedDriver = $this->normalizeDriverName($driver);
+        $isSqlite = str_contains($driver, 'sqlite');
+
+        if ($isSqlite && $conflictTarget === null) {
+            throw new InvalidArgumentException('SQLite UPSERT statements require a conflict target.');
+        }
+
+        $columns = array_keys($insertData);
+        $placeholders = [];
+        $bindings = [];
+
+        foreach ($insertData as $column => $value) {
+            $placeholder = ':' . $column;
+            $placeholders[] = $placeholder;
+            $bindings[$column] = $value;
+        }
+
+        $updateClauses = [];
+        foreach ($updateData as $column => $value) {
+            $updateExpression = null;
+
+            if (is_array($value) && isset($value['type'])) {
+                switch ($value['type']) {
+                    case 'insert':
+                        $sourceColumn = $value['column'] ?? $column;
+                        $updateExpression = ':' . ltrim((string) $sourceColumn, ':');
+                        break;
+                    case 'raw':
+                        $expression = $value['expression'] ?? '';
+                        $updateExpression = $this->resolveRawExpression($expression, $normalizedDriver);
+                        break;
+                    default:
+                        $placeholderName = $column . '_update';
+                        $updateExpression = ':' . $placeholderName;
+                        $bindings[$placeholderName] = $value['value'] ?? null;
+                        break;
+                }
+            } elseif (is_string($value) && str_starts_with($value, ':')) {
+                $updateExpression = $value;
+            } else {
+                $placeholderName = $column . '_update';
+                $updateExpression = ':' . $placeholderName;
+                $bindings[$placeholderName] = $value;
+            }
+
+            if ($updateExpression === null) {
+                throw new InvalidArgumentException('Unable to resolve update expression for column: ' . $column);
+            }
+
+            $updateClauses[] = sprintf('%s = %s', $column, $updateExpression);
+        }
+
+        $sql = sprintf(
+            'INSERT INTO %s (%s) VALUES (%s)',
+            $table,
+            implode(', ', $columns),
+            implode(', ', $placeholders)
+        );
+
+        if ($isSqlite) {
+            $targetClause = '';
+            if (is_array($conflictTarget)) {
+                $targetClause = '(' . implode(', ', $conflictTarget) . ')';
+            } elseif (is_string($conflictTarget) && $conflictTarget !== '') {
+                $targetClause = '(' . trim($conflictTarget, '() ') . ')';
+            }
+
+            $sql .= sprintf(' ON CONFLICT %s DO UPDATE SET %s', $targetClause, implode(', ', $updateClauses));
+        } else {
+            $sql .= ' ON DUPLICATE KEY UPDATE ' . implode(', ', $updateClauses);
+        }
+
+        return [
+            'sql' => $sql,
+            'bindings' => $bindings,
+        ];
+    }
+
+    /**
+     * Build a descriptor instructing the UPSERT helper to reuse the insert placeholder.
+     */
+    public static function useInsertValue(string $column): array
+    {
+        return [
+            'type' => 'insert',
+            'column' => $column,
+        ];
+    }
+
+    /**
+     * Build a descriptor instructing the UPSERT helper to inject a raw SQL expression.
+     *
+     * @param string|array<string,string> $expression Driver-agnostic string or driver keyed map of expressions.
+     */
+    public static function rawExpression($expression): array
+    {
+        return [
+            'type' => 'raw',
+            'expression' => $expression,
+        ];
     }
 
     /**
@@ -327,5 +459,60 @@ class DatabaseManager
         $code = $e->getPrevious() ? $e->getPrevious()->getCode() : $e->getCode();
         $errors = ['2006', '2013', '1047', '1049'];
         return in_array((string) $code, $errors, true);
+    }
+
+    /**
+     * Allow tests to replace the singleton instance without touching the real connection.
+     */
+    public static function setInstanceForTesting(?DatabaseManager $instance): void
+    {
+        self::$instance = $instance;
+        if ($instance === null) {
+            self::$dbh = null;
+            self::$lastUsedTime = null;
+        }
+    }
+
+    /**
+     * Normalize driver names for easier comparison.
+     */
+    private function normalizeDriverName(string $driver): string
+    {
+        if (str_contains($driver, 'mysql') || str_contains($driver, 'mariadb')) {
+            return 'mysql';
+        }
+
+        if (str_contains($driver, 'sqlite')) {
+            return 'sqlite';
+        }
+
+        return $driver;
+    }
+
+    /**
+     * Resolve raw expressions for the active driver.
+     *
+     * @param array<string,string>|string $expression
+     */
+    private function resolveRawExpression($expression, string $driver): string
+    {
+        if (is_string($expression)) {
+            return $expression;
+        }
+
+        if (isset($expression[$driver])) {
+            return $expression[$driver];
+        }
+
+        if (isset($expression['default'])) {
+            return $expression['default'];
+        }
+
+        $resolved = reset($expression);
+        if (!is_string($resolved) || $resolved === '') {
+            throw new InvalidArgumentException('Raw expression mapping must contain at least one SQL snippet.');
+        }
+
+        return $resolved;
     }
 }
