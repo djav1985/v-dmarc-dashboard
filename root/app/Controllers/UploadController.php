@@ -154,7 +154,6 @@ class UploadController extends Controller
     {
         // Roadmap stubs: enqueue for SIEM ingestion, trigger webhook dispatch, etc.
         // These will be implemented as connectors become available.
-        (void) $reportData;
-        (void) $reportId;
+        unset($reportData, $reportId);
     }
 }
