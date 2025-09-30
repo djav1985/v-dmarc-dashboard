@@ -43,111 +43,119 @@ $brandingVars = $branding->getBrandingVars();
 </head>
 <body>
     <header class="navbar">
-        <section class="navbar-section">
-            <a class="navbar-brand" href="/home">
-                <?php if (!empty($brandingVars['app_logo_url'])): ?>
-                    <img src="<?= htmlspecialchars($brandingVars['app_logo_url']) ?>" 
-                         alt="<?= htmlspecialchars($brandingVars['app_name']) ?>" 
-                         style="height: 32px; margin-right: 0.5rem;">
-                <?php else: ?>
-                    <i class="icon icon-mail mr-1 text-primary"></i>
-                <?php endif; ?>
-                <?= htmlspecialchars($brandingVars['app_name']) ?>
-            </a>
-        </section>
-        
-        <section class="navbar-section navbar-center">
-            <div class="nav">
-                <a class="nav-item" href="/home">
-                    <i class="icon icon-home"></i> Dashboard
-                </a>
-                
-                <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
-                <a class="nav-item" href="/reports">
-                    <i class="icon icon-list"></i> Reports
-                </a>
-                <?php endif; ?>
-                
-                <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_ANALYTICS)): ?>
-                <a class="nav-item" href="/analytics">
-                    <i class="icon icon-bookmark"></i> Analytics
-                </a>
-                <?php endif; ?>
-                
-                <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_GROUPS)): ?>
-                <a class="nav-item" href="/domain-groups">
-                    <i class="icon icon-people"></i> Groups
-                </a>
-                <?php endif; ?>
-                
-                <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_ALERTS)): ?>
-                <a class="nav-item" href="/alerts">
-                    <i class="icon icon-flag"></i> Alerts
-                </a>
-                <a class="nav-item" href="/email-digests">
-                    <i class="icon icon-mail"></i> Digests
-                </a>
-                <?php endif; ?>
-                
-                <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
-                <a class="nav-item" href="/reports-management">
-                    <i class="icon icon-docs"></i> PDF Reports
-                </a>
-                <?php endif; ?>
-                
-                <?php if ($rbac->hasPermission(RBACManager::PERM_UPLOAD_REPORTS)): ?>
-                <a class="nav-item" href="/upload">
-                    <i class="icon icon-upload"></i> Upload
-                </a>
-                <a class="nav-item" href="/imap">
-                    <i class="icon icon-mail"></i> IMAP
-                </a>
-                <?php endif; ?>
-            </div>
-        </section>
-        
-        <section class="navbar-section">
-            <div class="dropdown dropdown-right">
-                <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
-                    <i class="icon icon-people"></i>
-                    <?php 
-                    $displayName = $_SESSION['username'] ?? 'User';
-                    if (!empty($_SESSION['user_first_name']) || !empty($_SESSION['user_last_name'])) {
-                        $displayName = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? ''));
-                    }
-                    echo htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8');
-                    ?>
-                    <i class="icon icon-caret"></i>
-                </a>
-                <ul class="menu">
-                    <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_USERS)): ?>
-                    <li class="menu-item">
-                        <a href="/user-management" class="btn btn-link btn-sm">
-                            <i class="icon icon-people"></i> User Management
-                        </a>
-                    </li>
+        <div class="container grid-lg header-inner">
+            <section class="navbar-section navbar-branding">
+                <button class="btn btn-link btn-action navbar-toggle" type="button" aria-label="Toggle navigation"
+                        aria-controls="navbarCollapsible" aria-expanded="false">
+                    <i class="icon icon-menu"></i>
+                </button>
+                <a class="navbar-brand" href="/home">
+                    <?php if (!empty($brandingVars['app_logo_url'])): ?>
+                        <img src="<?= htmlspecialchars($brandingVars['app_logo_url']) ?>"
+                             alt="<?= htmlspecialchars($brandingVars['app_name']) ?>"
+                             style="height: 32px; margin-right: 0.5rem;">
+                    <?php else: ?>
+                        <i class="icon icon-mail mr-1 text-primary"></i>
                     <?php endif; ?>
-                    
-                    <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_SETTINGS)): ?>
-                    <li class="menu-item">
-                        <a href="/branding" class="btn btn-link btn-sm">
-                            <i class="icon icon-photo"></i> Branding
+                    <?= htmlspecialchars($brandingVars['app_name']) ?>
+                </a>
+            </section>
+
+            <div class="navbar-collapse" id="navbarCollapsible">
+                <section class="navbar-section navbar-center">
+                    <div class="nav">
+                        <a class="nav-item" href="/home">
+                            <i class="icon icon-home"></i> Dashboard
                         </a>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <li class="divider"></li>
-                    <li class="menu-item">
-                        <form method="POST" action="/login" class="m-1">
-                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                            <button class="btn btn-link btn-sm text-left" name="logout" type="submit">
-                                <i class="icon icon-shutdown"></i> Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
+                        <a class="nav-item" href="/reports">
+                            <i class="icon icon-list"></i> Reports
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_ANALYTICS)): ?>
+                        <a class="nav-item" href="/analytics">
+                            <i class="icon icon-bookmark"></i> Analytics
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_GROUPS)): ?>
+                        <a class="nav-item" href="/domain-groups">
+                            <i class="icon icon-people"></i> Groups
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_ALERTS)): ?>
+                        <a class="nav-item" href="/alerts">
+                            <i class="icon icon-flag"></i> Alerts
+                        </a>
+                        <a class="nav-item" href="/email-digests">
+                            <i class="icon icon-mail"></i> Digests
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
+                        <a class="nav-item" href="/reports-management">
+                            <i class="icon icon-docs"></i> PDF Reports
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if ($rbac->hasPermission(RBACManager::PERM_UPLOAD_REPORTS)): ?>
+                        <a class="nav-item" href="/upload">
+                            <i class="icon icon-upload"></i> Upload
+                        </a>
+                        <a class="nav-item" href="/imap">
+                            <i class="icon icon-mail"></i> IMAP
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
+                <section class="navbar-section navbar-actions">
+                    <div class="dropdown dropdown-right">
+                        <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
+                            <i class="icon icon-people"></i>
+                            <?php
+                            $displayName = $_SESSION['username'] ?? 'User';
+                            if (!empty($_SESSION['user_first_name']) || !empty($_SESSION['user_last_name'])) {
+                                $displayName = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? ''));
+                            }
+                            echo htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8');
+                            ?>
+                            <i class="icon icon-caret"></i>
+                        </a>
+                        <ul class="menu">
+                            <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_USERS)): ?>
+                            <li class="menu-item">
+                                <a href="/user-management" class="btn btn-link btn-sm">
+                                    <i class="icon icon-people"></i> User Management
+                                </a>
+                            </li>
+                            <?php endif; ?>
+
+                            <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_SETTINGS)): ?>
+                            <li class="menu-item">
+                                <a href="/branding" class="btn btn-link btn-sm">
+                                    <i class="icon icon-photo"></i> Branding
+                                </a>
+                            </li>
+                            <?php endif; ?>
+
+                            <li class="divider"></li>
+                            <li class="menu-item">
+                                <form method="POST" action="/login" class="m-1">
+                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                    <button class="btn btn-link btn-sm text-left" name="logout" type="submit">
+                                        <i class="icon icon-shutdown"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
             </div>
-        </section>
+        </div>
     </header>
     
     <!-- Message Display Area -->

@@ -115,7 +115,7 @@ function formatFileSize($bytes) {
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-2x icon-bookmark text-primary mr-2"></i>
                 Reports Management
@@ -154,7 +154,7 @@ function formatFileSize($bytes) {
     <!-- PDF Templates & Recent Generations -->
     <div>
         <div class="management-card">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
                 <h4>
                     <i class="icon icon-download mr-1"></i>
                     PDF Report Templates
@@ -189,7 +189,7 @@ function formatFileSize($bytes) {
 
         <!-- Recent PDF Generations -->
         <div class="management-card">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
                 <h4>
                     <i class="icon icon-bookmark mr-1"></i>
                     Recent PDF Reports

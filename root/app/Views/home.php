@@ -59,7 +59,7 @@ try {
                 </div>
             <?php else: ?>
                 <div class="columns">
-                    <div class="column col-8">
+                    <div class="column col-12 col-lg-8">
                         <div class="card">
                             <div class="card-header">
                                 <div class="card-title h5">
@@ -104,7 +104,7 @@ try {
                         </div>
                     </div>
                     
-                    <div class="column col-4">
+                    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
                         <div class="card">
                             <div class="card-header">
                                 <div class="card-title h6">Quick Actions</div>

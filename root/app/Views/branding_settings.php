@@ -9,7 +9,7 @@
 
 <div class="columns">
     <!-- General Settings -->
-    <div class="column col-8 col-sm-12">
+    <div class="column col-12 col-lg-8">
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title">General Branding</h5>
@@ -34,17 +34,17 @@
                     </div>
                     
                     <div class="columns">
-                        <div class="column col-6 col-sm-12">
+                        <div class="column col-12 col-sm-6">
                             <div class="form-group">
                                 <label class="form-label" for="primary_color">Primary Color</label>
-                                <input class="form-input" type="color" id="primary_color" name="primary_color" 
+                                <input class="form-input" type="color" id="primary_color" name="primary_color"
                                        value="<?= htmlspecialchars($settings['primary_color'] ?? '#5755d9') ?>">
                             </div>
                         </div>
-                        <div class="column col-6 col-sm-12">
+                        <div class="column col-12 col-sm-6 mt-2 mt-sm-0">
                             <div class="form-group">
                                 <label class="form-label" for="secondary_color">Secondary Color</label>
-                                <input class="form-input" type="color" id="secondary_color" name="secondary_color" 
+                                <input class="form-input" type="color" id="secondary_color" name="secondary_color"
                                        value="<?= htmlspecialchars($settings['secondary_color'] ?? '#f1f3f4') ?>">
                             </div>
                         </div>
@@ -96,7 +96,7 @@
     </div>
     
     <!-- Logo Upload -->
-    <div class="column col-lg-4">
+    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title">Logo</h5>

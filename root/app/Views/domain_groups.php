@@ -58,7 +58,7 @@ require 'partials/header.php';
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-2x icon-bookmark text-primary mr-2"></i>
                 Domain Groups
@@ -73,7 +73,7 @@ require 'partials/header.php';
 
 <!-- Domain Groups List -->
 <div class="columns">
-    <div class="column col-8">
+    <div class="column col-12 col-lg-8">
         <?php if (empty($this->data['groups'])): ?>
             <div class="empty">
                 <div class="empty-icon">
@@ -90,7 +90,7 @@ require 'partials/header.php';
         <?php else: ?>
             <?php foreach ($this->data['groups'] as $group): ?>
                 <div class="group-card">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start">
                         <div>
                             <h4><?= htmlspecialchars($group['name']) ?></h4>
                             <?php if ($group['description']): ?>
@@ -174,7 +174,7 @@ require 'partials/header.php';
     </div>
     
     <!-- Unassigned Domains Sidebar -->
-    <div class="column col-4">
+    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="card">
             <div class="card-header">
                 <div class="card-title h6">Unassigned Domains</div>
@@ -184,7 +184,7 @@ require 'partials/header.php';
                     <p class="text-gray">All domains are assigned to groups.</p>
                 <?php else: ?>
                     <?php foreach ($this->data['unassigned_domains'] as $domain): ?>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-1">
                             <span><?= htmlspecialchars($domain['domain']) ?></span>
                             <button class="btn btn-sm btn-primary" onclick="showAssignModal(0, '', <?= $domain['id'] ?>)">
                                 Assign

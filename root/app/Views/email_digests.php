@@ -50,7 +50,7 @@ function formatFrequency(string $frequency): string
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-mail icon-2x text-primary mr-2"></i>
                 Email Digest Scheduling
@@ -63,7 +63,7 @@ function formatFrequency(string $frequency): string
 <div class="columns">
     <div class="column col-12 col-lg-7">
         <div class="digest-card mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
                 <h4 class="mb-0">
                     <i class="icon icon-timer"></i> Scheduled Digests
                 </h4>
@@ -146,7 +146,7 @@ function formatFrequency(string $frequency): string
         </div>
     </div>
 
-    <div class="column col-12 col-lg-5">
+    <div class="column col-12 col-lg-5 mt-2 mt-lg-0">
         <div class="digest-card digest-form">
             <h4 class="mb-2">
                 <i class="icon icon-plus"></i> Create Digest Schedule

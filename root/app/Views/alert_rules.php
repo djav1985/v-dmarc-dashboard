@@ -34,7 +34,7 @@ function alertSeverityBadge(string $severity): string
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-bookmark icon-2x text-primary mr-2"></i>
                 Alert Rules

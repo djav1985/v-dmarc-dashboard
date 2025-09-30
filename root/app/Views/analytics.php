@@ -111,7 +111,7 @@ function getHealthBadge($category, $label) {
 
 <div class="columns">
     <div class="column col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
             <h2>
                 <i class="icon icon-2x icon-bookmark text-primary mr-2"></i>
                 Analytics Dashboard
@@ -128,9 +128,9 @@ function getHealthBadge($category, $label) {
     <div class="column col-12">
         <form method="POST" action="/analytics" class="filter-row">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-            
+
             <div class="columns">
-                <div class="column col-6 col-md-3">
+                <div class="column col-12 col-md-3">
                     <div class="form-group">
                         <label class="form-label" for="domain">Domain</label>
                         <select class="form-select" id="domain" name="domain">
@@ -145,23 +145,23 @@ function getHealthBadge($category, $label) {
                     </div>
                 </div>
                 
-                <div class="column col-6 col-md-3">
+                <div class="column col-12 col-md-3">
                     <div class="form-group">
                         <label class="form-label" for="start_date">Start Date</label>
-                        <input type="date" class="form-input" id="start_date" name="start_date" 
+                        <input type="date" class="form-input" id="start_date" name="start_date"
                                value="<?= htmlspecialchars($this->data['filters']['start_date']) ?>">
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-3">
+
+                <div class="column col-12 col-md-3">
                     <div class="form-group">
                         <label class="form-label" for="end_date">End Date</label>
-                        <input type="date" class="form-input" id="end_date" name="end_date" 
+                        <input type="date" class="form-input" id="end_date" name="end_date"
                                value="<?= htmlspecialchars($this->data['filters']['end_date']) ?>">
                     </div>
                 </div>
-                
-                <div class="column col-6 col-md-3">
+
+                <div class="column col-12 col-md-3">
                     <div class="form-group">
                         <label class="form-label d-invisible d-md-block">&nbsp;</label>
                         <div class="d-flex">
@@ -179,25 +179,25 @@ function getHealthBadge($category, $label) {
 
 <!-- Summary Metrics -->
 <div class="columns mb-2">
-    <div class="column col-3">
+    <div class="column col-12 col-sm-6 col-lg-3">
         <div class="metric-card">
             <div class="metric-number"><?= number_format($this->data['summary_stats']['total_volume'] ?? 0) ?></div>
             <div class="metric-label">Total Messages</div>
         </div>
     </div>
-    <div class="column col-3">
+    <div class="column col-12 col-sm-6 col-lg-3">
         <div class="metric-card">
             <div class="metric-number"><?= number_format($this->data['summary_stats']['domain_count'] ?? 0) ?></div>
             <div class="metric-label">Monitored Domains</div>
         </div>
     </div>
-    <div class="column col-3">
+    <div class="column col-12 col-sm-6 col-lg-3">
         <div class="metric-card">
             <div class="metric-number"><?= number_format($this->data['summary_stats']['report_count'] ?? 0) ?></div>
             <div class="metric-label">Reports Processed</div>
         </div>
     </div>
-    <div class="column col-3">
+    <div class="column col-12 col-sm-6 col-lg-3">
         <div class="metric-card">
             <div class="metric-number"><?= number_format($this->data['summary_stats']['pass_rate'] ?? 0, 1) ?>%</div>
             <div class="metric-label">Overall Pass Rate</div>
@@ -208,7 +208,7 @@ function getHealthBadge($category, $label) {
 <!-- Charts Row -->
 <div class="columns">
     <!-- Volume Trends -->
-    <div class="column col-8">
+    <div class="column col-12 col-lg-8">
         <div class="analytics-card">
             <div class="card-header">
                 <div class="card-title h5">
@@ -223,9 +223,9 @@ function getHealthBadge($category, $label) {
             </div>
         </div>
     </div>
-    
+
     <!-- Domain Health -->
-    <div class="column col-4">
+    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="analytics-card">
             <div class="card-header">
                 <div class="card-title h5">
@@ -261,7 +261,7 @@ function getHealthBadge($category, $label) {
 <!-- Second Charts Row -->
 <div class="columns">
     <!-- Compliance Trends -->
-    <div class="column col-8">
+    <div class="column col-12 col-lg-8">
         <div class="analytics-card">
             <div class="card-header">
                 <div class="card-title h5">
@@ -276,9 +276,9 @@ function getHealthBadge($category, $label) {
             </div>
         </div>
     </div>
-    
+
     <!-- Top Threats -->
-    <div class="column col-4">
+    <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="analytics-card">
             <div class="card-header">
                 <div class="card-title h5">
