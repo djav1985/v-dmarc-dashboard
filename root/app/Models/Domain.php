@@ -31,10 +31,7 @@ class Domain
         $db->bind(':domain', $domain);
         $db->execute();
 
-        // Get the new ID
-        $db->query('SELECT LAST_INSERT_ID() as id');
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**

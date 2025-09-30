@@ -186,9 +186,7 @@ class DomainGroup
         $db->bind(':description', $description);
         $db->execute();
 
-        $db->query('SELECT LAST_INSERT_ID() as id');
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**

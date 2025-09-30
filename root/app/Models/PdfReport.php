@@ -297,9 +297,7 @@ class PdfReport
         $db->bind(':generated_by', $data['generated_by'] ?? 'Unknown');
         $db->execute();
 
-        $db->query('SELECT LAST_INSERT_ID() as id');
-        $result = $db->single();
-        return (int) $result['id'];
+        return (int) $db->getLastInsertId();
     }
 
     /**
