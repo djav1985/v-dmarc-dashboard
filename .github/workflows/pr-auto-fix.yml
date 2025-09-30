@@ -110,16 +110,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref || github.ref }}
+          ref: ${{ github.head_ref }}
 
-      - name: Commit fixes or create PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          commit-message: "chore: auto-lint/style fixes"
-          branch: "auto-fix/${{ github.run_id }}"
-          title: "Auto-fix lint/style issues"
-          body: "This PR contains automated lint/style fixes from workflow run ${{ github.run_id }}."
-          delete-branch: true
-          labels: |
-            automated
-            lint-fix
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit fixes
+        run: |
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: auto-lint/style fixes"
+          git push origin HEAD:${{ github.head_ref }}
