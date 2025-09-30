@@ -5,7 +5,7 @@ This document sets baseline expectations for contributors to ensure code quality
 
 ---
 
-## Framework
+## Framework Development Principles
 
 - Use respect/validation for validation.
 - Use phpmailer/phpmailer for emails.
