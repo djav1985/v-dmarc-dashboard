@@ -72,6 +72,14 @@ class Router
             // Reports management and PDF generation
             $r->addRoute('GET', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleRequest']);
             $r->addRoute('POST', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleSubmission']);
+            
+            // User management (RBAC)
+            $r->addRoute('GET', '/user-management', [\App\Controllers\UserManagementController::class, 'handleRequest']);
+            $r->addRoute('POST', '/user-management', [\App\Controllers\UserManagementController::class, 'handleSubmission']);
+            
+            // Branding settings
+            $r->addRoute('GET', '/branding', [\App\Controllers\BrandingController::class, 'handleRequest']);
+            $r->addRoute('POST', '/branding', [\App\Controllers\BrandingController::class, 'handleSubmission']);
         });
     }
 

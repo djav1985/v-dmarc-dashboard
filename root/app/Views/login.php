@@ -25,23 +25,24 @@
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    <link rel="stylesheet" href="/assets/css/enhanced-styles.css">
     <link rel="stylesheet" href="/assets/css/login.css">
     <link rel="stylesheet" href="/assets/css/forms.css">
 </head>
 <body>
     <div class="container grid-lg">
         <div class="columns">
-            <div class="column col-4 col-mx-auto">
+            <div class="column col-4 col-sm-8 col-xs-12 col-mx-auto">
                 <div class="login-container">
-                    <div class="text-center mb-2">
-                        <i class="icon icon-3x icon-mail text-primary mb-1"></i>
+                    <div class="text-center mb-3">
+                        <i class="icon icon-3x icon-mail text-primary mb-2"></i>
                         <h2>DMARC Dashboard</h2>
                         <p class="text-gray">Secure email authentication monitoring</p>
                     </div>
                     
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-title h5">Sign In</div>
+                            <div class="card-title">Sign In</div>
                         </div>
                         <div class="card-body">
                             <form method="post">
@@ -68,7 +69,7 @@
                         </div>
                     </div>
                     
-                    <div class="text-center mt-2">
+                    <div class="text-center mt-3">
                         <div class="toast">
                             <small class="text-gray">
                                 <strong>Default credentials:</strong> admin / admin

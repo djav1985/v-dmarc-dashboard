@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'appsbyv/name-dev',
-        'pretty_version' => 'dev-copilot/fix-1946be57-f14a-4f46-ba1b-ff3304698de1',
-        'version' => 'dev-copilot/fix-1946be57-f14a-4f46-ba1b-ff3304698de1',
-        'reference' => 'ef5a039ed8387ca83a74e94dc1f1dfa7061f7127',
+        'pretty_version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+        'version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+        'reference' => 'db2ebc4a697c420d19765b3a15db22a4adf7aec3',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'appsbyv/name-dev' => array(
-            'pretty_version' => 'dev-copilot/fix-1946be57-f14a-4f46-ba1b-ff3304698de1',
-            'version' => 'dev-copilot/fix-1946be57-f14a-4f46-ba1b-ff3304698de1',
-            'reference' => 'ef5a039ed8387ca83a74e94dc1f1dfa7061f7127',
+            'pretty_version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+            'version' => 'dev-copilot/fix-541f7486-8dbb-4a5c-ab54-27c3d790a10d',
+            'reference' => 'db2ebc4a697c420d19765b3a15db22a4adf7aec3',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

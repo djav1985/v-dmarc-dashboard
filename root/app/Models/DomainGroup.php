@@ -10,6 +10,18 @@ use App\Core\DatabaseManager;
 class DomainGroup
 {
     /**
+     * Get all domains (for user management)
+     *
+     * @return array
+     */
+    public static function getAllDomains(): array
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT * FROM domains ORDER BY domain ASC');
+        return $db->resultSet();
+    }
+
+    /**
      * Get all domain groups with their assigned domains
      *
      * @return array
