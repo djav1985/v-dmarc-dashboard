@@ -68,6 +68,10 @@ class Router
             // Alerting system
             $r->addRoute('GET', '/alerts', [\App\Controllers\AlertController::class, 'handleRequest']);
             $r->addRoute('POST', '/alerts', [\App\Controllers\AlertController::class, 'handleSubmission']);
+
+            // Email digest scheduling
+            $r->addRoute('GET', '/email-digests', [\App\Controllers\EmailDigestController::class, 'handleRequest']);
+            $r->addRoute('POST', '/email-digests', [\App\Controllers\EmailDigestController::class, 'handleSubmission']);
             
             // Reports management and PDF generation
             $r->addRoute('GET', '/reports-management', [\App\Controllers\ReportsManagementController::class, 'handleRequest']);
