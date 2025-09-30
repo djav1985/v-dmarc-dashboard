@@ -15,3 +15,11 @@ dist/
 # PHPUnit cache
 .phpunit.result.cache
 root/php_app.log
+
+# Dependencies
+vendor/
+node_modules/
+root/vendor/
+
+# Temporary files
+/tmp/
