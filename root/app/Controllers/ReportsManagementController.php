@@ -4,10 +4,14 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\PdfReport;
+use App\Models\PdfReportSchedule;
 use App\Models\PolicySimulation;
 use App\Models\Domain;
 use App\Models\DomainGroup;
 use App\Core\RBACManager;
+use App\Services\PdfReportService;
+use App\Services\PdfReportScheduler;
+use Throwable;
 
 /**
  * Reports Controller for PDF generation and policy simulation
@@ -61,6 +65,21 @@ class ReportsManagementController extends Controller
                 case 'run_simulation':
                     $this->runSimulation();
                     break;
+                case 'create_schedule':
+                    $this->createSchedule();
+                    break;
+                case 'update_schedule':
+                    $this->updateSchedule();
+                    break;
+                case 'delete_schedule':
+                    $this->deleteSchedule();
+                    break;
+                case 'toggle_schedule':
+                    $this->toggleSchedule();
+                    break;
+                case 'run_schedule':
+                    $this->runSchedule();
+                    break;
             }
         }
 
@@ -76,15 +95,22 @@ class ReportsManagementController extends Controller
         $templates = PdfReport::getAllTemplates();
         $recentGenerations = PdfReport::getRecentGenerations(5);
         $simulations = PolicySimulation::getAllSimulations();
+        $schedules = PdfReportSchedule::getAllSchedules();
+        $groups = DomainGroup::getAllGroups();
 
         $this->data = [
             'templates' => $templates,
             'recent_generations' => $recentGenerations,
             'simulations' => array_slice($simulations, 0, 5),
+            'schedules' => $schedules,
+            'groups' => $groups,
             'stats' => [
                 'total_templates' => count($templates),
                 'recent_generations' => count($recentGenerations),
-                'total_simulations' => count($simulations)
+                'total_simulations' => count($simulations),
+                'active_schedules' => count(array_filter($schedules, static function ($schedule) {
+                    return (int) ($schedule['enabled'] ?? 0) === 1;
+                })),
             ]
         ];
 
@@ -178,38 +204,232 @@ class ReportsManagementController extends Controller
         $domainFilter = $_POST['domain_filter'] ?? '';
         $groupFilter = !empty($_POST['group_filter']) ? (int) $_POST['group_filter'] : null;
 
-        if ($templateId > 0) {
-            // Generate report data
-            $reportData = PdfReport::generateReportData($templateId, $startDate, $endDate, $domainFilter, $groupFilter);
+        if ($templateId <= 0) {
+            $_SESSION['flash_message'] = 'A valid template must be selected before generating a PDF report.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
 
-            // In a real implementation, you would use a PDF library like TCPDF or Dompdf
-            // For demo purposes, we'll simulate the generation
-            $filename = 'dmarc_report_' . date('Y-m-d_H-i-s') . '.pdf';
-            $fileSize = rand(100000, 500000); // Simulate file size
+        $reportData = PdfReport::generateReportData($templateId, $startDate, $endDate, $domainFilter, $groupFilter);
 
-            // Log the generation
+        if (empty($reportData)) {
+            $_SESSION['flash_message'] = 'No data was available for the selected template and filters.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        try {
+            $generation = PdfReportService::generatePdf(
+                $reportData,
+                $title,
+                [
+                    'output_directory' => defined('PDF_REPORT_STORAGE_PATH') ? PDF_REPORT_STORAGE_PATH : null,
+                    'prefix' => 'manual',
+                ]
+            );
+
             PdfReport::logGeneration([
                 'template_id' => $templateId,
-                'filename' => $filename,
+                'filename' => $generation['filename'],
+                'file_path' => $generation['relative_path'],
                 'title' => $title,
                 'date_range_start' => $startDate,
                 'date_range_end' => $endDate,
                 'domain_filter' => $domainFilter,
                 'group_filter' => $groupFilter,
                 'parameters' => $_POST,
-                'file_size' => $fileSize,
-                'generated_by' => $_SESSION['username'] ?? 'Unknown'
+                'file_size' => $generation['size'],
+                'generated_by' => $_SESSION['username'] ?? 'Unknown',
+                'schedule_id' => null,
             ]);
 
-            // In reality, you would:
-            // 1. Generate HTML from template and data
-            // 2. Convert HTML to PDF using library
-            // 3. Save PDF to file system
-            // 4. Provide download link
-
-            $_SESSION['flash_message'] = "PDF report '{$filename}' generated successfully.";
+            $_SESSION['flash_message'] = "PDF report '{$generation['filename']}' generated successfully.";
             $_SESSION['flash_type'] = 'success';
+        } catch (Throwable $exception) {
+            $_SESSION['flash_message'] = 'Failed to generate PDF: ' . $exception->getMessage();
+            $_SESSION['flash_type'] = 'error';
         }
+    }
+
+    /**
+     * Create a scheduled PDF report.
+     */
+    private function createSchedule(): void
+    {
+        $name = trim($_POST['schedule_name'] ?? '');
+        $templateId = (int) ($_POST['schedule_template_id'] ?? 0);
+        $title = trim($_POST['schedule_title'] ?? '');
+        $frequency = trim($_POST['schedule_frequency'] ?? '');
+        $recipients = $this->extractRecipients($_POST['schedule_recipients'] ?? '');
+
+        if ($name === '' || $templateId <= 0 || $frequency === '' || empty($recipients)) {
+            $_SESSION['flash_message'] = 'Schedule name, template, cadence, and at least one recipient are required.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        $domainFilter = trim($_POST['schedule_domain_filter'] ?? '');
+        $groupFilter = !empty($_POST['schedule_group_filter']) ? (int) $_POST['schedule_group_filter'] : null;
+        $nextRun = trim($_POST['schedule_start_at'] ?? '');
+
+        try {
+            PdfReportSchedule::create([
+                'name' => $name,
+                'template_id' => $templateId,
+                'title' => $title !== '' ? $title : $name,
+                'frequency' => $frequency,
+                'recipients' => $recipients,
+                'domain_filter' => $domainFilter,
+                'group_filter' => $groupFilter ?: null,
+                'parameters' => [
+                    'created_via' => 'dashboard',
+                ],
+                'enabled' => 1,
+                'next_run_at' => $nextRun !== '' ? $nextRun : null,
+                'created_by' => $_SESSION['username'] ?? null,
+            ]);
+
+            $_SESSION['flash_message'] = "Schedule '{$name}' created successfully.";
+            $_SESSION['flash_type'] = 'success';
+        } catch (Throwable $exception) {
+            $_SESSION['flash_message'] = 'Failed to create schedule: ' . $exception->getMessage();
+            $_SESSION['flash_type'] = 'error';
+        }
+    }
+
+    /**
+     * Update schedule configuration.
+     */
+    private function updateSchedule(): void
+    {
+        $scheduleId = (int) ($_POST['schedule_id'] ?? 0);
+        $schedule = $scheduleId > 0 ? PdfReportSchedule::find($scheduleId) : null;
+        if (!$schedule) {
+            $_SESSION['flash_message'] = 'The selected schedule could not be found.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        $name = trim($_POST['schedule_name'] ?? ($schedule['name'] ?? ''));
+        $templateId = (int) ($_POST['schedule_template_id'] ?? $schedule['template_id']);
+        $title = trim($_POST['schedule_title'] ?? ($schedule['title'] ?? ''));
+        $frequency = trim($_POST['schedule_frequency'] ?? ($schedule['frequency'] ?? ''));
+        $recipients = $this->extractRecipients($_POST['schedule_recipients'] ?? '');
+        $domainFilter = trim($_POST['schedule_domain_filter'] ?? ($schedule['domain_filter'] ?? ''));
+        $groupFilter = isset($_POST['schedule_group_filter']) && $_POST['schedule_group_filter'] !== ''
+            ? (int) $_POST['schedule_group_filter']
+            : ($schedule['group_filter'] ?? null);
+        $nextRun = trim($_POST['schedule_start_at'] ?? ($schedule['next_run_at'] ?? ''));
+        $enabled = isset($_POST['schedule_enabled']) ? (int) $_POST['schedule_enabled'] : ($schedule['enabled'] ?? 1);
+
+        if ($name === '' || $templateId <= 0 || $frequency === '' || empty($recipients)) {
+            $_SESSION['flash_message'] = 'Updated schedule details are incomplete. Please verify cadence, template, and recipients.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        try {
+            PdfReportSchedule::update($scheduleId, [
+                'name' => $name,
+                'template_id' => $templateId,
+                'title' => $title !== '' ? $title : $name,
+                'frequency' => $frequency,
+                'recipients' => $recipients,
+                'domain_filter' => $domainFilter,
+                'group_filter' => $groupFilter ?: null,
+                'parameters' => [
+                    'updated_via' => 'dashboard',
+                ],
+                'enabled' => $enabled ? 1 : 0,
+                'next_run_at' => $nextRun !== '' ? $nextRun : null,
+            ]);
+
+            $_SESSION['flash_message'] = "Schedule '{$name}' updated successfully.";
+            $_SESSION['flash_type'] = 'success';
+        } catch (Throwable $exception) {
+            $_SESSION['flash_message'] = 'Failed to update schedule: ' . $exception->getMessage();
+            $_SESSION['flash_type'] = 'error';
+        }
+    }
+
+    /**
+     * Delete a schedule.
+     */
+    private function deleteSchedule(): void
+    {
+        $scheduleId = (int) ($_POST['schedule_id'] ?? 0);
+        if ($scheduleId <= 0) {
+            $_SESSION['flash_message'] = 'Unable to delete schedule: missing identifier.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        PdfReportSchedule::delete($scheduleId);
+        $_SESSION['flash_message'] = 'Schedule removed successfully.';
+        $_SESSION['flash_type'] = 'success';
+    }
+
+    /**
+     * Toggle schedule enabled state.
+     */
+    private function toggleSchedule(): void
+    {
+        $scheduleId = (int) ($_POST['schedule_id'] ?? 0);
+        $enabled = (int) ($_POST['schedule_enabled'] ?? 0) === 1;
+
+        if ($scheduleId <= 0) {
+            $_SESSION['flash_message'] = 'Unable to change schedule state: missing identifier.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        PdfReportSchedule::setEnabled($scheduleId, $enabled);
+        $_SESSION['flash_message'] = $enabled ? 'Schedule enabled.' : 'Schedule paused.';
+        $_SESSION['flash_type'] = 'success';
+    }
+
+    /**
+     * Trigger an immediate run for a schedule.
+     */
+    private function runSchedule(): void
+    {
+        $scheduleId = (int) ($_POST['schedule_id'] ?? 0);
+        if ($scheduleId <= 0) {
+            $_SESSION['flash_message'] = 'Unable to execute schedule: missing identifier.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        try {
+            $result = PdfReportScheduler::runScheduleNow($scheduleId);
+            if ($result === null) {
+                $_SESSION['flash_message'] = 'Schedule could not be located.';
+                $_SESSION['flash_type'] = 'error';
+                return;
+            }
+
+            if ($result['success']) {
+                $_SESSION['flash_message'] = 'Schedule executed successfully and recipients were notified.';
+                $_SESSION['flash_type'] = 'success';
+            } else {
+                $_SESSION['flash_message'] = 'Schedule execution completed with warnings: ' . ($result['message'] ?? 'Unknown issue');
+                $_SESSION['flash_type'] = 'warning';
+            }
+        } catch (Throwable $exception) {
+            $_SESSION['flash_message'] = 'Failed to run schedule: ' . $exception->getMessage();
+            $_SESSION['flash_type'] = 'error';
+        }
+    }
+
+    /**
+     * Normalize recipient input into an array list.
+     */
+    private function extractRecipients(string $raw): array
+    {
+        $parts = preg_split('/[\r\n,;]+/', $raw) ?: [];
+        $recipients = array_filter(array_map('trim', $parts));
+
+        return array_values($recipients);
     }
 
     /**

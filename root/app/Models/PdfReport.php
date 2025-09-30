@@ -287,16 +287,17 @@ class PdfReport
         $db = DatabaseManager::getInstance();
 
         $db->query('
-            INSERT INTO pdf_report_generations 
-            (template_id, filename, title, date_range_start, date_range_end, 
-             domain_filter, group_filter, parameters, file_size, generated_by) 
-            VALUES 
-            (:template_id, :filename, :title, :date_range_start, :date_range_end,
-             :domain_filter, :group_filter, :parameters, :file_size, :generated_by)
+            INSERT INTO pdf_report_generations
+            (template_id, filename, file_path, title, date_range_start, date_range_end,
+             domain_filter, group_filter, parameters, file_size, generated_by, schedule_id)
+            VALUES
+            (:template_id, :filename, :file_path, :title, :date_range_start, :date_range_end,
+             :domain_filter, :group_filter, :parameters, :file_size, :generated_by, :schedule_id)
         ');
 
         $db->bind(':template_id', $data['template_id']);
         $db->bind(':filename', $data['filename']);
+        $db->bind(':file_path', $data['file_path'] ?? null);
         $db->bind(':title', $data['title']);
         $db->bind(':date_range_start', $data['date_range_start']);
         $db->bind(':date_range_end', $data['date_range_end']);
@@ -305,6 +306,7 @@ class PdfReport
         $db->bind(':parameters', json_encode($data['parameters'] ?? []));
         $db->bind(':file_size', $data['file_size'] ?? 0);
         $db->bind(':generated_by', $data['generated_by'] ?? 'Unknown');
+        $db->bind(':schedule_id', $data['schedule_id'] ?? null);
         $db->execute();
 
         return (int) $db->getLastInsertId();
@@ -321,11 +323,13 @@ class PdfReport
         $db = DatabaseManager::getInstance();
 
         $db->query('
-            SELECT 
+            SELECT
                 prg.*,
-                prt.name as template_name
+                prt.name as template_name,
+                prs.name as schedule_name
             FROM pdf_report_generations prg
             JOIN pdf_report_templates prt ON prg.template_id = prt.id
+            LEFT JOIN pdf_report_schedules prs ON prg.schedule_id = prs.id
             ORDER BY prg.generated_at DESC
             LIMIT :limit
         ');

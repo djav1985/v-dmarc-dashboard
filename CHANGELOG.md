@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Built a digest scheduling controller/UI with supporting tests covering automated dispatch and mailer mocking.
 - Added database compatibility regression tests covering digest timestamps, analytics bucketing, transactional deletion, and IMAP attachment cleanup.
 - Added unit coverage confirming PDF analytics respect domain-group filters across all sections.
+- Added Dompdf-backed PDF rendering with persistent storage, schedule management UI, notification templates, and end-to-end scheduler tests.
 
 ### Changed
 - Updated documentation to explain the dual Composer environments and new directory structure.
@@ -29,8 +30,10 @@ All notable changes to this project will be documented in this file.
 - Ensured IMAP attachment processing always cleans up temporary files and logs the failing path for diagnostics.
 - Standardized alert metrics, incident acknowledgement, and GeoIP cache cleanup to bind ISO timestamps for cross-database compatibility and added regression coverage for non-SQLite drivers.
 - Updated analytics summary, trend, compliance, health, and threat helpers plus PDF report generation to honour optional domain-group filters.
+- Extended the hourly cron job to execute scheduled PDF reports and log delivery outcomes alongside existing digest processing.
 
 ### Fixed
+- Removed the leading whitespace from the public entry point so sessions can start and error responses can set headers without runtime warnings.
 - Hardened DMARC ingestion to parse forensic single-part payloads and detect gzip/ZIP attachments by signature so reports without filename extensions are still processed.
 - Corrected alert metric scheduling to respect the configured application timezone when calculating window boundaries.
 - Fixed email digest aggregation to prevent duplicated volumes when domains belong to multiple groups.

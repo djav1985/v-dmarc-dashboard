@@ -73,6 +73,19 @@ php cron.php hourly
 
 Add your custom logic to the switch statement inside `cron.php`.
 
+## PDF Report Automation
+
+The reports management dashboard now generates production-ready PDFs using [Dompdf](https://github.com/dompdf/dompdf). Manual
+exports can be launched from the UI and are written to the directory defined by the `PDF_REPORT_STORAGE_PATH` constant
+(`root/storage/pdf_reports` by default). Ensure this directory exists and is writable by the web server or CLI user.
+
+Recurring deliveries are managed through the new schedule editor on the reports management dashboard. Each schedule tracks its
+cadence, recipients, and last-run status, and the hourly cron task dispatches due jobs by calling
+`App\Services\PdfReportScheduler::processDueSchedules()`. Email notifications reuse the framework’s PHPMailer templates.
+
+After pulling the latest code, apply the schema changes in `root/app/Database/Migrations/202406010001_create_pdf_report_schedules.php`
+and `root/app/Database/Migrations/202406010002_update_pdf_report_generations.php` so the new tables and columns are available.
+
 ## Timezone Configuration
 
 The application honours PHP's default timezone when binding timestamps for alert

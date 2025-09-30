@@ -27,6 +27,7 @@ use App\Utilities\DataRetention;
 use App\Services\ImapIngestionService;
 use App\Services\AlertService;
 use App\Services\EmailDigestService;
+use App\Services\PdfReportScheduler;
 use Throwable;
 
 // Apply configured runtime limits after loading settings
@@ -123,6 +124,28 @@ if (!in_array($jobType, $validJobTypes)) {
                 }
             } catch (Throwable $exception) {
                 echo "Error processing digests: " . $exception->getMessage() . "\n";
+            }
+
+            try {
+                $scheduleResults = PdfReportScheduler::processDueSchedules();
+                if (!empty($scheduleResults)) {
+                    foreach ($scheduleResults as $result) {
+                        $status = $result['success'] ? 'generated' : 'failed';
+                        $message = $result['message'] ?? '';
+                        echo "Schedule #{$result['schedule_id']} {$status}.";
+                        if ($message !== '') {
+                            echo " {$message}";
+                        }
+                        if (!empty($result['next_run'])) {
+                            echo " Next run {$result['next_run']}.";
+                        }
+                        echo "\n";
+                    }
+                } else {
+                    echo "No scheduled PDF reports due this hour.\n";
+                }
+            } catch (Throwable $exception) {
+                echo "Error processing PDF schedules: " . $exception->getMessage() . "\n";
             }
             break;
             
