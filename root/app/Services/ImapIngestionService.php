@@ -113,6 +113,7 @@ class ImapIngestionService
                     if ($this->processEmail($uid)) {
                         $results['processed']++;
                         // Mark email as read/processed
+                        imap_delete($this->connection, $uid, FT_UID);
                         imap_setflag_full($this->connection, $uid, '\\Seen', ST_UID);
                     } else {
                         $results['errors']++;
@@ -123,7 +124,9 @@ class ImapIngestionService
                 }
             }
 
-            $results['messages'][] = "Processed {$results['processed']} reports with {$results['errors']} errors";
+            imap_expunge($this->connection);
+
+            $results['messages'][] = "Processed {$results['processed']} reports with {$results['errors']} errors; flagged messages were expunged";
         } catch (Exception $e) {
             $results['messages'][] = 'Error during email processing: ' . $e->getMessage();
         } finally {
