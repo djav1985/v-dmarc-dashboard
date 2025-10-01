@@ -616,5 +616,4 @@ class Analytics
 
         return $date;
     }
-
 }
