@@ -19,15 +19,49 @@ class PolicySimulation
     public static function getAllSimulations(): array
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        $whereClause = '';
+        $bindings = [];
+
+        if ($rbac->getCurrentUserRole() !== RBACManager::ROLE_APP_ADMIN) {
+            $accessibleDomains = $rbac->getAccessibleDomains();
+            if (empty($accessibleDomains)) {
+                return [];
+            }
+
+            $domainIds = array_values(array_filter(array_map(
+                static fn($domain) => (int) ($domain['id'] ?? 0),
+                $accessibleDomains
+            )));
+
+            if (empty($domainIds)) {
+                return [];
+            }
+
+            $placeholders = [];
+            foreach ($domainIds as $index => $domainId) {
+                $placeholder = ':domain_id_' . $index;
+                $placeholders[] = $placeholder;
+                $bindings[$placeholder] = $domainId;
+            }
+
+            $whereClause = 'WHERE ps.domain_id IN (' . implode(', ', $placeholders) . ')';
+        }
 
         $db->query('
-            SELECT 
+            SELECT
                 ps.*,
                 d.domain
             FROM policy_simulations ps
             JOIN domains d ON ps.domain_id = d.id
+            ' . $whereClause . '
             ORDER BY ps.created_at DESC
         ');
+
+        foreach ($bindings as $placeholder => $value) {
+            $db->bind($placeholder, $value);
+        }
 
         return $db->resultSet();
     }
@@ -421,7 +455,7 @@ class PolicySimulation
         $db = DatabaseManager::getInstance();
 
         $db->query('
-            SELECT 
+            SELECT
                 ps.*,
                 d.domain
             FROM policy_simulations ps
@@ -430,6 +464,16 @@ class PolicySimulation
         ');
 
         $db->bind(':id', $id);
-        return $db->single();
+        $simulation = $db->single();
+
+        if (!$simulation) {
+            return null;
+        }
+
+        if (!RBACManager::getInstance()->canAccessDomain((int) $simulation['domain_id'])) {
+            return null;
+        }
+
+        return $simulation;
     }
 }

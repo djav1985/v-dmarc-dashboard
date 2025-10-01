@@ -13,6 +13,7 @@ use App\Core\RBACManager;
 use App\Helpers\MessageHelper;
 use App\Services\PdfReportService;
 use App\Services\PdfReportScheduler;
+use App\Utilities\AccessScopeValidator;
 use Throwable;
 use RuntimeException;
 
@@ -221,6 +222,23 @@ class ReportsManagementController extends Controller
             $_SESSION['flash_type'] = 'error';
             return;
         }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domainFilter);
+        if (!$domainResolution['authorized']) {
+            $_SESSION['flash_message'] = 'The selected domain is unavailable or you do not have access to it.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupFilter);
+        if (!$groupResolution['authorized']) {
+            $_SESSION['flash_message'] = 'The selected group is unavailable or you do not have access to it.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
+        $domainFilter = $domainResolution['name'] ?? '';
+        $groupFilter = $groupResolution['id'];
 
         $reportData = PdfReport::generateReportData($templateId, $startDate, $endDate, $domainFilter, $groupFilter);
 

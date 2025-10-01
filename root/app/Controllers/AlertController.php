@@ -10,6 +10,8 @@ use App\Models\Alert;
 use App\Models\DomainGroup;
 use App\Models\Domain;
 use App\Services\AlertService;
+use App\Utilities\AccessScopeValidator;
+use RuntimeException;
 
 /**
  * Alert Controller for managing real-time alerting system
@@ -161,7 +163,27 @@ class AlertController extends Controller
         ];
 
         if (!empty($data['name']) && !empty($data['metric'])) {
-            Alert::createRule($data);
+            $domainResolution = AccessScopeValidator::resolveDomain($data['domain_filter']);
+            if (!$domainResolution['authorized']) {
+                MessageHelper::addMessage('The selected domain is unavailable or unauthorized.', 'error');
+                return;
+            }
+
+            $groupResolution = AccessScopeValidator::resolveGroup($data['group_filter']);
+            if (!$groupResolution['authorized']) {
+                MessageHelper::addMessage('The selected group is unavailable or unauthorized.', 'error');
+                return;
+            }
+
+            $data['domain_filter'] = $domainResolution['name'] ?? '';
+            $data['group_filter'] = $groupResolution['id'];
+
+            try {
+                Alert::createRule($data);
+                MessageHelper::addMessage('Alert rule created successfully.', 'success');
+            } catch (RuntimeException $exception) {
+                MessageHelper::addMessage($exception->getMessage(), 'error');
+            }
         }
     }
 
@@ -183,6 +205,20 @@ class AlertController extends Controller
 
         if ($incidentId > 0) {
             $db = \App\Core\DatabaseManager::getInstance();
+            $db->query('
+                SELECT ai.id, ar.domain_filter, ar.group_filter
+                FROM alert_incidents ai
+                JOIN alert_rules ar ON ai.rule_id = ar.id
+                WHERE ai.id = :incident_id
+            ');
+            $db->bind(':incident_id', $incidentId);
+            $incident = $db->single();
+
+            if (!$incident || !\App\Models\Alert::canCurrentUserAccessRule($incident)) {
+                MessageHelper::addMessage('You do not have permission to acknowledge this incident.', 'error');
+                return;
+            }
+
             $acknowledgedAt = date('Y-m-d H:i:s');
             $db->query('
                 UPDATE alert_incidents
@@ -193,6 +229,7 @@ class AlertController extends Controller
             $db->bind(':acknowledged_by', $acknowledgedBy);
             $db->bind(':acknowledged_at', $acknowledgedAt);
             $db->execute();
+            MessageHelper::addMessage('Incident acknowledged.', 'success');
         }
     }
 }

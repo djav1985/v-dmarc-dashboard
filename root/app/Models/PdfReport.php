@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
+use App\Utilities\AccessScopeValidator;
 
 /**
  * PDF Report model for generating and managing PDF reports
@@ -58,6 +59,19 @@ class PdfReport
         if (!$template) {
             return [];
         }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domainFilter);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupFilter);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
+        $domainFilter = $domainResolution['name'] ?? '';
+        $groupFilter = $groupResolution['id'];
 
         $reportData = [
             'template' => $template,
@@ -197,23 +211,48 @@ class PdfReport
     {
         $db = DatabaseManager::getInstance();
 
-        $whereClause = '';
+        $domainResolution = AccessScopeValidator::resolveDomain($domainFilter);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupFilter);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
         $bindParams = [
             ':start_date' => strtotime($startDate),
             ':end_date' => strtotime($endDate . ' 23:59:59')
         ];
 
-        if (!empty($domainFilter)) {
-            $whereClause = 'AND d.domain = :domain';
-            $bindParams[':domain'] = $domainFilter;
+        $whereConditions = [];
+
+        if ($domainResolution['id'] !== null) {
+            $whereConditions[] = 'd.id = :domain_id';
+            $bindParams[':domain_id'] = $domainResolution['id'];
+        } else {
+            $authorization = AccessScopeValidator::buildDomainAuthorizationClause($bindParams, 'dar.domain_id');
+            if ($authorization !== null) {
+                if ($authorization['allowed'] === false) {
+                    return [];
+                }
+
+                $whereConditions[] = $authorization['clause'];
+            }
         }
 
         $groupJoin = '';
         $groupClause = '';
-        if ($groupFilter !== null) {
+        if ($groupResolution['id'] !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
-            $bindParams[':group_id'] = $groupFilter;
+            $bindParams[':group_id'] = $groupResolution['id'];
+        }
+
+        $whereClause = '';
+        if (!empty($whereConditions)) {
+            $whereClause = 'AND ' . implode(' AND ', $whereConditions);
         }
 
         $query = "
@@ -279,17 +318,23 @@ class PdfReport
         }
 
         // Analyze compliance for recommendations
-        $avgDmarcCompliance = 0;
         if (!empty($compliance)) {
             $avgDmarcCompliance = array_sum(array_column($compliance, 'dmarc_compliance')) / count($compliance);
-        }
 
-        if ($avgDmarcCompliance < 90) {
+            if ($avgDmarcCompliance < 90) {
+                $recommendations[] = [
+                    'type' => 'compliance',
+                    'priority' => 'medium',
+                    'title' => 'Improve DMARC compliance',
+                    'description' => "Average DMARC compliance is {$avgDmarcCompliance}%. Consider policy adjustments.",
+                ];
+            }
+        } else {
             $recommendations[] = [
                 'type' => 'compliance',
-                'priority' => 'medium',
-                'title' => 'Improve DMARC compliance',
-                'description' => "Average DMARC compliance is {$avgDmarcCompliance}%. Consider policy adjustments.",
+                'priority' => 'low',
+                'title' => 'Compliance data unavailable',
+                'description' => 'No DMARC compliance data was found for the selected period and scope.',
             ];
         }
 

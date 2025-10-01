@@ -17,6 +17,7 @@ require __DIR__ . '/TestHelpers.php';
 
 use App\Core\DatabaseManager;
 use App\Models\PolicySimulation;
+use function TestHelpers\assertCountEquals;
 use function TestHelpers\assertTrue;
 
 $failures = 0;
@@ -119,6 +120,15 @@ try {
 }
 
 assertTrue($runExceptionCaught, 'Running a simulation for an unauthorized domain should be blocked.', $failures);
+
+$allSimulations = PolicySimulation::getAllSimulations();
+assertCountEquals(1, $allSimulations, 'User should only see simulations for permitted domains.', $failures);
+
+$restrictedSimulation = PolicySimulation::getSimulation($foreignSimulationId);
+assertTrue($restrictedSimulation === null, 'Unauthorized simulation lookups should return null.', $failures);
+
+$accessibleSimulation = PolicySimulation::getSimulation($simulationId);
+assertTrue($accessibleSimulation !== null, 'Authorized simulations should remain accessible.', $failures);
 
 echo 'Policy simulation access tests completed with ' . ($failures === 0 ? 'no failures' : $failures . ' failure(s)') . PHP_EOL;
 exit($failures === 0 ? 0 : 1);
