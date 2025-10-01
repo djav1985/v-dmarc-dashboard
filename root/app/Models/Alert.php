@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Core\DatabaseManager;
 use App\Core\Mailer;
+use App\Core\RBACManager;
+use RuntimeException;
 
 /**
  * Alerting system model for real-time monitoring and notifications
@@ -20,7 +22,7 @@ class Alert
         $db = DatabaseManager::getInstance();
 
         $db->query('
-            SELECT 
+            SELECT
                 ar.*,
                 dg.name as group_name,
                 COUNT(ai.id) as incident_count,
@@ -32,7 +34,9 @@ class Alert
             ORDER BY ar.severity DESC, ar.created_at DESC
         ');
 
-        return $db->resultSet();
+        $rules = $db->resultSet();
+
+        return self::filterRulesByAccess($rules);
     }
 
     /**
@@ -45,10 +49,32 @@ class Alert
     {
         $db = DatabaseManager::getInstance();
 
+        $domainFilter = trim($data['domain_filter'] ?? '');
+        if ($domainFilter !== '') {
+            $domain = Domain::findByDomain($domainFilter);
+            if (!$domain || !RBACManager::getInstance()->canAccessDomain((int) $domain['id'])) {
+                throw new RuntimeException('You do not have permission to create a rule for the selected domain.');
+            }
+            $data['domain_filter'] = $domain['domain'];
+        } else {
+            $data['domain_filter'] = '';
+        }
+
+        $groupFilter = $data['group_filter'] ?? null;
+        if ($groupFilter !== null) {
+            $groupId = (int) $groupFilter;
+            if ($groupId <= 0 || !RBACManager::getInstance()->canAccessGroup($groupId)) {
+                throw new RuntimeException('You do not have permission to create a rule for the selected group.');
+            }
+            $data['group_filter'] = $groupId;
+        } else {
+            $data['group_filter'] = null;
+        }
+
         $db->query('
-            INSERT INTO alert_rules 
-            (name, description, rule_type, metric, threshold_value, threshold_operator, 
-             time_window, domain_filter, group_filter, severity, notification_channels, 
+            INSERT INTO alert_rules
+            (name, description, rule_type, metric, threshold_value, threshold_operator,
+             time_window, domain_filter, group_filter, severity, notification_channels,
              notification_recipients, webhook_url, enabled) 
             VALUES 
             (:name, :description, :rule_type, :metric, :threshold_value, :threshold_operator,
@@ -63,8 +89,8 @@ class Alert
         $db->bind(':threshold_value', $data['threshold_value']);
         $db->bind(':threshold_operator', $data['threshold_operator']);
         $db->bind(':time_window', $data['time_window']);
-        $db->bind(':domain_filter', $data['domain_filter'] ?? '');
-        $db->bind(':group_filter', $data['group_filter'] ?? null);
+        $db->bind(':domain_filter', $data['domain_filter']);
+        $db->bind(':group_filter', $data['group_filter']);
         $db->bind(':severity', $data['severity']);
         $db->bind(':notification_channels', json_encode($data['notification_channels']));
         $db->bind(':notification_recipients', json_encode($data['notification_recipients']));
@@ -360,18 +386,22 @@ class Alert
         $db = DatabaseManager::getInstance();
 
         $db->query('
-            SELECT 
+            SELECT
                 ai.*,
                 ar.name as rule_name,
                 ar.severity,
-                ar.notification_channels
+                ar.notification_channels,
+                ar.domain_filter,
+                ar.group_filter
             FROM alert_incidents ai
             JOIN alert_rules ar ON ai.rule_id = ar.id
             WHERE ai.status = "open"
             ORDER BY ai.triggered_at DESC
         ');
 
-        return $db->resultSet();
+        $incidents = $db->resultSet();
+
+        return array_values(array_filter($incidents, [self::class, 'isRuleAccessible']));
     }
 
     /**
@@ -493,22 +523,100 @@ class Alert
             'severity' => $incident['severity'] ?? 'medium'
         ];
 
-        // In a real implementation, you would make an HTTP POST request
-        // For demo purposes, we'll just log the notification
-        $success = true; // Assume success for demo
+        $encodedPayload = json_encode($payload);
+        if ($encodedPayload === false) {
+            $encodedPayload = '{}';
+        }
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => [
+                    'Content-Type: application/json',
+                    'User-Agent: v-dmarc-alert/1.0'
+                ],
+                'content' => $encodedPayload,
+                'timeout' => 5,
+                'ignore_errors' => true,
+            ],
+        ]);
+
+        $response = @file_get_contents($webhookUrl, false, $context);
+        $statusCode = null;
+        $errorMessage = '';
+
+        if ($response !== false && isset($http_response_header[0])) {
+            if (preg_match('/\s(\d{3})\s/', (string) $http_response_header[0], $matches) === 1) {
+                $statusCode = (int) $matches[1];
+            }
+        } elseif ($response === false) {
+            $lastError = error_get_last();
+            $errorMessage = $lastError['message'] ?? 'Webhook request failed.';
+        }
+
+        $success = false;
+        if ($statusCode !== null) {
+            $success = $statusCode >= 200 && $statusCode < 300;
+            if (!$success) {
+                $errorMessage = 'Webhook responded with HTTP ' . $statusCode;
+            }
+        } elseif ($errorMessage === '') {
+            $errorMessage = 'Webhook response status could not be determined.';
+        }
 
         $db->query('
-            INSERT INTO alert_notifications 
-            (incident_id, channel, recipient, success) 
-            VALUES (:incident_id, :channel, :recipient, :success)
+            INSERT INTO alert_notifications
+            (incident_id, channel, recipient, success, error_message)
+            VALUES (:incident_id, :channel, :recipient, :success, :error_message)
         ');
 
         $db->bind(':incident_id', $incidentId);
         $db->bind(':channel', 'webhook');
         $db->bind(':recipient', $webhookUrl);
         $db->bind(':success', $success ? 1 : 0);
+        $db->bind(':error_message', $success ? '' : $errorMessage);
         $db->execute();
 
         return $success;
+    }
+
+    /**
+     * Determine if the current user can access the provided rule context.
+     */
+    public static function canCurrentUserAccessRule(array $rule): bool
+    {
+        return self::isRuleAccessible($rule);
+    }
+
+    /**
+     * Restrict rule collections to those accessible by the current user.
+     */
+    private static function filterRulesByAccess(array $rules): array
+    {
+        return array_values(array_filter($rules, [self::class, 'isRuleAccessible']));
+    }
+
+    private static function isRuleAccessible(array $rule): bool
+    {
+        $rbac = RBACManager::getInstance();
+
+        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+            return true;
+        }
+
+        $domainFilter = trim((string) ($rule['domain_filter'] ?? ''));
+        if ($domainFilter !== '') {
+            $domain = Domain::findByDomain($domainFilter);
+            if (!$domain || !$rbac->canAccessDomain((int) $domain['id'])) {
+                return false;
+            }
+        }
+
+        $groupFilter = $rule['group_filter'] ?? null;
+        if (!empty($groupFilter) && !$rbac->canAccessGroup((int) $groupFilter)) {
+            return false;
+        }
+
+        return true;
     }
 }

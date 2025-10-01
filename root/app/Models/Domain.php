@@ -62,6 +62,19 @@ class Domain
     }
 
     /**
+     * Locate a domain record by its FQDN.
+     */
+    public static function findByDomain(string $domain): ?array
+    {
+        $db = DatabaseManager::getInstance();
+        $db->query('SELECT * FROM domains WHERE domain = :domain LIMIT 1');
+        $db->bind(':domain', trim($domain));
+        $result = $db->single();
+
+        return $result ?: null;
+    }
+
+    /**
      * Retrieve the ownership contact for a domain.
      */
     public static function getOwnershipContact(int $id): ?string

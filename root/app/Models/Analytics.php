@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Core\DatabaseManager;
-use App\Core\RBACManager;
+use App\Core\ErrorManager;
+use App\Utilities\AccessScopeValidator;
+use DateTimeImmutable;
 
 /**
  * Analytics model for generating DMARC dashboard analytics and trends
@@ -26,47 +28,57 @@ class Analytics
         string $domain = '',
         ?int $groupId = null
     ): array {
+        $range = self::resolveDateRange($startDate, $endDate);
+        if ($range === null) {
+            return [];
+        }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domain);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupId);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
         $db = DatabaseManager::getInstance();
 
-        $whereClause = '';
         $bindParams = [
-            ':start_date' => strtotime($startDate),
-            ':end_date' => strtotime($endDate . ' 23:59:59')
+            ':start_date' => $range['start'],
+            ':end_date' => $range['end'],
         ];
 
-        if (!empty($domain)) {
-            $whereClause = 'AND d.domain = :domain';
-            $bindParams[':domain'] = $domain;
+        $whereConditions = [];
+
+        if ($domainResolution['id'] !== null) {
+            $whereConditions[] = 'd.id = :domain_id';
+            $bindParams[':domain_id'] = $domainResolution['id'];
         }
 
         $groupJoin = '';
         $groupClause = '';
-        if ($groupId !== null) {
+        if ($groupResolution['id'] !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
-            $bindParams[':group_id'] = $groupId;
+            $bindParams[':group_id'] = $groupResolution['id'];
         }
 
-        if ($domain === '') {
-            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+        if ($domainResolution['id'] === null) {
+            $authorization = AccessScopeValidator::buildDomainAuthorizationClause($bindParams, 'dar.domain_id');
             if ($authorization !== null) {
                 if ($authorization['allowed'] === false) {
                     return [];
                 }
 
-                $whereClause .= ' AND ' . $authorization['clause'];
+                $whereConditions[] = $authorization['clause'];
             }
         }
 
-        if ($domain === '') {
-            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
-            if ($authorization !== null) {
-                if ($authorization['allowed'] === false) {
-                    return [];
-                }
-
-                $whereClause .= ' AND ' . $authorization['clause'];
-            }
+        $whereClause = '';
+        if (!empty($whereConditions)) {
+            $whereClause = 'AND ' . implode(' AND ', $whereConditions);
         }
 
         $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
@@ -115,37 +127,45 @@ class Analytics
         ?int $groupId = null,
         ?string $domainFilter = null
     ): array {
+        $range = self::resolveDateRange($startDate, $endDate);
+        if ($range === null) {
+            return [];
+        }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domainFilter);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupId);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
         $db = DatabaseManager::getInstance();
 
         $groupJoin = '';
         $groupClause = '';
-        if ($groupId !== null) {
+        $bindParams = [
+            ':start_date' => $range['start'],
+            ':end_date' => $range['end'],
+        ];
+
+        if ($groupResolution['id'] !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupResolution['id'];
         }
 
         $domainClause = '';
-        if ($domainFilter !== null && $domainFilter !== '') {
-            $domainClause = 'AND d.domain = :domain';
+        if ($domainResolution['id'] !== null) {
+            $domainClause = 'AND d.id = :domain_id';
+            $bindParams[':domain_id'] = $domainResolution['id'];
         }
 
         $authorizationClause = '';
-        $authorizationBindings = [];
-        if ($domainFilter === null || $domainFilter === '') {
-            $authorization = self::buildAuthorizationConstraint($authorizationBindings, 'dar.domain_id');
-            if ($authorization !== null) {
-                if ($authorization['allowed'] === false) {
-                    return [];
-                }
-
-                $authorizationClause = 'AND ' . $authorization['clause'];
-            }
-        }
-
-        $authorizationClause = '';
-        $authorizationBindings = [];
-        if ($domainFilter === null || $domainFilter === '') {
-            $authorization = self::buildAuthorizationConstraint($authorizationBindings, 'd.id');
+        if ($domainResolution['id'] === null) {
+            $authorization = AccessScopeValidator::buildDomainAuthorizationClause($bindParams, 'd.id');
             if ($authorization !== null) {
                 if ($authorization['allowed'] === false) {
                     return [];
@@ -195,15 +215,7 @@ class Analytics
         ";
 
         $db->query($query);
-        $db->bind(':start_date', strtotime($startDate));
-        $db->bind(':end_date', strtotime($endDate . ' 23:59:59'));
-        if ($groupId !== null) {
-            $db->bind(':group_id', $groupId);
-        }
-        if ($domainFilter !== null && $domainFilter !== '') {
-            $db->bind(':domain', $domainFilter);
-        }
-        foreach ($authorizationBindings as $placeholder => $value) {
+        foreach ($bindParams as $placeholder => $value) {
             $db->bind($placeholder, $value);
         }
 
@@ -245,20 +257,35 @@ class Analytics
         string $domain = '',
         ?int $groupId = null
     ): array {
+        $range = self::resolveDateRange($startDate, $endDate);
+        if ($range === null) {
+            return [];
+        }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domain);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupId);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
         $db = DatabaseManager::getInstance();
 
         $bindParams = [
-            ':start_date' => strtotime($startDate),
-            ':end_date' => strtotime($endDate . ' 23:59:59')
+            ':start_date' => $range['start'],
+            ':end_date' => $range['end']
         ];
 
         $additionalConditions = [];
 
-        if (!empty($domain)) {
-            $additionalConditions[] = 'd.domain = :domain';
-            $bindParams[':domain'] = $domain;
+        if ($domainResolution['id'] !== null) {
+            $additionalConditions[] = 'd.id = :domain_id';
+            $bindParams[':domain_id'] = $domainResolution['id'];
         } else {
-            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+            $authorization = AccessScopeValidator::buildDomainAuthorizationClause($bindParams, 'dar.domain_id');
             if ($authorization !== null) {
                 if (($authorization['allowed'] ?? true) === false) {
                     return [];
@@ -269,17 +296,10 @@ class Analytics
 
         $groupJoin = '';
         $groupClause = '';
-        if ($groupId !== null) {
-            $rbac = RBACManager::getInstance();
-            if (
-                $rbac->getCurrentUserRole() !== RBACManager::ROLE_APP_ADMIN
-                && !$rbac->canAccessGroup($groupId)
-            ) {
-                return [];
-            }
+        if ($groupResolution['id'] !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
-            $bindParams[':group_id'] = $groupId;
+            $bindParams[':group_id'] = $groupResolution['id'];
         }
 
         $whereClause = '';
@@ -336,24 +356,46 @@ class Analytics
         ?int $groupId = null,
         ?string $domainFilter = null
     ): array {
+        $range = self::resolveDateRange($startDate, $endDate);
+        if ($range === null) {
+            return [];
+        }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domainFilter);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupId);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
         $db = DatabaseManager::getInstance();
 
         $groupJoin = '';
         $groupClause = '';
-        if ($groupId !== null) {
+        $bindParams = [
+            ':start_date' => $range['start'],
+            ':end_date' => $range['end'],
+            ':limit' => $limit,
+        ];
+
+        if ($groupResolution['id'] !== null) {
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupResolution['id'];
         }
 
         $domainClause = '';
-        if ($domainFilter !== null && $domainFilter !== '') {
-            $domainClause = 'AND d.domain = :domain';
+        if ($domainResolution['id'] !== null) {
+            $domainClause = 'AND d.id = :domain_id';
+            $bindParams[':domain_id'] = $domainResolution['id'];
         }
 
         $authorizationClause = '';
-        $authorizationBindings = [];
-        if ($domainFilter === null || $domainFilter === '') {
-            $authorization = self::buildAuthorizationConstraint($authorizationBindings, 'd.id');
+        if ($domainResolution['id'] === null) {
+            $authorization = AccessScopeValidator::buildDomainAuthorizationClause($bindParams, 'd.id');
             if ($authorization !== null) {
                 if ($authorization['allowed'] === false) {
                     return [];
@@ -393,16 +435,7 @@ class Analytics
         ";
 
         $db->query($query);
-        $db->bind(':start_date', strtotime($startDate));
-        $db->bind(':end_date', strtotime($endDate . ' 23:59:59'));
-        if ($groupId !== null) {
-            $db->bind(':group_id', $groupId);
-        }
-        if ($domainFilter !== null && $domainFilter !== '') {
-            $db->bind(':domain', $domainFilter);
-        }
-        $db->bind(':limit', $limit);
-        foreach ($authorizationBindings as $placeholder => $value) {
+        foreach ($bindParams as $placeholder => $value) {
             $db->bind($placeholder, $value);
         }
 
@@ -424,36 +457,55 @@ class Analytics
         string $domain = '',
         ?int $groupId = null
     ): array {
+        $range = self::resolveDateRange($startDate, $endDate);
+        if ($range === null) {
+            return [];
+        }
+
+        $domainResolution = AccessScopeValidator::resolveDomain($domain);
+        if (!$domainResolution['authorized']) {
+            return [];
+        }
+
+        $groupResolution = AccessScopeValidator::resolveGroup($groupId);
+        if (!$groupResolution['authorized']) {
+            return [];
+        }
+
         $db = DatabaseManager::getInstance();
 
-        $whereClause = '';
         $bindParams = [
-            ':start_date' => strtotime($startDate),
-            ':end_date' => strtotime($endDate . ' 23:59:59')
+            ':start_date' => $range['start'],
+            ':end_date' => $range['end']
         ];
 
-        if (!empty($domain)) {
-            $whereClause = 'AND d.domain = :domain';
-            $bindParams[':domain'] = $domain;
-        }
+        $whereConditions = [];
 
-        $groupJoin = '';
-        $groupClause = '';
-        if ($groupId !== null) {
-            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
-            $groupClause = 'AND dga.group_id = :group_id';
-            $bindParams[':group_id'] = $groupId;
-        }
-
-        if ($domain === '') {
-            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+        if ($domainResolution['id'] !== null) {
+            $whereConditions[] = 'd.id = :domain_id';
+            $bindParams[':domain_id'] = $domainResolution['id'];
+        } else {
+            $authorization = AccessScopeValidator::buildDomainAuthorizationClause($bindParams, 'dar.domain_id');
             if ($authorization !== null) {
                 if ($authorization['allowed'] === false) {
                     return [];
                 }
 
-                $whereClause .= ' AND ' . $authorization['clause'];
+                $whereConditions[] = $authorization['clause'];
             }
+        }
+
+        $groupJoin = '';
+        $groupClause = '';
+        if ($groupResolution['id'] !== null) {
+            $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
+            $groupClause = 'AND dga.group_id = :group_id';
+            $bindParams[':group_id'] = $groupResolution['id'];
+        }
+
+        $whereClause = '';
+        if (!empty($whereConditions)) {
+            $whereClause = 'AND ' . implode(' AND ', $whereConditions);
         }
 
         $dateExpression = self::getDateBucketExpression('dar.date_range_begin');
@@ -511,39 +563,57 @@ class Analytics
     }
 
     /**
-     * Build a domain authorization clause for the current user.
+     * Resolve the provided dates into UNIX timestamps.
+     *
+     * @return array{start:int,end:int}|null
      */
-    private static function buildAuthorizationConstraint(array &$bindParams, string $column): ?array
+    private static function resolveDateRange(string $startDate, string $endDate): ?array
     {
-        $rbac = RBACManager::getInstance();
-        if ($rbac->getCurrentUserRole() === RBACManager::ROLE_APP_ADMIN) {
+        $start = self::parseDate($startDate);
+        $end = self::parseDate($endDate);
+
+        if ($start === null || $end === null) {
             return null;
         }
 
-        $accessibleDomains = $rbac->getAccessibleDomains();
-        if (empty($accessibleDomains)) {
-            return ['allowed' => false, 'clause' => ''];
-        }
+        if ($end < $start) {
+            ErrorManager::getInstance()->log(
+                sprintf('Invalid analytics range: %s - %s.', $startDate, $endDate),
+                'warning'
+            );
 
-        $domainIds = array_values(array_filter(array_map(
-            static fn($domain) => (int) ($domain['id'] ?? 0),
-            $accessibleDomains
-        )));
-
-        if (empty($domainIds)) {
-            return ['allowed' => false, 'clause' => ''];
-        }
-
-        $placeholders = [];
-        foreach ($domainIds as $index => $domainId) {
-            $placeholder = ':authorized_domain_' . $index;
-            $placeholders[] = $placeholder;
-            $bindParams[$placeholder] = $domainId;
+            return null;
         }
 
         return [
-            'allowed' => true,
-            'clause' => $column . ' IN (' . implode(', ', $placeholders) . ')'
+            'start' => $start->setTime(0, 0)->getTimestamp(),
+            'end' => $end->setTime(23, 59, 59)->getTimestamp(),
         ];
+    }
+
+    private static function parseDate(string $value): ?DateTimeImmutable
+    {
+        $date = DateTimeImmutable::createFromFormat('Y-m-d', $value);
+        if ($date === false) {
+            ErrorManager::getInstance()->log(
+                sprintf('Invalid analytics date provided: %s.', $value),
+                'warning'
+            );
+
+            return null;
+        }
+
+        $errors = DateTimeImmutable::getLastErrors();
+
+        if ($errors !== false && (($errors['warning_count'] ?? 0) > 0 || ($errors['error_count'] ?? 0) > 0)) {
+            ErrorManager::getInstance()->log(
+                sprintf('Invalid analytics date provided: %s.', $value),
+                'warning'
+            );
+
+            return null;
+        }
+
+        return $date;
     }
 }

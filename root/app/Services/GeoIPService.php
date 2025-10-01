@@ -191,7 +191,7 @@ class GeoIPService
         try {
             // Try ip-api.com first (free, no key required)
             $url = sprintf(
-                'http://ip-api.com/json/%s?fields=%s',
+                'https://ip-api.com/json/%s?fields=%s',
                 $ipAddress,
                 self::IP_API_FIELDS
             );
