@@ -247,23 +247,44 @@ class Analytics
     ): array {
         $db = DatabaseManager::getInstance();
 
-        $whereClause = '';
         $bindParams = [
             ':start_date' => strtotime($startDate),
             ':end_date' => strtotime($endDate . ' 23:59:59')
         ];
 
+        $additionalConditions = [];
+
         if (!empty($domain)) {
-            $whereClause = 'AND d.domain = :domain';
+            $additionalConditions[] = 'd.domain = :domain';
             $bindParams[':domain'] = $domain;
+        } else {
+            $authorization = self::buildAuthorizationConstraint($bindParams, 'dar.domain_id');
+            if ($authorization !== null) {
+                if (($authorization['allowed'] ?? true) === false) {
+                    return [];
+                }
+                $additionalConditions[] = $authorization['clause'];
+            }
         }
 
         $groupJoin = '';
         $groupClause = '';
         if ($groupId !== null) {
+            $rbac = RBACManager::getInstance();
+            if (
+                $rbac->getCurrentUserRole() !== RBACManager::ROLE_APP_ADMIN
+                && !$rbac->canAccessGroup($groupId)
+            ) {
+                return [];
+            }
             $groupJoin = 'JOIN domain_group_assignments dga ON d.id = dga.domain_id';
             $groupClause = 'AND dga.group_id = :group_id';
             $bindParams[':group_id'] = $groupId;
+        }
+
+        $whereClause = '';
+        if (!empty($additionalConditions)) {
+            $whereClause = 'AND ' . implode(' AND ', $additionalConditions);
         }
 
         $query = "

@@ -128,6 +128,7 @@ class EmailDigestController extends Controller
                 'group_filter' => $groupFilter,
                 'enabled' => $enabled,
                 'next_scheduled' => $nextScheduled,
+                'created_by' => $_SESSION['username'] ?? null,
             ]);
 
             MessageHelper::addMessage('Email digest schedule created successfully.', 'success');
@@ -151,7 +152,14 @@ class EmailDigestController extends Controller
             return;
         }
 
-        EmailDigest::setEnabled($scheduleId, $desiredState);
+        if (!EmailDigest::setEnabled($scheduleId, $desiredState)) {
+            MessageHelper::addMessage(
+                'You are not authorized to update the requested schedule or it no longer exists.',
+                'error'
+            );
+            return;
+        }
+
         MessageHelper::addMessage(
             $desiredState ? 'Schedule enabled.' : 'Schedule disabled.',
             'success'

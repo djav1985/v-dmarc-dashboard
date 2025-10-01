@@ -382,7 +382,12 @@ class ReportsManagementController extends Controller
             return;
         }
 
-        PdfReportSchedule::delete($scheduleId);
+        if (!PdfReportSchedule::delete($scheduleId)) {
+            $_SESSION['flash_message'] = 'You are not authorized to remove this schedule or it no longer exists.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
         $_SESSION['flash_message'] = 'Schedule removed successfully.';
         $_SESSION['flash_type'] = 'success';
     }
@@ -401,7 +406,12 @@ class ReportsManagementController extends Controller
             return;
         }
 
-        PdfReportSchedule::setEnabled($scheduleId, $enabled);
+        if (!PdfReportSchedule::setEnabled($scheduleId, $enabled)) {
+            $_SESSION['flash_message'] = 'You are not authorized to modify this schedule or it no longer exists.';
+            $_SESSION['flash_type'] = 'error';
+            return;
+        }
+
         $_SESSION['flash_message'] = $enabled ? 'Schedule enabled.' : 'Schedule paused.';
         $_SESSION['flash_type'] = 'success';
     }

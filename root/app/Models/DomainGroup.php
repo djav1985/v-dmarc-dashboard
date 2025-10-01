@@ -199,10 +199,17 @@ class DomainGroup
     public static function assignDomainToGroup(int $domainId, int $groupId): bool
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        if ($rbac->getCurrentUserRole() !== RBACManager::ROLE_APP_ADMIN) {
+            if (!$rbac->canAccessDomain($domainId) || !$rbac->canAccessGroup($groupId)) {
+                return false;
+            }
+        }
 
         try {
             $db->query('
-                INSERT INTO domain_group_assignments (domain_id, group_id) 
+                INSERT INTO domain_group_assignments (domain_id, group_id)
                 VALUES (:domain_id, :group_id)
             ');
 
@@ -225,9 +232,16 @@ class DomainGroup
     public static function removeDomainFromGroup(int $domainId, int $groupId): bool
     {
         $db = DatabaseManager::getInstance();
+        $rbac = RBACManager::getInstance();
+
+        if ($rbac->getCurrentUserRole() !== RBACManager::ROLE_APP_ADMIN) {
+            if (!$rbac->canAccessDomain($domainId) || !$rbac->canAccessGroup($groupId)) {
+                return false;
+            }
+        }
 
         $db->query('
-            DELETE FROM domain_group_assignments 
+            DELETE FROM domain_group_assignments
             WHERE domain_id = :domain_id AND group_id = :group_id
         ');
 

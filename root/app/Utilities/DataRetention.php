@@ -17,6 +17,7 @@ class DataRetention
     {
         $results = [
             'aggregate_reports_deleted' => 0,
+            'aggregate_records_deleted' => 0,
             'forensic_reports_deleted' => 0,
             'tls_reports_deleted' => 0,
             'errors' => []
@@ -28,15 +29,47 @@ class DataRetention
             // Get retention settings
             $retentionSettings = self::getRetentionSettings();
 
+            $transactionStarted = false;
+
+            if (
+                isset($retentionSettings['aggregate_reports_retention_days'])
+                || isset($retentionSettings['forensic_reports_retention_days'])
+                || isset($retentionSettings['tls_reports_retention_days'])
+            ) {
+                $transactionStarted = $db->beginTransaction();
+            }
+
             // Clean up aggregate reports
             if (isset($retentionSettings['aggregate_reports_retention_days'])) {
                 $days = (int) $retentionSettings['aggregate_reports_retention_days'];
                 $cutoffDate = time() - ($days * 24 * 60 * 60);
 
-                $db->query('DELETE FROM dmarc_aggregate_reports WHERE date_range_end < :cutoff_date');
+                $db->query('SELECT id FROM dmarc_aggregate_reports WHERE date_range_end < :cutoff_date');
                 $db->bind(':cutoff_date', $cutoffDate);
-                $db->execute();
-                $results['aggregate_reports_deleted'] = $db->rowCount();
+                $reportRows = $db->resultSet();
+
+                $reportIds = array_values(array_filter(array_map(
+                    static fn($row) => isset($row['id']) ? (int) $row['id'] : null,
+                    $reportRows
+                )));
+
+                if (!empty($reportIds)) {
+                    [$placeholders, $bindings] = self::buildInClause($reportIds, 'aggregate_report');
+
+                    $db->query('DELETE FROM dmarc_aggregate_records WHERE report_id IN (' . implode(', ', $placeholders) . ')');
+                    foreach ($bindings as $placeholder => $value) {
+                        $db->bind($placeholder, $value);
+                    }
+                    $db->execute();
+                    $results['aggregate_records_deleted'] = $db->rowCount();
+
+                    $db->query('DELETE FROM dmarc_aggregate_reports WHERE id IN (' . implode(', ', $placeholders) . ')');
+                    foreach ($bindings as $placeholder => $value) {
+                        $db->bind($placeholder, $value);
+                    }
+                    $db->execute();
+                    $results['aggregate_reports_deleted'] = $db->rowCount();
+                }
             }
 
             // Clean up forensic reports
@@ -60,13 +93,48 @@ class DataRetention
                 $db->execute();
                 $results['tls_reports_deleted'] = $db->rowCount();
             }
+
+            if (!empty($transactionStarted)) {
+                $db->commit();
+            }
         } catch (Exception $e) {
+            if (isset($db, $transactionStarted) && !empty($transactionStarted)) {
+                try {
+                    $db->rollBack();
+                } catch (Exception $rollbackException) {
+                    ErrorManager::getInstance()->log(
+                        'Failed to roll back data retention cleanup: ' . $rollbackException->getMessage(),
+                        'error'
+                    );
+                }
+            }
             $error = 'Data retention cleanup failed: ' . $e->getMessage();
             $results['errors'][] = $error;
             ErrorManager::getInstance()->log($error, 'error');
         }
 
         return $results;
+    }
+
+    /**
+     * Build a parameterized IN clause.
+     *
+     * @param array<int> $ids
+     * @param string $prefix
+     * @return array{0: array<int, string>, 1: array<string, int>}
+     */
+    private static function buildInClause(array $ids, string $prefix): array
+    {
+        $placeholders = [];
+        $bindings = [];
+
+        foreach (array_values($ids) as $index => $id) {
+            $placeholder = ':' . $prefix . '_' . $index;
+            $placeholders[] = $placeholder;
+            $bindings[$placeholder] = (int) $id;
+        }
+
+        return [$placeholders, $bindings];
     }
 
     /**

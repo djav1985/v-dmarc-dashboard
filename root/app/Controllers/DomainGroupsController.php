@@ -96,9 +96,23 @@ class DomainGroupsController extends Controller
         $domainId = (int) ($_POST['domain_id'] ?? 0);
         $groupId = (int) ($_POST['group_id'] ?? 0);
 
-        if ($domainId > 0 && $groupId > 0) {
-            DomainGroup::assignDomainToGroup($domainId, $groupId);
+        if ($domainId <= 0 || $groupId <= 0) {
+            MessageHelper::addMessage('A valid domain and group must be selected for assignment.', 'error');
+            return;
         }
+
+        $rbac = RBACManager::getInstance();
+        if (!$rbac->canAccessDomain($domainId) || !$rbac->canAccessGroup($groupId)) {
+            MessageHelper::addMessage('You are not authorized to manage the selected domain assignment.', 'error');
+            return;
+        }
+
+        if (!DomainGroup::assignDomainToGroup($domainId, $groupId)) {
+            MessageHelper::addMessage('The domain could not be assigned to the group.', 'error');
+            return;
+        }
+
+        MessageHelper::addMessage('Domain assigned to group successfully.', 'success');
     }
 
     /**
@@ -109,8 +123,22 @@ class DomainGroupsController extends Controller
         $domainId = (int) ($_POST['domain_id'] ?? 0);
         $groupId = (int) ($_POST['group_id'] ?? 0);
 
-        if ($domainId > 0 && $groupId > 0) {
-            DomainGroup::removeDomainFromGroup($domainId, $groupId);
+        if ($domainId <= 0 || $groupId <= 0) {
+            MessageHelper::addMessage('A valid domain and group must be selected for removal.', 'error');
+            return;
         }
+
+        $rbac = RBACManager::getInstance();
+        if (!$rbac->canAccessDomain($domainId) || !$rbac->canAccessGroup($groupId)) {
+            MessageHelper::addMessage('You are not authorized to update the selected domain assignment.', 'error');
+            return;
+        }
+
+        if (!DomainGroup::removeDomainFromGroup($domainId, $groupId)) {
+            MessageHelper::addMessage('The domain could not be removed from the group.', 'error');
+            return;
+        }
+
+        MessageHelper::addMessage('Domain removed from group successfully.', 'success');
     }
 }
