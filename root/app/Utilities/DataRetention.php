@@ -9,6 +9,12 @@ use Exception;
 class DataRetention
 {
     /**
+     * Maximum number of IDs to include in a single IN clause to avoid SQL parameter limits.
+     * SQLite default limit is 999, so we use 500 to stay well within bounds.
+     */
+    private const MAX_SQL_PARAMS = 500;
+
+    /**
      * Clean up old DMARC reports based on retention settings.
      *
      * @return array Cleanup results
@@ -54,21 +60,37 @@ class DataRetention
                 )));
 
                 if (!empty($reportIds)) {
-                    [$placeholders, $bindings] = self::buildInClause($reportIds, 'aggregate_report');
+                    // Process deletions in batches to avoid SQL parameter limits
+                    $batches = array_chunk($reportIds, self::MAX_SQL_PARAMS);
+                    $totalRecordsDeleted = 0;
+                    $totalReportsDeleted = 0;
 
-                    $db->query('DELETE FROM dmarc_aggregate_records WHERE report_id IN (' . implode(', ', $placeholders) . ')');
-                    foreach ($bindings as $placeholder => $value) {
-                        $db->bind($placeholder, $value);
-                    }
-                    $db->execute();
-                    $results['aggregate_records_deleted'] = $db->rowCount();
+                    foreach ($batches as $batch) {
+                        [$placeholders, $bindings] = self::buildInClause($batch, 'aggregate_report');
 
-                    $db->query('DELETE FROM dmarc_aggregate_reports WHERE id IN (' . implode(', ', $placeholders) . ')');
-                    foreach ($bindings as $placeholder => $value) {
-                        $db->bind($placeholder, $value);
+                        $db->query(
+                            'DELETE FROM dmarc_aggregate_records WHERE report_id IN ('
+                            . implode(', ', $placeholders) . ')'
+                        );
+                        foreach ($bindings as $placeholder => $value) {
+                            $db->bind($placeholder, $value);
+                        }
+                        $db->execute();
+                        $totalRecordsDeleted += $db->rowCount();
+
+                        $db->query(
+                            'DELETE FROM dmarc_aggregate_reports WHERE id IN ('
+                            . implode(', ', $placeholders) . ')'
+                        );
+                        foreach ($bindings as $placeholder => $value) {
+                            $db->bind($placeholder, $value);
+                        }
+                        $db->execute();
+                        $totalReportsDeleted += $db->rowCount();
                     }
-                    $db->execute();
-                    $results['aggregate_reports_deleted'] = $db->rowCount();
+
+                    $results['aggregate_records_deleted'] = $totalRecordsDeleted;
+                    $results['aggregate_reports_deleted'] = $totalReportsDeleted;
                 }
             }
 
