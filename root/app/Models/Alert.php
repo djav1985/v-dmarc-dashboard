@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\DatabaseManager;
 use App\Core\Mailer;
 use App\Core\RBACManager;
+use App\Utilities\UrlValidator;
 use RuntimeException;
 
 /**
@@ -71,6 +72,13 @@ class Alert
             $data['group_filter'] = null;
         }
 
+        // Validate webhook URL to prevent SSRF attacks
+        $webhookUrl = trim($data['webhook_url'] ?? '');
+        $urlValidation = UrlValidator::validateWebhookUrl($webhookUrl);
+        if (!$urlValidation['valid']) {
+            throw new RuntimeException('Invalid webhook URL: ' . $urlValidation['error']);
+        }
+
         $db->query('
             INSERT INTO alert_rules
             (name, description, rule_type, metric, threshold_value, threshold_operator,
@@ -94,7 +102,7 @@ class Alert
         $db->bind(':severity', $data['severity']);
         $db->bind(':notification_channels', json_encode($data['notification_channels']));
         $db->bind(':notification_recipients', json_encode($data['notification_recipients']));
-        $db->bind(':webhook_url', $data['webhook_url'] ?? '');
+        $db->bind(':webhook_url', $webhookUrl);
         $db->bind(':enabled', $data['enabled'] ?? 1);
         $db->execute();
 
@@ -512,6 +520,27 @@ class Alert
     private static function sendWebhookNotification(int $incidentId, string $webhookUrl, array $incident): bool
     {
         $db = DatabaseManager::getInstance();
+
+        // Validate webhook URL before making the request to prevent SSRF
+        $urlValidation = UrlValidator::validateWebhookUrl($webhookUrl);
+        if (!$urlValidation['valid']) {
+            $errorMessage = 'Invalid webhook URL: ' . $urlValidation['error'];
+
+            $db->query('
+                INSERT INTO alert_notifications
+                (incident_id, channel, recipient, success, error_message)
+                VALUES (:incident_id, :channel, :recipient, :success, :error_message)
+            ');
+
+            $db->bind(':incident_id', $incidentId);
+            $db->bind(':channel', 'webhook');
+            $db->bind(':recipient', $webhookUrl);
+            $db->bind(':success', 0);
+            $db->bind(':error_message', $errorMessage);
+            $db->execute();
+
+            return false;
+        }
 
         $payload = [
             'alert_type' => 'dmarc_incident',
