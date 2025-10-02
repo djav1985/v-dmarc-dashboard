@@ -48,7 +48,13 @@ class ReportDetailController extends Controller
             'reject_count' => 0,
             'dkim_pass_count' => 0,
             'spf_pass_count' => 0,
-            'unique_ips' => count(array_unique(array_column($records, 'source_ip')))
+            'unique_ips' => count(array_unique(array_column($records, 'source_ip'))),
+            'policy_evaluated_reason_volume' => 0,
+            'policy_override_volume' => 0,
+            'auth_results_volume' => 0,
+            'policy_evaluated_reason_breakdown' => [],
+            'policy_override_breakdown' => [],
+            'auth_result_breakdown' => []
         ];
 
         foreach ($records as $record) {
@@ -70,7 +76,37 @@ class ReportDetailController extends Controller
             if ($record['spf_result'] === 'pass') {
                 $summary['spf_pass_count'] += $record['count'];
             }
+
+            if (!empty($record['policy_evaluated_reasons'])) {
+                $summary['policy_evaluated_reason_volume'] += $record['count'];
+                foreach ($record['policy_evaluated_reasons'] as $reason) {
+                    $label = $reason['type'] ?? 'unspecified';
+                    $labelKey = $label !== null && $label !== '' ? $label : 'unspecified';
+                    $summary['policy_evaluated_reason_breakdown'][$labelKey] = ($summary['policy_evaluated_reason_breakdown'][$labelKey] ?? 0) + $record['count'];
+                }
+            }
+
+            if (!empty($record['policy_override_reasons'])) {
+                $summary['policy_override_volume'] += $record['count'];
+                foreach ($record['policy_override_reasons'] as $reason) {
+                    $label = $reason['type'] ?? 'unspecified';
+                    $labelKey = $label !== null && $label !== '' ? $label : 'unspecified';
+                    $summary['policy_override_breakdown'][$labelKey] = ($summary['policy_override_breakdown'][$labelKey] ?? 0) + $record['count'];
+                }
+            }
+
+            if (!empty($record['auth_results'])) {
+                $summary['auth_results_volume'] += $record['count'];
+                foreach ($record['auth_results'] as $method => $entries) {
+                    $methodLabel = strtoupper((string) $method);
+                    $summary['auth_result_breakdown'][$methodLabel] = ($summary['auth_result_breakdown'][$methodLabel] ?? 0) + $record['count'];
+                }
+            }
         }
+
+        arsort($summary['policy_evaluated_reason_breakdown']);
+        arsort($summary['policy_override_breakdown']);
+        arsort($summary['auth_result_breakdown']);
 
         // Group records by source IP for better visualization
         $ipGroups = [];

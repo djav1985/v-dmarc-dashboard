@@ -59,6 +59,12 @@ CREATE TABLE dmarc_aggregate_reports (
     date_range_begin INTEGER NOT NULL,
     date_range_end INTEGER NOT NULL,
     received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    policy_adkim TEXT,
+    policy_aspf TEXT,
+    policy_p TEXT,
+    policy_sp TEXT,
+    policy_pct INTEGER,
+    policy_fo TEXT,
     raw_xml TEXT,
     processed INTEGER DEFAULT 0,
     FOREIGN KEY (domain_id) REFERENCES domains(id) ON DELETE CASCADE
@@ -79,6 +85,9 @@ CREATE TABLE dmarc_aggregate_records (
     header_from TEXT,
     envelope_from TEXT,
     envelope_to TEXT,
+    policy_evaluated_reasons TEXT,
+    policy_override_reasons TEXT,
+    auth_results TEXT,
     FOREIGN KEY (report_id) REFERENCES dmarc_aggregate_reports(id) ON DELETE CASCADE
 );
 

@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Introduced saved report filters with dedicated persistence, controller routes, UI affordances, and regression coverage.
 - Added CSV and XLSX report exports powered by the new `ReportExport` utility and accompanying unit tests.
 - Added a retention settings controller/view guarded by the new `manage_retention` permission, plus tests for the update workflow.
+- Captured DMARC policy alignment metadata, override reasoning, and authentication evidence throughout ingestion, analytics, and the report detail experience with forward- and installer-ready schema changes.
 
 ### Changed
 - Updated documentation to explain the dual Composer environments and new directory structure.

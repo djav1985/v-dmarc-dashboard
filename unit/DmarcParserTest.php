@@ -29,6 +29,26 @@ $aggregateXml = file_get_contents($fixtureDir . '/aggregate-sample.xml');
 assertTrue($forensicXml !== false, 'Forensic fixture should be readable.', $failures);
 assertTrue($aggregateXml !== false, 'Aggregate fixture should be readable.', $failures);
 
+if ($aggregateXml !== false) {
+    $aggregateReport = DmarcParser::parseAggregateReport($aggregateXml);
+
+    assertEquals('r', $aggregateReport['policy_adkim'], 'Aggregate parser should capture adkim.', $failures);
+    assertEquals('r', $aggregateReport['policy_aspf'], 'Aggregate parser should capture aspf.', $failures);
+    assertEquals('none', $aggregateReport['policy_p'], 'Aggregate parser should capture policy p.', $failures);
+    assertEquals('none', $aggregateReport['policy_sp'], 'Aggregate parser should capture policy sp.', $failures);
+    assertEquals(100, $aggregateReport['policy_pct'], 'Aggregate parser should capture pct.', $failures);
+    assertEquals('1', $aggregateReport['policy_fo'], 'Aggregate parser should capture fo.', $failures);
+
+    assertCountEquals(1, $aggregateReport['records'], 'Aggregate parser should return records.', $failures);
+    $aggregateRecord = $aggregateReport['records'][0];
+    assertEquals('forwarded', $aggregateRecord['policy_evaluated_reasons'][0]['type'] ?? null, 'Aggregate parser should capture evaluation reason.', $failures);
+    assertEquals('Trusted forwarder sample', $aggregateRecord['policy_evaluated_reasons'][0]['comment'] ?? null, 'Aggregate parser should capture reason comment.', $failures);
+    assertEquals('local_policy', $aggregateRecord['policy_override_reasons'][0]['type'] ?? null, 'Aggregate parser should capture override reason.', $failures);
+    assertEquals('Allowing reporting domain', $aggregateRecord['policy_override_reasons'][0]['comment'] ?? null, 'Aggregate parser should capture override comment.', $failures);
+    assertEquals('selector1', $aggregateRecord['auth_results']['dkim'][0]['selector'] ?? null, 'Aggregate parser should capture DKIM selector auth result.', $failures);
+    assertEquals('fail', $aggregateRecord['auth_results']['spf'][0]['result'] ?? null, 'Aggregate parser should capture SPF auth result.', $failures);
+}
+
 if ($forensicXml !== false) {
     $forensicReport = DmarcParser::parseForensicReport($forensicXml);
 
@@ -83,6 +103,8 @@ if ($aggregateXml !== false) {
         assertEquals('aggregate.example', $gzipReport['policy_published_domain'], 'Gzip parser should read policy domain.', $failures);
         assertCountEquals(1, $gzipReport['records'], 'Gzip parser should return one record.', $failures);
         assertEquals('198.51.100.23', $gzipReport['records'][0]['source_ip'], 'Gzip parser should decode record source IP.', $failures);
+        assertEquals('fail', $gzipReport['records'][0]['spf_result'], 'Gzip parser should include SPF result.', $failures);
+        assertEquals('forwarded', $gzipReport['records'][0]['policy_evaluated_reasons'][0]['type'] ?? null, 'Gzip parser should retain evaluation reason.', $failures);
         @unlink($gzipPath);
     }
 
@@ -99,6 +121,8 @@ if ($aggregateXml !== false) {
         assertEquals('aggregate.example', $zipReport['policy_published_domain'], 'Zip parser should read policy domain.', $failures);
         assertCountEquals(1, $zipReport['records'], 'Zip parser should return one record.', $failures);
         assertEquals('198.51.100.23', $zipReport['records'][0]['source_ip'], 'Zip parser should decode record source IP.', $failures);
+        assertEquals('fail', $zipReport['records'][0]['spf_result'], 'Zip parser should include SPF result.', $failures);
+        assertEquals('local_policy', $zipReport['records'][0]['policy_override_reasons'][0]['type'] ?? null, 'Zip parser should retain override reason.', $failures);
         @unlink($zipPath);
     }
 }

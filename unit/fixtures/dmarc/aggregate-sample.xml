@@ -16,6 +16,7 @@
         <p>none</p>
         <sp>none</sp>
         <pct>100</pct>
+        <fo>1</fo>
     </policy_published>
     <record>
         <row>
@@ -24,7 +25,15 @@
             <policy_evaluated>
                 <disposition>none</disposition>
                 <dkim>pass</dkim>
-                <spf>pass</spf>
+                <spf>fail</spf>
+                <reason>
+                    <type>forwarded</type>
+                    <comment>Trusted forwarder sample</comment>
+                </reason>
+                <policy_override>
+                    <type>local_policy</type>
+                    <comment>Allowing reporting domain</comment>
+                </policy_override>
             </policy_evaluated>
         </row>
         <identifiers>
@@ -32,5 +41,17 @@
             <envelope_from>mail.aggregate.example</envelope_from>
             <envelope_to>postmaster@example.org</envelope_to>
         </identifiers>
+        <auth_results>
+            <dkim>
+                <domain>aggregate.example</domain>
+                <selector>selector1</selector>
+                <result>pass</result>
+            </dkim>
+            <spf>
+                <domain>aggregate.example</domain>
+                <scope>mfrom</scope>
+                <result>fail</result>
+            </spf>
+        </auth_results>
     </record>
 </feedback>
