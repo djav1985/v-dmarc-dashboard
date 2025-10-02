@@ -92,7 +92,10 @@ class Analytics
                 SUM(CASE WHEN dmar.disposition = 'quarantine' THEN dmar.count ELSE 0 END) as quarantined_count,
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) as dkim_pass_count,
-                SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count
+                SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count,
+                SUM(CASE WHEN dmar.policy_evaluated_reasons IS NOT NULL AND dmar.policy_evaluated_reasons != '' THEN dmar.count ELSE 0 END) as policy_reason_volume,
+                SUM(CASE WHEN dmar.policy_override_reasons IS NOT NULL AND dmar.policy_override_reasons != '' THEN dmar.count ELSE 0 END) as policy_override_volume,
+                SUM(CASE WHEN dmar.auth_results IS NOT NULL AND dmar.auth_results != '' THEN dmar.count ELSE 0 END) as auth_results_volume
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
             $groupJoin
@@ -185,6 +188,9 @@ class Analytics
                 SUM(CASE WHEN dmar.disposition = 'reject' THEN dmar.count ELSE 0 END) as rejected_count,
                 SUM(CASE WHEN dmar.dkim_result = 'pass' THEN dmar.count ELSE 0 END) as dkim_pass_count,
                 SUM(CASE WHEN dmar.spf_result = 'pass' THEN dmar.count ELSE 0 END) as spf_pass_count,
+                SUM(CASE WHEN dmar.policy_evaluated_reasons IS NOT NULL AND dmar.policy_evaluated_reasons != '' THEN dmar.count ELSE 0 END) as policy_reason_volume,
+                SUM(CASE WHEN dmar.policy_override_reasons IS NOT NULL AND dmar.policy_override_reasons != '' THEN dmar.count ELSE 0 END) as policy_override_volume,
+                SUM(CASE WHEN dmar.auth_results IS NOT NULL AND dmar.auth_results != '' THEN dmar.count ELSE 0 END) as auth_results_volume,
                 ROUND(
                     (
                         SUM(
@@ -524,7 +530,19 @@ class Analytics
                 ROUND(
                     (SUM(CASE WHEN dmar.disposition = 'none' THEN dmar.count ELSE 0 END) * 100.0) /
                     NULLIF(SUM(dmar.count), 0), 2
-                ) as dmarc_compliance
+                ) as dmarc_compliance,
+                ROUND(
+                    (SUM(CASE WHEN dmar.policy_override_reasons IS NOT NULL AND dmar.policy_override_reasons != '' THEN dmar.count ELSE 0 END) * 100.0) /
+                    NULLIF(SUM(dmar.count), 0), 2
+                ) as override_rate,
+                ROUND(
+                    (SUM(CASE WHEN dmar.policy_evaluated_reasons IS NOT NULL AND dmar.policy_evaluated_reasons != '' THEN dmar.count ELSE 0 END) * 100.0) /
+                    NULLIF(SUM(dmar.count), 0), 2
+                ) as reason_flag_rate,
+                ROUND(
+                    (SUM(CASE WHEN dmar.auth_results IS NOT NULL AND dmar.auth_results != '' THEN dmar.count ELSE 0 END) * 100.0) /
+                    NULLIF(SUM(dmar.count), 0), 2
+                ) as auth_results_rate
             FROM dmarc_aggregate_reports dar
             JOIN domains d ON dar.domain_id = d.id
             $groupJoin

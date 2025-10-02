@@ -51,12 +51,14 @@ class DmarcReport
         $domainId = Domain::getOrCreateDomain($reportData['policy_published_domain']);
 
         $db->query('
-            INSERT INTO dmarc_aggregate_reports 
-            (domain_id, org_name, email, extra_contact_info, report_id, 
-             date_range_begin, date_range_end, raw_xml) 
-            VALUES 
-            (:domain_id, :org_name, :email, :extra_contact_info, :report_id, 
-             :date_range_begin, :date_range_end, :raw_xml)
+            INSERT INTO dmarc_aggregate_reports
+            (domain_id, org_name, email, extra_contact_info, report_id,
+             date_range_begin, date_range_end, policy_adkim, policy_aspf,
+             policy_p, policy_sp, policy_pct, policy_fo, raw_xml)
+            VALUES
+            (:domain_id, :org_name, :email, :extra_contact_info, :report_id,
+             :date_range_begin, :date_range_end, :policy_adkim, :policy_aspf,
+             :policy_p, :policy_sp, :policy_pct, :policy_fo, :raw_xml)
         ');
 
         $db->bind(':domain_id', $domainId);
@@ -66,6 +68,12 @@ class DmarcReport
         $db->bind(':report_id', $reportData['report_id']);
         $db->bind(':date_range_begin', $reportData['date_range_begin']);
         $db->bind(':date_range_end', $reportData['date_range_end']);
+        $db->bind(':policy_adkim', $reportData['policy_adkim'] ?? null);
+        $db->bind(':policy_aspf', $reportData['policy_aspf'] ?? null);
+        $db->bind(':policy_p', $reportData['policy_p'] ?? null);
+        $db->bind(':policy_sp', $reportData['policy_sp'] ?? null);
+        $db->bind(':policy_pct', isset($reportData['policy_pct']) ? (int) $reportData['policy_pct'] : null);
+        $db->bind(':policy_fo', $reportData['policy_fo'] ?? null);
         $db->bind(':raw_xml', $reportData['raw_xml'] ?? null);
 
         $db->execute();
@@ -85,13 +93,19 @@ class DmarcReport
         $db = DatabaseManager::getInstance();
 
         foreach ($records as $record) {
+            $policyReasonsJson = self::encodeJson($record['policy_evaluated_reasons'] ?? null);
+            $policyOverridesJson = self::encodeJson($record['policy_override_reasons'] ?? null);
+            $authResultsJson = self::encodeJson($record['auth_results'] ?? null);
+
             $db->query('
-                INSERT INTO dmarc_aggregate_records 
-                (report_id, source_ip, count, disposition, dkim_result, spf_result, 
-                 header_from, envelope_from, envelope_to) 
-                VALUES 
-                (:report_id, :source_ip, :count, :disposition, :dkim_result, :spf_result, 
-                 :header_from, :envelope_from, :envelope_to)
+                INSERT INTO dmarc_aggregate_records
+                (report_id, source_ip, count, disposition, dkim_result, spf_result,
+                 header_from, envelope_from, envelope_to, policy_evaluated_reasons,
+                 policy_override_reasons, auth_results)
+                VALUES
+                (:report_id, :source_ip, :count, :disposition, :dkim_result, :spf_result,
+                 :header_from, :envelope_from, :envelope_to, :policy_evaluated_reasons,
+                 :policy_override_reasons, :auth_results)
             ');
 
             $db->bind(':report_id', $reportId);
@@ -103,6 +117,9 @@ class DmarcReport
             $db->bind(':header_from', $record['header_from'] ?? null);
             $db->bind(':envelope_from', $record['envelope_from'] ?? null);
             $db->bind(':envelope_to', $record['envelope_to'] ?? null);
+            $db->bind(':policy_evaluated_reasons', $policyReasonsJson);
+            $db->bind(':policy_override_reasons', $policyOverridesJson);
+            $db->bind(':auth_results', $authResultsJson);
 
             $db->execute();
         }
@@ -908,6 +925,10 @@ class DmarcReport
             return null;
         }
 
+        if (array_key_exists('policy_pct', $result)) {
+            $result['policy_pct'] = $result['policy_pct'] !== null ? (int) $result['policy_pct'] : null;
+        }
+
         return $result;
     }
 
@@ -933,7 +954,16 @@ class DmarcReport
         ');
 
         $db->bind(':report_id', $reportId);
-        return $db->resultSet();
+        $records = $db->resultSet();
+
+        foreach ($records as &$record) {
+            $record['policy_evaluated_reasons'] = self::decodeJsonField($record['policy_evaluated_reasons'] ?? null);
+            $record['policy_override_reasons'] = self::decodeJsonField($record['policy_override_reasons'] ?? null);
+            $record['auth_results'] = self::decodeJsonField($record['auth_results'] ?? null);
+        }
+        unset($record);
+
+        return $records;
     }
 
     /**
@@ -984,5 +1014,41 @@ class DmarcReport
         }
 
         return RBACManager::getInstance()->canAccessDomain((int) $result['domain_id']);
+    }
+
+    private static function encodeJson($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        if (!is_array($value) || empty($value)) {
+            return null;
+        }
+
+        $encoded = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return $encoded === false ? null : $encoded;
+    }
+
+    private static function decodeJsonField(?string $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return [];
+        }
+
+        $decoded = json_decode($trimmed, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

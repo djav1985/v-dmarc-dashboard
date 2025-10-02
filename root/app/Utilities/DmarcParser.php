@@ -27,19 +27,43 @@ class DmarcParser
                 'date_range_begin' => (int) $xml->report_metadata->date_range->begin,
                 'date_range_end' => (int) $xml->report_metadata->date_range->end,
                 'policy_published_domain' => (string) $xml->policy_published->domain,
+                'policy_adkim' => self::extractOptionalString($xml->policy_published->adkim ?? null),
+                'policy_aspf' => self::extractOptionalString($xml->policy_published->aspf ?? null),
+                'policy_p' => self::extractOptionalString($xml->policy_published->p ?? null),
+                'policy_sp' => self::extractOptionalString($xml->policy_published->sp ?? null),
+                'policy_pct' => self::extractOptionalInt($xml->policy_published->pct ?? null),
+                'policy_fo' => self::extractOptionalString($xml->policy_published->fo ?? null),
                 'raw_xml' => $xmlContent,
                 'records' => []
             ];
 
             // Parse individual records
             foreach ($xml->record as $record) {
+                $policyEvaluated = $record->row->policy_evaluated ?? null;
+
                 $recordData = [
                     'source_ip' => (string) $record->row->source_ip,
                     'count' => (int) $record->row->count,
-                    'disposition' => (string) $record->row->policy_evaluated->disposition,
-                    'dkim_result' => (string) $record->row->policy_evaluated->dkim ?: null,
-                    'spf_result' => (string) $record->row->policy_evaluated->spf ?: null,
+                    'disposition' => (string) ($policyEvaluated->disposition ?? ''),
+                    'dkim_result' => self::extractOptionalString($policyEvaluated->dkim ?? null),
+                    'spf_result' => self::extractOptionalString($policyEvaluated->spf ?? null),
                 ];
+
+                $policyReasons = self::extractPolicyReasons($policyEvaluated, 'reason');
+                if (!empty($policyReasons)) {
+                    $recordData['policy_evaluated_reasons'] = $policyReasons;
+                }
+
+                $policyOverrides = self::extractPolicyReasons($policyEvaluated, 'policy_override');
+                if (!empty($policyOverrides)) {
+                    $recordData['policy_override_reasons'] = $policyOverrides;
+                }
+
+                $authResultsNode = $record->auth_results ?? ($record->row->auth_results ?? null);
+                $authResults = self::extractAuthResults($authResultsNode);
+                if (!empty($authResults)) {
+                    $recordData['auth_results'] = $authResults;
+                }
 
                 // Add identifiers if present
                 if (isset($record->identifiers)) {
@@ -55,6 +79,113 @@ class DmarcParser
         } catch (Exception $e) {
             throw new Exception("Failed to parse DMARC aggregate report: " . $e->getMessage());
         }
+    }
+
+    private static function extractOptionalString(?SimpleXMLElement $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $stringValue = trim((string) $value);
+
+        return $stringValue === '' ? null : $stringValue;
+    }
+
+    private static function extractOptionalInt(?SimpleXMLElement $value): ?int
+    {
+        $stringValue = self::extractOptionalString($value);
+        if ($stringValue === null || !preg_match('/^-?\d+$/', $stringValue)) {
+            return null;
+        }
+
+        return (int) $stringValue;
+    }
+
+    private static function extractPolicyReasons(?SimpleXMLElement $context, string $nodeName): array
+    {
+        if ($context === null || !isset($context->{$nodeName})) {
+            return [];
+        }
+
+        $reasons = [];
+
+        foreach ($context->{$nodeName} as $node) {
+            if (!$node instanceof SimpleXMLElement) {
+                continue;
+            }
+
+            $type = self::extractOptionalString($node->type ?? null);
+            $comment = self::extractOptionalString($node->comment ?? null);
+
+            if ($type === null && $comment === null) {
+                $fallback = self::extractOptionalString($node);
+                if ($fallback === null) {
+                    continue;
+                }
+
+                $reasons[] = [
+                    'type' => $fallback,
+                    'comment' => null,
+                ];
+                continue;
+            }
+
+            $reasons[] = [
+                'type' => $type,
+                'comment' => $comment,
+            ];
+        }
+
+        return $reasons;
+    }
+
+    private static function extractAuthResults(?SimpleXMLElement $context): array
+    {
+        if ($context === null) {
+            return [];
+        }
+
+        $results = [];
+
+        foreach ($context->children() as $authNode) {
+            if (!$authNode instanceof SimpleXMLElement) {
+                continue;
+            }
+
+            $method = $authNode->getName();
+            $entries = [];
+
+            foreach ($authNode->children() as $child) {
+                if (!$child instanceof SimpleXMLElement) {
+                    continue;
+                }
+
+                $entries[$child->getName()] = self::extractOptionalString($child);
+            }
+
+            if (empty(array_filter($entries, static fn($value) => $value !== null && $value !== ''))) {
+                $fallback = self::extractOptionalString($authNode);
+                if ($fallback === null) {
+                    continue;
+                }
+
+                $entries = ['value' => $fallback];
+            }
+
+            $filtered = array_filter(
+                $entries,
+                static fn($value) => $value !== null && $value !== ''
+            );
+
+            if (empty($filtered)) {
+                continue;
+            }
+
+            $results[$method][] = $filtered;
+        }
+
+        return $results;
     }
 
     /**
