@@ -308,7 +308,7 @@ CREATE TABLE pdf_report_schedules (
     enabled INTEGER DEFAULT 1,
     last_run_at DATETIME,
     next_run_at DATETIME,
-    last_status TEXT,
+    last_status VARCHAR(50),
     last_error TEXT,
     created_by TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
