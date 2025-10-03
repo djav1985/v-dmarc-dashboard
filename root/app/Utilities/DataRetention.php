@@ -70,7 +70,7 @@ class DataRetention
 
                         $db->query(
                             'DELETE FROM dmarc_aggregate_records WHERE report_id IN ('
-                            . implode(', ', $placeholders) . ')'
+                                . implode(', ', $placeholders) . ')'
                         );
                         foreach ($bindings as $placeholder => $value) {
                             $db->bind($placeholder, $value);
@@ -80,7 +80,7 @@ class DataRetention
 
                         $db->query(
                             'DELETE FROM dmarc_aggregate_reports WHERE id IN ('
-                            . implode(', ', $placeholders) . ')'
+                                . implode(', ', $placeholders) . ')'
                         );
                         foreach ($bindings as $placeholder => $value) {
                             $db->bind($placeholder, $value);

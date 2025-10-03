@@ -82,13 +82,13 @@ class LoginController extends Controller
                 $session->set('is_admin', $userInfo->admin);
                 $session->set('timeout', time());
                 $session->regenerate();
-                
+
                 // Update last login timestamp
                 Users::updateLastLogin($userInfo->username);
-                
+
                 // Log successful login
                 AuditLogger::getInstance()->logLogin($userInfo->username, true);
-                
+
                 header('Location: /');
                 exit();
             }
@@ -103,7 +103,7 @@ class LoginController extends Controller
                 $error = 'Invalid username or password.';
                 ErrorManager::getInstance()->log($error);
                 MessageHelper::addMessage($error);
-                
+
                 // Log failed login
                 AuditLogger::getInstance()->logLogin($username, false);
             }
@@ -121,12 +121,12 @@ class LoginController extends Controller
     {
         $session = SessionManager::getInstance();
         $username = $session->get('username');
-        
+
         // Log logout before destroying session
         if ($username) {
             AuditLogger::getInstance()->logLogout($username);
         }
-        
+
         $session->destroy();
         header('Location: /login');
         exit();

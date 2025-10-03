@@ -1,61 +1,61 @@
 /* DMARC Dashboard - Form styles */
 .form-group {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .form-input {
-    width: 100%;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .form-input:focus {
-    outline: none;
-    border-color: #5755d9;
-    box-shadow: 0 0 0 0.1rem rgb(87 85 217 / 25%);
+  outline: none;
+  box-shadow: 0 0 0 0.1rem rgb(87 85 217 / 25%);
+  border-color: #5755d9;
 }
 
 .form-label {
-    font-weight: 500;
-    color: #495057;
-    margin-bottom: 0.25rem;
-    display: block;
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #495057;
+  font-weight: 500;
 }
 
 .form-input-hint {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-top: 0.25rem;
+  margin-top: 0.25rem;
+  color: #6c757d;
+  font-size: 0.8rem;
 }
 
 .input-lg {
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
 }
 
 .btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
 }
 
 /* File input styling */
 .form-input[type="file"] {
-    padding: 0.375rem 0.75rem;
-    background: #fff;
-    border: 2px dashed #ced4da;
-    border-radius: 6px;
-    transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease;
+  border: 2px dashed #ced4da;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.375rem 0.75rem;
 }
 
 .form-input[type="file"]:hover {
-    border-color: #5755d9;
+  border-color: #5755d9;
 }
 
 .form-input[type="file"]:focus {
-    border-color: #5755d9;
-    box-shadow: 0 0 0 0.1rem rgb(87 85 217 / 25%);
+  box-shadow: 0 0 0 0.1rem rgb(87 85 217 / 25%);
+  border-color: #5755d9;
 }

@@ -13,6 +13,11 @@ use App\Services\GeoIPService;
 class ReportDetailController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+    /**
      * Display detailed view of a specific DMARC report
      */
     public function handleRequest($id = null): void

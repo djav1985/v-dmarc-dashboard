@@ -100,6 +100,6 @@ class AuditLogController extends Controller
         $db->query('SELECT DISTINCT action FROM audit_logs ORDER BY action');
         $rows = $db->resultSet();
 
-        return array_map(static fn ($row) => $row['action'], $rows);
+        return array_map(static fn($row) => $row['action'], $rows);
     }
 }

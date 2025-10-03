@@ -13,17 +13,24 @@
 
 require 'partials/header.php';
 
-function getTemplateTypeClass($type) {
+function getTemplateTypeClass($type)
+{
     switch ($type) {
-        case 'executive': return 'label-primary';
-        case 'technical': return 'label-success';
-        case 'compliance': return 'label-warning';
-        case 'custom': return 'label-secondary';
-        default: return 'label-secondary';
+        case 'executive':
+            return 'label-primary';
+        case 'technical':
+            return 'label-success';
+        case 'compliance':
+            return 'label-warning';
+        case 'custom':
+            return 'label-secondary';
+        default:
+            return 'label-secondary';
     }
 }
 
-function formatFileSize($bytes) {
+function formatFileSize($bytes)
+{
     if ($bytes >= 1048576) {
         return round($bytes / 1048576, 1) . ' MB';
     } elseif ($bytes >= 1024) {
@@ -32,7 +39,8 @@ function formatFileSize($bytes) {
     return $bytes . ' B';
 }
 
-function formatScheduleFrequency(string $frequency): string {
+function formatScheduleFrequency(string $frequency): string
+{
     if (str_starts_with($frequency, 'custom:')) {
         $days = (int) substr($frequency, 7);
         return 'Every ' . max(1, $days) . ' days';
@@ -46,7 +54,8 @@ function formatScheduleFrequency(string $frequency): string {
     };
 }
 
-function formatScheduleStatus(array $schedule): string {
+function formatScheduleStatus(array $schedule): string
+{
     if ((int) ($schedule['enabled'] ?? 0) !== 1) {
         return 'Paused';
     }
@@ -58,7 +67,8 @@ function formatScheduleStatus(array $schedule): string {
     };
 }
 
-function formatScheduleDate(?string $value): string {
+function formatScheduleDate(?string $value): string
+{
     if (empty($value)) {
         return '—';
     }
@@ -70,7 +80,8 @@ function formatScheduleDate(?string $value): string {
     }
 }
 
-function getScheduleRecipients(?string $recipientsJson): string {
+function getScheduleRecipients(?string $recipientsJson): string
+{
     $decoded = json_decode($recipientsJson ?? '[]', true);
     if (!is_array($decoded)) {
         return '';
@@ -81,103 +92,125 @@ function getScheduleRecipients(?string $recipientsJson): string {
 ?>
 
 <style>
-.management-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-.stat-card {
-    text-align: center;
-    padding: 1.5rem;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.stat-number {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-.stat-label {
-    font-size: 0.85rem;
-    opacity: 0.9;
-}
-.feature-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
-}
-.template-item, .generation-item, .simulation-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #f1f3f4;
-}
-.template-item:last-child, .generation-item:last-child, .simulation-item:last-child {
-    border-bottom: none;
-}
-.quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-top: 2rem;
-}
-.action-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    text-align: center;
-    background: white;
-    transition: box-shadow 0.2s;
-}
-.action-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-@media (max-width: 768px) {
-    .feature-section {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    .management-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-}
-.schedule-item {
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background: #fdfdfd;
-}
-.schedule-item h5 {
-    margin: 0 0 0.5rem 0;
-}
-.schedule-meta {
-    font-size: 0.85rem;
-    color: #6c757d;
-}
-.schedule-actions {
-    margin-top: 0.75rem;
-}
-.schedule-actions form {
-    display: inline-block;
-    margin-right: 0.5rem;
-}
-.schedule-form .form-group {
-    margin-bottom: 0.75rem;
-}
-.schedule-note {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .feature-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .template-item,
+    .generation-item,
+    .simulation-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .template-item:last-child,
+    .generation-item:last-child,
+    .simulation-item:last-child {
+        border-bottom: none;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .action-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        background: white;
+        transition: box-shadow 0.2s;
+    }
+
+    .action-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .feature-section {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    .schedule-item {
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #fdfdfd;
+    }
+
+    .schedule-item h5 {
+        margin: 0 0 0.5rem 0;
+    }
+
+    .schedule-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .schedule-actions {
+        margin-top: 0.75rem;
+    }
+
+    .schedule-actions form {
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .schedule-form .form-group {
+        margin-bottom: 0.75rem;
+    }
+
+    .schedule-note {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
 </style>
 
 <?php if (isset($_SESSION['flash_message'])): ?>
@@ -240,7 +273,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                 </h4>
                 <a href="/reports-management?action=pdf-templates" class="btn btn-link btn-sm">View All</a>
             </div>
-            
+
             <?php if (empty($this->data['templates'])): ?>
                 <div class="empty">
                     <p class="empty-title">No Templates</p>
@@ -258,8 +291,8 @@ function getScheduleRecipients(?string $recipientsJson): string {
                             <span class="label <?= getTemplateTypeClass($template['template_type']) ?>">
                                 <?= ucfirst($template['template_type']) ?>
                             </span>
-                            <br><a href="/reports-management?action=generate-pdf&template_id=<?= $template['id'] ?>" 
-                                   class="btn btn-sm btn-primary mt-1">Generate</a>
+                            <br><a href="/reports-management?action=generate-pdf&template_id=<?= $template['id'] ?>"
+                                class="btn btn-sm btn-primary mt-1">Generate</a>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -274,7 +307,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                     Recent PDF Reports
                 </h4>
             </div>
-            
+
             <?php if (empty($this->data['recent_generations'])): ?>
                 <div class="empty">
                     <p class="empty-title">No Reports Generated</p>
@@ -287,7 +320,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                             <strong><?= htmlspecialchars($generation['title']) ?></strong>
                             <br><small class="text-gray"><?= htmlspecialchars($generation['filename']) ?></small>
                             <br><small class="text-gray">
-                                <?= date('M j, Y H:i', strtotime($generation['generated_at'])) ?> • 
+                                <?= date('M j, Y H:i', strtotime($generation['generated_at'])) ?> •
                                 <?= formatFileSize($generation['file_size']) ?>
                             </small>
                         </div>
@@ -311,7 +344,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                 </h4>
                 <a href="/reports-management?action=policy-simulations" class="btn btn-link btn-sm">View All</a>
             </div>
-            
+
             <?php if (empty($this->data['simulations'])): ?>
                 <div class="empty">
                     <p class="empty-title">No Simulations</p>
@@ -329,7 +362,7 @@ function getScheduleRecipients(?string $recipientsJson): string {
                             <strong><?= htmlspecialchars($simulation['name']) ?></strong>
                             <br><small class="text-gray"><?= htmlspecialchars($simulation['domain']) ?></small>
                             <br><small class="text-gray">
-                                <?= date('M j', strtotime($simulation['simulation_period_start'])) ?> - 
+                                <?= date('M j', strtotime($simulation['simulation_period_start'])) ?> -
                                 <?= date('M j, Y', strtotime($simulation['simulation_period_end'])) ?>
                             </small>
                         </div>
@@ -339,8 +372,8 @@ function getScheduleRecipients(?string $recipientsJson): string {
                             <?php else: ?>
                                 <span class="label label-warning">Pending</span>
                             <?php endif; ?>
-                            <br><a href="/reports-management?action=view-simulation&id=<?= $simulation['id'] ?>" 
-                                   class="btn btn-sm btn-link mt-1">View</a>
+                            <br><a href="/reports-management?action=view-simulation&id=<?= $simulation['id'] ?>"
+                                class="btn btn-sm btn-link mt-1">View</a>
                         </div>
                     </div>
                 <?php endforeach; ?>

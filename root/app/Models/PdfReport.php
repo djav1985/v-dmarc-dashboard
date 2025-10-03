@@ -148,7 +148,7 @@ class PdfReport
 
     /**
      * Generate summary data section
-    */
+     */
     private static function generateSummaryData(string $startDate, string $endDate, string $domainFilter, ?int $groupFilter): array
     {
         return \App\Models\Analytics::getSummaryStatistics($startDate, $endDate, $domainFilter, $groupFilter);

@@ -20,6 +20,14 @@ use Throwable;
 class EmailDigestController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+
+    // ...existing methods, all indented 4 spaces inside the class...
+    // ...existing methods...
+    /**
      * Display the digest schedule management view.
      */
     public function handleRequest(): void
@@ -27,9 +35,9 @@ class EmailDigestController extends Controller
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_ALERTS);
 
         $this->data = [
-            'schedules' => EmailDigest::getAllSchedules(),
-            'domains' => Domain::getAllDomains(),
-            'groups' => DomainGroup::getAllGroups(),
+        'schedules' => EmailDigest::getAllSchedules(),
+        'domains' => Domain::getAllDomains(),
+        'groups' => DomainGroup::getAllGroups(),
         ];
 
         require __DIR__ . '/../Views/email_digests.php';
@@ -96,8 +104,8 @@ class EmailDigestController extends Controller
         }
 
         $frequency = $frequencyInput === 'custom'
-            ? sprintf('custom:%d', $customRangeDays)
-            : $frequencyInput;
+        ? sprintf('custom:%d', $customRangeDays)
+        : $frequencyInput;
 
         $nextScheduled = null;
 
@@ -121,14 +129,14 @@ class EmailDigestController extends Controller
 
         try {
             EmailDigest::createSchedule([
-                'name' => $name,
-                'frequency' => $frequency,
-                'recipients' => $recipients,
-                'domain_filter' => $domainFilter,
-                'group_filter' => $groupFilter,
-                'enabled' => $enabled,
-                'next_scheduled' => $nextScheduled,
-                'created_by' => $_SESSION['username'] ?? null,
+            'name' => $name,
+            'frequency' => $frequency,
+            'recipients' => $recipients,
+            'domain_filter' => $domainFilter,
+            'group_filter' => $groupFilter,
+            'enabled' => $enabled,
+            'next_scheduled' => $nextScheduled,
+            'created_by' => $_SESSION['username'] ?? null,
             ]);
 
             MessageHelper::addMessage('Email digest schedule created successfully.', 'success');

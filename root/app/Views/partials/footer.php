@@ -18,34 +18,35 @@ $branding = BrandingManager::getInstance();
 $brandingVars = $branding->getBrandingVars();
 ?>
 
-    </main>
-    
-    <footer class="bg-gray p-2 mt-4">
-        <div class="container grid-lg">
-            <div class="columns footer-columns">
-                <div class="column col-12 col-md-6">
-                    <small class="text-gray">
-                        <i class="icon icon-mail"></i> <?= htmlspecialchars($brandingVars['app_name']) ?>
-                        <?php if (!empty($brandingVars['company_name'])): ?>
-                            <span class="ml-1">- <?= htmlspecialchars($brandingVars['company_name']) ?></span>
-                        <?php else: ?>
-                            <span class="ml-1">- Email Authentication Monitor</span>
-                        <?php endif; ?>
-                    </small>
-                </div>
-                <div class="column col-12 col-md-6 footer-right">
-                    <small class="text-gray">
-                        <?php if (!empty($brandingVars['footer_text'])): ?>
-                            <?= htmlspecialchars($brandingVars['footer_text']) ?>
-                        <?php else: ?>
-                            Powered by V PHP Framework
-                        <?php endif; ?>
-                    </small>
-                </div>
+</main>
+
+<footer class="bg-gray p-2 mt-4">
+    <div class="container grid-lg">
+        <div class="columns footer-columns">
+            <div class="column col-12 col-md-6">
+                <small class="text-gray">
+                    <i class="icon icon-mail"></i> <?= htmlspecialchars($brandingVars['app_name']) ?>
+                    <?php if (!empty($brandingVars['company_name'])): ?>
+                        <span class="ml-1">- <?= htmlspecialchars($brandingVars['company_name']) ?></span>
+                    <?php else: ?>
+                        <span class="ml-1">- Email Authentication Monitor</span>
+                    <?php endif; ?>
+                </small>
+            </div>
+            <div class="column col-12 col-md-6 footer-right">
+                <small class="text-gray">
+                    <?php if (!empty($brandingVars['footer_text'])): ?>
+                        <?= htmlspecialchars($brandingVars['footer_text']) ?>
+                    <?php else: ?>
+                        Powered by V PHP Framework
+                    <?php endif; ?>
+                </small>
             </div>
         </div>
-    </footer>
+    </div>
+</footer>
 
-    <script src="/assets/js/footer-scripts.js"></script>
+<script src="/assets/js/footer-scripts.js"></script>
 </body>
+
 </html>

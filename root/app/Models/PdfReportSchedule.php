@@ -1,17 +1,23 @@
 <?php
 
+/*
+ * PdfReportSchedule.php
+ *
+ * Handles scheduling for PDF report generation.
+ *
+ * (c) 2023 AppsByV. All rights reserved.
+ */
+
 namespace App\Models;
 
+use App\Models\PdfReportSchedulerHelper;
 use App\Core\DatabaseManager;
 use App\Core\RBACManager;
 use App\Core\SessionManager;
-use DateTimeImmutable;
 use RuntimeException;
+use DateTimeImmutable;
 use Throwable;
 
-/**
- * Storage helper for scheduled PDF report automation.
- */
 class PdfReportSchedule
 {
     /**
@@ -430,22 +436,5 @@ class PdfReportSchedule
         }
 
         return true;
-    }
-}
-
-/**
- * Internal helper used to share interval building without creating a new service dependency in the model.
- */
-class PdfReportSchedulerHelper
-{
-    public static function buildInterval(array $parsed): \DateInterval
-    {
-        return match ($parsed['type']) {
-            'daily' => new \DateInterval('P1D'),
-            'weekly' => new \DateInterval('P7D'),
-            'monthly' => new \DateInterval('P1M'),
-            'custom' => new \DateInterval('P' . max(1, (int) ($parsed['custom_days'] ?? $parsed['range_days'])) . 'D'),
-            default => new \DateInterval('P1D'),
-        };
     }
 }

@@ -9,16 +9,17 @@ require 'partials/header.php';
 ?>
 
 <style>
-.rule-form-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-.rule-form-card .form-group {
-    margin-bottom: 1rem;
-}
+    .rule-form-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .rule-form-card .form-group {
+        margin-bottom: 1rem;
+    }
 </style>
 
 <div class="columns">
@@ -155,23 +156,23 @@ require 'partials/header.php';
 </div>
 
 <script>
-(function () {
-    const webhookCheckbox = document.getElementById('channel_webhook');
-    const webhookGroup = document.getElementById('webhook-url-group');
+    (function() {
+        const webhookCheckbox = document.getElementById('channel_webhook');
+        const webhookGroup = document.getElementById('webhook-url-group');
 
-    function toggleWebhookField() {
-        if (!webhookCheckbox || !webhookGroup) {
-            return;
+        function toggleWebhookField() {
+            if (!webhookCheckbox || !webhookGroup) {
+                return;
+            }
+
+            webhookGroup.style.display = webhookCheckbox.checked ? 'block' : 'none';
         }
 
-        webhookGroup.style.display = webhookCheckbox.checked ? 'block' : 'none';
-    }
-
-    if (webhookCheckbox) {
-        webhookCheckbox.addEventListener('change', toggleWebhookField);
-        toggleWebhookField();
-    }
-})();
+        if (webhookCheckbox) {
+            webhookCheckbox.addEventListener('change', toggleWebhookField);
+            toggleWebhookField();
+        }
+    })();
 </script>
 
 <?php require 'partials/footer.php'; ?>

@@ -15,6 +15,14 @@ use App\Models\DmarcReport;
 class AnalyticsController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+
+    // ...existing methods, all indented 4 spaces inside the class...
+    // ...existing methods...
+    /**
      * Display analytics dashboard with trends and health scores
      */
     public function handleRequest(): void
@@ -50,17 +58,17 @@ class AnalyticsController extends Controller
 
         // Pass data to view
         $this->data = [
-            'trend_data' => $trendData,
-            'health_scores' => $healthScores,
-            'summary_stats' => $summaryStats,
-            'top_threats' => $topThreats,
-            'compliance_data' => $complianceData,
-            'domains' => $domains,
-            'filters' => [
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'domain' => $domain
-            ]
+        'trend_data' => $trendData,
+        'health_scores' => $healthScores,
+        'summary_stats' => $summaryStats,
+        'top_threats' => $topThreats,
+        'compliance_data' => $complianceData,
+        'domains' => $domains,
+        'filters' => [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'domain' => $domain
+        ]
         ];
 
         require __DIR__ . '/../Views/analytics.php';

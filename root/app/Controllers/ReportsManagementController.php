@@ -23,6 +23,11 @@ use RuntimeException;
 class ReportsManagementController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+    /**
      * Display reports management interface
      */
     public function handleRequest(): void

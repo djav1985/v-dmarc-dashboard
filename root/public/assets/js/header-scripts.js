@@ -10,8 +10,8 @@
     };
 
     function initNavbarToggle() {
-        var toggle = document.querySelector('.navbar-toggle');
-        var collapsible = document.getElementById('navbarCollapsible');
+        var toggle = document.querySelector(".navbar-toggle");
+        var collapsible = document.getElementById("navbarCollapsible");
 
         if (!toggle || !collapsible) {
             return;
@@ -20,10 +20,10 @@
         var isListeningOutside = false;
 
         function closeMenu() {
-            collapsible.classList.remove('is-open');
-            toggle.setAttribute('aria-expanded', 'false');
+            collapsible.classList.remove("is-open");
+            toggle.setAttribute("aria-expanded", "false");
             if (isListeningOutside) {
-                document.removeEventListener('click', handleOutsideClick);
+                document.removeEventListener("click", handleOutsideClick);
                 isListeningOutside = false;
             }
         }
@@ -34,29 +34,29 @@
             }
         }
 
-        toggle.addEventListener('click', function (event) {
+        toggle.addEventListener("click", function (event) {
             event.preventDefault();
-            var isOpen = collapsible.classList.toggle('is-open');
-            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            var isOpen = collapsible.classList.toggle("is-open");
+            toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
 
             if (isOpen && !isListeningOutside) {
-                document.addEventListener('click', handleOutsideClick);
+                document.addEventListener("click", handleOutsideClick);
                 isListeningOutside = true;
             } else if (!isOpen && isListeningOutside) {
-                document.removeEventListener('click', handleOutsideClick);
+                document.removeEventListener("click", handleOutsideClick);
                 isListeningOutside = false;
             }
         });
 
-        window.addEventListener('resize', function () {
+        window.addEventListener("resize", function () {
             if (window.innerWidth > 960) {
                 closeMenu();
             }
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initNavbarToggle);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initNavbarToggle);
     } else {
         initNavbarToggle();
     }

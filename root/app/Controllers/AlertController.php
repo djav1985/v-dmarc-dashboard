@@ -19,6 +19,14 @@ use RuntimeException;
 class AlertController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+
+    // ...existing methods, all indented 4 spaces inside the class...
+    // ...existing methods...
+    /**
      * Display alerts dashboard
      */
     public function handleRequest(): void
@@ -91,14 +99,14 @@ class AlertController extends Controller
         $criticalIncidents = count(array_filter($incidents, fn($i) => $i['severity'] === 'critical'));
 
         $this->data = [
-            'rules' => $rules,
-            'incidents' => $incidents,
-            'stats' => [
-                'total_rules' => $totalRules,
-                'enabled_rules' => $enabledRules,
-                'open_incidents' => $openIncidents,
-                'critical_incidents' => $criticalIncidents
-            ]
+        'rules' => $rules,
+        'incidents' => $incidents,
+        'stats' => [
+            'total_rules' => $totalRules,
+            'enabled_rules' => $enabledRules,
+            'open_incidents' => $openIncidents,
+            'critical_incidents' => $criticalIncidents
+        ]
         ];
 
         require __DIR__ . '/../Views/alerts_dashboard.php';
@@ -133,8 +141,8 @@ class AlertController extends Controller
         $groups = DomainGroup::getAllGroups();
 
         $this->data = [
-            'domains' => $domains,
-            'groups' => $groups
+        'domains' => $domains,
+        'groups' => $groups
         ];
 
         require __DIR__ . '/../Views/create_alert_rule.php';
@@ -146,20 +154,20 @@ class AlertController extends Controller
     private function createRule(): void
     {
         $data = [
-            'name' => trim($_POST['name'] ?? ''),
-            'description' => trim($_POST['description'] ?? ''),
-            'rule_type' => $_POST['rule_type'] ?? 'threshold',
-            'metric' => $_POST['metric'] ?? '',
-            'threshold_value' => (float) ($_POST['threshold_value'] ?? 0),
-            'threshold_operator' => $_POST['threshold_operator'] ?? '>',
-            'time_window' => (int) ($_POST['time_window'] ?? 60),
-            'domain_filter' => $_POST['domain_filter'] ?? '',
-            'group_filter' => !empty($_POST['group_filter']) ? (int) $_POST['group_filter'] : null,
-            'severity' => $_POST['severity'] ?? 'medium',
-            'notification_channels' => $_POST['notification_channels'] ?? [],
-            'notification_recipients' => array_filter(explode(',', $_POST['notification_recipients'] ?? '')),
-            'webhook_url' => trim($_POST['webhook_url'] ?? ''),
-            'enabled' => isset($_POST['enabled']) ? 1 : 0
+        'name' => trim($_POST['name'] ?? ''),
+        'description' => trim($_POST['description'] ?? ''),
+        'rule_type' => $_POST['rule_type'] ?? 'threshold',
+        'metric' => $_POST['metric'] ?? '',
+        'threshold_value' => (float) ($_POST['threshold_value'] ?? 0),
+        'threshold_operator' => $_POST['threshold_operator'] ?? '>',
+        'time_window' => (int) ($_POST['time_window'] ?? 60),
+        'domain_filter' => $_POST['domain_filter'] ?? '',
+        'group_filter' => !empty($_POST['group_filter']) ? (int) $_POST['group_filter'] : null,
+        'severity' => $_POST['severity'] ?? 'medium',
+        'notification_channels' => $_POST['notification_channels'] ?? [],
+        'notification_recipients' => array_filter(explode(',', $_POST['notification_recipients'] ?? '')),
+        'webhook_url' => trim($_POST['webhook_url'] ?? ''),
+        'enabled' => isset($_POST['enabled']) ? 1 : 0
         ];
 
         if (!empty($data['name']) && !empty($data['metric'])) {

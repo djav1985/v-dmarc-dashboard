@@ -15,6 +15,7 @@
 
 <!DOCTYPE html>
 <html lang="en-US">
+
 <head>
     <!-- Meta tags for responsive design and SEO -->
     <meta charset="UTF-8">
@@ -29,6 +30,7 @@
     <link rel="stylesheet" href="/assets/css/login.css">
     <link rel="stylesheet" href="/assets/css/forms.css">
 </head>
+
 <body>
     <div class="container grid-lg">
         <div class="columns">
@@ -39,7 +41,7 @@
                         <h2>DMARC Dashboard</h2>
                         <p class="text-gray">Secure email authentication monitoring</p>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title">Sign In</div>
@@ -47,17 +49,17 @@
                         <div class="card-body">
                             <form method="post">
                                 <input type="hidden" name="csrf_token" value="<?php echo App\Core\SessionManager::getInstance()->get('csrf_token'); ?>">
-                                
+
                                 <div class="form-group">
                                     <label class="form-label" for="username">Username</label>
-                                    <input class="form-input" id="username" type="text" name="username" 
-                                           autocomplete="username" placeholder="Enter username" required>
+                                    <input class="form-input" id="username" type="text" name="username"
+                                        autocomplete="username" placeholder="Enter username" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label" for="password">Password</label>
-                                    <input class="form-input" id="password" type="password" name="password" 
-                                           autocomplete="current-password" placeholder="Enter password" required>
+                                    <input class="form-input" id="password" type="password" name="password"
+                                        autocomplete="current-password" placeholder="Enter password" required>
                                 </div>
 
                                 <div class="form-group">
@@ -68,7 +70,7 @@
                             </form>
                         </div>
                     </div>
-                    
+
                     <div class="text-center mt-3">
                         <div class="toast">
                             <small class="text-gray">
@@ -84,4 +86,5 @@
     <!-- Display error messages if any -->
     <?php App\Helpers\MessageHelper::displayAndClearMessages(); ?>
 </body>
+
 </html>

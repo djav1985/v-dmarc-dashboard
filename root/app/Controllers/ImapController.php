@@ -106,10 +106,10 @@ class ImapController extends Controller
     private function isImapConfigured(): bool
     {
         return defined('IMAP_HOST') &&
-               defined('IMAP_USERNAME') &&
-               defined('IMAP_PASSWORD') &&
-               !empty(IMAP_HOST) &&
-               !empty(IMAP_USERNAME) &&
-               !empty(IMAP_PASSWORD);
+            defined('IMAP_USERNAME') &&
+            defined('IMAP_PASSWORD') &&
+            !empty(IMAP_HOST) &&
+            !empty(IMAP_USERNAME) &&
+            !empty(IMAP_PASSWORD);
     }
 }

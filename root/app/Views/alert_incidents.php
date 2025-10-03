@@ -30,17 +30,18 @@ function incidentStatus(string $status): string
 ?>
 
 <style>
-.incident-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-.incident-actions {
-    margin-top: 0.75rem;
-}
+    .incident-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .incident-actions {
+        margin-top: 0.75rem;
+    }
 </style>
 
 <div class="columns">

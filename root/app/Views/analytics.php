@@ -14,10 +14,11 @@
 require 'partials/header.php';
 
 // Helper functions
-function formatHealthScore($score, $category) {
+function formatHealthScore($score, $category)
+{
     $colors = [
         'excellent' => 'text-success',
-        'good' => 'text-primary', 
+        'good' => 'text-primary',
         'warning' => 'text-warning',
         'critical' => 'text-error'
     ];
@@ -25,11 +26,12 @@ function formatHealthScore($score, $category) {
     return "<span class=\"$color font-weight-bold\">{$score}%</span>";
 }
 
-function getHealthBadge($category, $label) {
+function getHealthBadge($category, $label)
+{
     $classes = [
         'excellent' => 'label-success',
         'good' => 'label-primary',
-        'warning' => 'label-warning', 
+        'warning' => 'label-warning',
         'critical' => 'label-error'
     ];
     $class = $classes[$category] ?? 'label-secondary';
@@ -38,72 +40,83 @@ function getHealthBadge($category, $label) {
 ?>
 
 <style>
-.analytics-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    padding: 1.5rem;
-}
-.filter-row {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-.filter-row .columns {
-    margin-bottom: 0;
-}
-.filter-row .form-group {
-    margin-bottom: 0.5rem;
-}
-@media (min-width: 960px) {
-    .filter-row .form-group {
+    .analytics-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+
+    .filter-row {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-row .columns {
         margin-bottom: 0;
     }
-}
-.metric-card {
-    text-align: center;
-    padding: 1.5rem;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    margin-bottom: 1rem;
-}
-.metric-number {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    line-height: 1;
-}
-.metric-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-.chart-container {
-    position: relative;
-    height: 300px;
-    margin: 1rem 0;
-}
-.health-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #f1f3f4;
-}
-.health-item:last-child {
-    border-bottom: none;
-}
-.threat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #f1f3f4;
-    background: rgba(255,0,0,0.02);
-}
+
+    .filter-row .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    @media (min-width: 960px) {
+        .filter-row .form-group {
+            margin-bottom: 0;
+        }
+    }
+
+    .metric-card {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .metric-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 1rem 0;
+    }
+
+    .health-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .health-item:last-child {
+        border-bottom: none;
+    }
+
+    .threat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f3f4;
+        background: rgba(255, 0, 0, 0.02);
+    }
 </style>
 
 <!-- Include Chart.js -->
@@ -136,7 +149,7 @@ function getHealthBadge($category, $label) {
                         <select class="form-select" id="domain" name="domain">
                             <option value="">All Domains</option>
                             <?php foreach ($this->data['domains'] as $domain): ?>
-                                <option value="<?= htmlspecialchars($domain['domain']) ?>" 
+                                <option value="<?= htmlspecialchars($domain['domain']) ?>"
                                     <?= $this->data['filters']['domain'] === $domain['domain'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($domain['domain']) ?>
                                 </option>
@@ -144,12 +157,12 @@ function getHealthBadge($category, $label) {
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="column col-12 col-md-3">
                     <div class="form-group">
                         <label class="form-label" for="start_date">Start Date</label>
                         <input type="date" class="form-input" id="start_date" name="start_date"
-                               value="<?= htmlspecialchars($this->data['filters']['start_date']) ?>">
+                            value="<?= htmlspecialchars($this->data['filters']['start_date']) ?>">
                     </div>
                 </div>
 
@@ -157,7 +170,7 @@ function getHealthBadge($category, $label) {
                     <div class="form-group">
                         <label class="form-label" for="end_date">End Date</label>
                         <input type="date" class="form-input" id="end_date" name="end_date"
-                               value="<?= htmlspecialchars($this->data['filters']['end_date']) ?>">
+                            value="<?= htmlspecialchars($this->data['filters']['end_date']) ?>">
                     </div>
                 </div>
 
@@ -311,121 +324,119 @@ function getHealthBadge($category, $label) {
 </div>
 
 <script>
-// Prepare data for charts
-const trendData = <?= json_encode($this->data['trend_data']) ?>;
-const complianceData = <?= json_encode($this->data['compliance_data']) ?>;
+    // Prepare data for charts
+    const trendData = <?= json_encode($this->data['trend_data']) ?>;
+    const complianceData = <?= json_encode($this->data['compliance_data']) ?>;
 
-// Volume Trends Chart
-const volumeCtx = document.getElementById('volumeChart').getContext('2d');
-const volumeChart = new Chart(volumeCtx, {
-    type: 'line',
-    data: {
-        labels: trendData.map(d => d.date),
-        datasets: [
-            {
-                label: 'Total Volume',
-                data: trendData.map(d => d.total_volume || 0),
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                fill: true,
-                tension: 0.4
-            },
-            {
-                label: 'Passed',
-                data: trendData.map(d => d.passed_count || 0),
-                borderColor: '#27d267',
-                backgroundColor: 'rgba(39, 210, 103, 0.1)',
-                fill: false,
-                tension: 0.4
-            },
-            {
-                label: 'Quarantined',
-                data: trendData.map(d => d.quarantined_count || 0),
-                borderColor: '#ffb82c',
-                backgroundColor: 'rgba(255, 184, 44, 0.1)',
-                fill: false,
-                tension: 0.4
-            },
-            {
-                label: 'Rejected',
-                data: trendData.map(d => d.rejected_count || 0),
-                borderColor: '#e85656',
-                backgroundColor: 'rgba(232, 86, 86, 0.1)',
-                fill: false,
-                tension: 0.4
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
+    // Volume Trends Chart
+    const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+    const volumeChart = new Chart(volumeCtx, {
+        type: 'line',
+        data: {
+            labels: trendData.map(d => d.date),
+            datasets: [{
+                    label: 'Total Volume',
+                    data: trendData.map(d => d.total_volume || 0),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Passed',
+                    data: trendData.map(d => d.passed_count || 0),
+                    borderColor: '#27d267',
+                    backgroundColor: 'rgba(39, 210, 103, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Quarantined',
+                    data: trendData.map(d => d.quarantined_count || 0),
+                    borderColor: '#ffb82c',
+                    backgroundColor: 'rgba(255, 184, 44, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Rejected',
+                    data: trendData.map(d => d.rejected_count || 0),
+                    borderColor: '#e85656',
+                    backgroundColor: 'rgba(232, 86, 86, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
         },
-        scales: {
-            y: {
-                beginAtZero: true
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
-    }
-});
+    });
 
-// Compliance Trends Chart
-const complianceCtx = document.getElementById('complianceChart').getContext('2d');
-const complianceChart = new Chart(complianceCtx, {
-    type: 'line',
-    data: {
-        labels: complianceData.map(d => d.date),
-        datasets: [
-            {
-                label: 'DMARC Compliance',
-                data: complianceData.map(d => d.dmarc_compliance || 0),
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                fill: false,
-                tension: 0.4
-            },
-            {
-                label: 'DKIM Compliance',
-                data: complianceData.map(d => d.dkim_compliance || 0),
-                borderColor: '#27d267',
-                backgroundColor: 'rgba(39, 210, 103, 0.1)',
-                fill: false,
-                tension: 0.4
-            },
-            {
-                label: 'SPF Compliance',
-                data: complianceData.map(d => d.spf_compliance || 0),
-                borderColor: '#ffb82c',
-                backgroundColor: 'rgba(255, 184, 44, 0.1)',
-                fill: false,
-                tension: 0.4
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
+    // Compliance Trends Chart
+    const complianceCtx = document.getElementById('complianceChart').getContext('2d');
+    const complianceChart = new Chart(complianceCtx, {
+        type: 'line',
+        data: {
+            labels: complianceData.map(d => d.date),
+            datasets: [{
+                    label: 'DMARC Compliance',
+                    data: complianceData.map(d => d.dmarc_compliance || 0),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'DKIM Compliance',
+                    data: complianceData.map(d => d.dkim_compliance || 0),
+                    borderColor: '#27d267',
+                    backgroundColor: 'rgba(39, 210, 103, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'SPF Compliance',
+                    data: complianceData.map(d => d.spf_compliance || 0),
+                    borderColor: '#ffb82c',
+                    backgroundColor: 'rgba(255, 184, 44, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100,
-                ticks: {
-                    callback: function(value) {
-                        return value + '%';
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
                     }
                 }
             }
         }
-    }
-});
+    });
 </script>
 
 <?php require 'partials/footer.php'; ?>

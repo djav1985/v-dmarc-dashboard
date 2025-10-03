@@ -1,250 +1,291 @@
 <!DOCTYPE html>
 <html lang="en-US">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
-    <style>
-        .navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e9ecef;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            padding: 0.5rem 1rem;
-        }
-        .navbar-section {
-            display: flex;
-            align-items: center;
-        }
-        .navbar-section.navbar-center {
-            flex: 1;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-        }
-        .navbar-brand {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #495057;
-            margin-right: 2rem;
-        }
-        .nav-link {
-            padding: 0.4rem 0.8rem;
-            margin: 0 0.1rem;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            transition: background-color 0.2s;
-        }
-        .nav-link:hover {
-            background-color: #f8f9fa;
-        }
-        .filter-row {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .filter-row .columns {
-            margin-bottom: 0;
-        }
-        .filter-row .form-group {
-            margin-bottom: 0.5rem;
-        }
-        @media (min-width: 960px) {
-            .filter-row .form-group {
-                margin-bottom: 0;
-            }
-        }
-        @media (max-width: 960px) {
-            .navbar-section.navbar-center {
-                display: none;
-            }
-            .navbar-brand {
-                margin-right: 1rem;
-                font-size: 1rem;
-            }
-        }
-        @media (max-width: 480px) {
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css" />
+        <style>
             .navbar {
-                padding: 0.25rem 0.5rem;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+                border-bottom: 1px solid #e9ecef;
+                background-color: #ffffff;
+                padding: 0.5rem 1rem;
+            }
+            .navbar-section {
+                display: flex;
+                align-items: center;
+            }
+            .navbar-section.navbar-center {
+                flex: 1;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.25rem;
             }
             .navbar-brand {
+                margin-right: 2rem;
+                color: #495057;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+            .nav-link {
+                transition: background-color 0.2s;
+                margin: 0 0.1rem;
+                border-radius: 4px;
+                padding: 0.4rem 0.8rem;
                 font-size: 0.9rem;
             }
-        }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: #f8f9fa; 
-        }
-        main { 
-            min-height: calc(100vh - 120px); 
-            padding: 1rem 0; 
-        }
-    </style>
-    <title>DMARC Dashboard - UI Fixes Demo</title>
-</head>
-<body>
-    <header class="navbar">
-        <section class="navbar-section">
-            <a class="navbar-brand" href="/home">
-                <i class="icon icon-mail mr-1 text-primary"></i>
-                DMARC Dashboard
-            </a>
-        </section>
-        
-        <section class="navbar-section navbar-center">
-            <a class="btn btn-link nav-link" href="/home">
-                <i class="icon icon-home"></i> Dashboard
-            </a>
-            <a class="btn btn-link nav-link" href="/reports">
-                <i class="icon icon-list"></i> Reports
-            </a>
-            <a class="btn btn-link nav-link" href="/analytics">
-                <i class="icon icon-bookmark"></i> Analytics
-            </a>
-            <a class="btn btn-link nav-link" href="/domain-groups">
-                <i class="icon icon-people"></i> Groups
-            </a>
-            <a class="btn btn-link nav-link" href="/alerts">
-                <i class="icon icon-flag"></i> Alerts
-            </a>
-            <a class="btn btn-link nav-link" href="/reports-management">
-                <i class="icon icon-docs"></i> PDF Reports
-            </a>
-            <a class="btn btn-link nav-link" href="/upload">
-                <i class="icon icon-upload"></i> Upload
-            </a>
-            <a class="btn btn-link nav-link" href="/imap">
-                <i class="icon icon-mail"></i> IMAP
-            </a>
-        </section>
-        
-        <section class="navbar-section">
-            <div class="dropdown dropdown-right">
-                <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
-                    <i class="icon icon-people"></i>
-                    admin
-                    <i class="icon icon-caret"></i>
+            .nav-link:hover {
+                background-color: #f8f9fa;
+            }
+            .filter-row {
+                margin-bottom: 1.5rem;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                background: #f8f9fa;
+                padding: 1.5rem;
+            }
+            .filter-row .columns {
+                margin-bottom: 0;
+            }
+            .filter-row .form-group {
+                margin-bottom: 0.5rem;
+            }
+            @media (min-width: 960px) {
+                .filter-row .form-group {
+                    margin-bottom: 0;
+                }
+            }
+            @media (max-width: 960px) {
+                .navbar-section.navbar-center {
+                    display: none;
+                }
+                .navbar-brand {
+                    margin-right: 1rem;
+                    font-size: 1rem;
+                }
+            }
+            @media (max-width: 480px) {
+                .navbar {
+                    padding: 0.25rem 0.5rem;
+                }
+                .navbar-brand {
+                    font-size: 0.9rem;
+                }
+            }
+            body {
+                background-color: #f8f9fa;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            }
+            main {
+                padding: 1rem 0;
+                min-height: calc(100vh - 120px);
+            }
+        </style>
+        <title>DMARC Dashboard - UI Fixes Demo</title>
+    </head>
+    <body>
+        <header class="navbar">
+            <section class="navbar-section">
+                <a class="navbar-brand" href="/home">
+                    <i class="icon icon-mail mr-1 text-primary"></i>
+                    DMARC Dashboard
                 </a>
-                <ul class="menu">
-                    <li class="menu-item">
-                        <button class="btn btn-link btn-sm text-left">
-                            <i class="icon icon-shutdown"></i> Logout
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </section>
-    </header>
-    
-    <main class="container grid-lg">
-        <div class="columns">
-            <div class="column col-12">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h2>
-                        <i class="icon icon-2x icon-bookmark text-primary mr-2"></i>
-                        Analytics Dashboard
-                    </h2>
-                    <div class="text-gray">
-                        2023-09-28 to 2023-10-02
+            </section>
+
+            <section class="navbar-section navbar-center">
+                <a class="btn btn-link nav-link" href="/home"> <i class="icon icon-home"></i> Dashboard </a>
+                <a class="btn btn-link nav-link" href="/reports"> <i class="icon icon-list"></i> Reports </a>
+                <a class="btn btn-link nav-link" href="/analytics"> <i class="icon icon-bookmark"></i> Analytics </a>
+                <a class="btn btn-link nav-link" href="/domain-groups"> <i class="icon icon-people"></i> Groups </a>
+                <a class="btn btn-link nav-link" href="/alerts"> <i class="icon icon-flag"></i> Alerts </a>
+                <a class="btn btn-link nav-link" href="/reports-management">
+                    <i class="icon icon-docs"></i> PDF Reports
+                </a>
+                <a class="btn btn-link nav-link" href="/upload"> <i class="icon icon-upload"></i> Upload </a>
+                <a class="btn btn-link nav-link" href="/imap"> <i class="icon icon-mail"></i> IMAP </a>
+            </section>
+
+            <section class="navbar-section">
+                <div class="dropdown dropdown-right">
+                    <a href="#" class="btn btn-link dropdown-toggle" tabindex="0">
+                        <i class="icon icon-people"></i>
+                        admin
+                        <i class="icon icon-caret"></i>
+                    </a>
+                    <ul class="menu">
+                        <li class="menu-item">
+                            <button class="btn btn-link btn-sm text-left">
+                                <i class="icon icon-shutdown"></i> Logout
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </header>
+
+        <main class="container grid-lg">
+            <div class="columns">
+                <div class="column col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2>
+                            <i class="icon icon-2x icon-bookmark text-primary mr-2"></i>
+                            Analytics Dashboard
+                        </h2>
+                        <div class="text-gray">2023-09-28 to 2023-10-02</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Improved Filter Form -->
-        <div class="columns">
-            <div class="column col-12">
-                <form method="POST" action="/analytics" class="filter-row">
-                    <div class="columns">
-                        <div class="column col-6 col-md-3">
-                            <div class="form-group">
-                                <label class="form-label" for="domain">Domain</label>
-                                <select class="form-select" id="domain" name="domain">
-                                    <option value="">All Domains</option>
-                                    <option value="example.com">example.com</option>
-                                    <option value="testdomain.org">testdomain.org</option>
-                                    <option value="mydomain.net">mydomain.net</option>
-                                </select>
+            <!-- Improved Filter Form -->
+            <div class="columns">
+                <div class="column col-12">
+                    <form method="POST" action="/analytics" class="filter-row">
+                        <div class="columns">
+                            <div class="column col-6 col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="domain">Domain</label>
+                                    <select class="form-select" id="domain" name="domain">
+                                        <option value="">All Domains</option>
+                                        <option value="example.com">example.com</option>
+                                        <option value="testdomain.org">testdomain.org</option>
+                                        <option value="mydomain.net">mydomain.net</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="column col-6 col-md-3">
-                            <div class="form-group">
-                                <label class="form-label" for="start_date">Start Date</label>
-                                <input type="date" class="form-input" id="start_date" name="start_date" 
-                                       value="2023-09-28">
+
+                            <div class="column col-6 col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="start_date">Start Date</label>
+                                    <input
+                                        type="date"
+                                        class="form-input"
+                                        id="start_date"
+                                        name="start_date"
+                                        value="2023-09-28"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="column col-6 col-md-3">
-                            <div class="form-group">
-                                <label class="form-label" for="end_date">End Date</label>
-                                <input type="date" class="form-input" id="end_date" name="end_date" 
-                                       value="2023-10-02">
+
+                            <div class="column col-6 col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="end_date">End Date</label>
+                                    <input
+                                        type="date"
+                                        class="form-input"
+                                        id="end_date"
+                                        name="end_date"
+                                        value="2023-10-02"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="column col-6 col-md-3">
-                            <div class="form-group">
-                                <label class="form-label d-invisible d-md-block">&nbsp;</label>
-                                <div class="d-flex">
-                                    <button type="submit" class="btn btn-primary mr-2">
-                                        <i class="icon icon-search"></i> Update
-                                    </button>
-                                    <a href="/analytics" class="btn btn-link">Reset</a>
+
+                            <div class="column col-6 col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label d-invisible d-md-block">&nbsp;</label>
+                                    <div class="d-flex">
+                                        <button type="submit" class="btn btn-primary mr-2">
+                                            <i class="icon icon-search"></i> Update
+                                        </button>
+                                        <a href="/analytics" class="btn btn-link">Reset</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Demo Content -->
+            <div class="columns">
+                <div class="column col-3">
+                    <div
+                        class="card text-center"
+                        style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                        "
+                    >
+                        <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem">4,107</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9">Total Messages</div>
                     </div>
-                </form>
+                </div>
+                <div class="column col-3">
+                    <div
+                        class="card text-center"
+                        style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                        "
+                    >
+                        <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem">3</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9">Monitored Domains</div>
+                    </div>
+                </div>
+                <div class="column col-3">
+                    <div
+                        class="card text-center"
+                        style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                        "
+                    >
+                        <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem">4</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9">Reports Processed</div>
+                    </div>
+                </div>
+                <div class="column col-3">
+                    <div
+                        class="card text-center"
+                        style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                        "
+                    >
+                        <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem">93.5%</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9">Overall Pass Rate</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Demo Content -->
-        <div class="columns">
-            <div class="column col-3">
-                <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">4,107</div>
-                    <div style="font-size: 0.9rem; opacity: 0.9;">Total Messages</div>
+            <div class="columns">
+                <div class="column col-12">
+                    <h3>Fixed UI Issues</h3>
+                    <div class="card p-2">
+                        <ul>
+                            <li>
+                                <strong>✅ Header Layout Fixed:</strong> Navigation items now properly aligned in one
+                                centered row with brand on left, user menu on right
+                            </li>
+                            <li>
+                                <strong>✅ Responsive Navigation:</strong> Navigation collapses gracefully on smaller
+                                screens
+                            </li>
+                            <li>
+                                <strong>✅ Filter Layout Improved:</strong> Filters now display in a single row on
+                                desktop, drop to responsive columns on mobile
+                            </li>
+                            <li>
+                                <strong>✅ Professional Spacing:</strong> Proper padding, margins, and visual hierarchy
+                                throughout
+                            </li>
+                            <li>
+                                <strong>✅ Consistent Design:</strong> All pages now use the same improved layout
+                                patterns
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <div class="column col-3">
-                <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">3</div>
-                    <div style="font-size: 0.9rem; opacity: 0.9;">Monitored Domains</div>
-                </div>
-            </div>
-            <div class="column col-3">
-                <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">4</div>
-                    <div style="font-size: 0.9rem; opacity: 0.9;">Reports Processed</div>
-                </div>
-            </div>
-            <div class="column col-3">
-                <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">93.5%</div>
-                    <div style="font-size: 0.9rem; opacity: 0.9;">Overall Pass Rate</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="columns">
-            <div class="column col-12">
-                <h3>Fixed UI Issues</h3>
-                <div class="card p-2">
-                    <ul>
-                        <li><strong>✅ Header Layout Fixed:</strong> Navigation items now properly aligned in one centered row with brand on left, user menu on right</li>
-                        <li><strong>✅ Responsive Navigation:</strong> Navigation collapses gracefully on smaller screens</li>
-                        <li><strong>✅ Filter Layout Improved:</strong> Filters now display in a single row on desktop, drop to responsive columns on mobile</li>
-                        <li><strong>✅ Professional Spacing:</strong> Proper padding, margins, and visual hierarchy throughout</li>
-                        <li><strong>✅ Consistent Design:</strong> All pages now use the same improved layout patterns</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </main>
-</body>
+        </main>
+    </body>
 </html>

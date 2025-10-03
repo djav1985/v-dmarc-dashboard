@@ -141,7 +141,7 @@ class SavedReportFiltersController extends Controller
     /**
      * @param array<string, scalar|array>|null $extra
      */
-    private function redirectToReports(array $extra = null): void
+    private function redirectToReports(?array $extra = null): void
     {
         $query = '';
         if ($extra !== null && !empty($extra)) {

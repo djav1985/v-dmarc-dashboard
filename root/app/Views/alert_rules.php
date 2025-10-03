@@ -20,16 +20,17 @@ function alertSeverityBadge(string $severity): string
 ?>
 
 <style>
-.rules-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-.rules-table td {
-    vertical-align: top;
-}
+    .rules-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .rules-table td {
+        vertical-align: top;
+    }
 </style>
 
 <div class="columns">

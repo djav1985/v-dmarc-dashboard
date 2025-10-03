@@ -27,9 +27,7 @@ class SessionManager
     /**
      * Private constructor to prevent direct instantiation.
      */
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Retrieve the singleton instance.

@@ -43,13 +43,13 @@
             </tr>
         </thead>
         <tbody>
-        <?php foreach (array_slice($digest['domains'], 0, 10) as $domain): ?>
-            <tr>
-                <td><?= htmlspecialchars($domain['domain'] ?? '') ?></td>
-                <td><?= number_format((int) ($domain['total_volume'] ?? 0)) ?></td>
-                <td><?= isset($domain['pass_rate']) ? htmlspecialchars((string) $domain['pass_rate']) . '%' : 'n/a' ?></td>
-            </tr>
-        <?php endforeach; ?>
+            <?php foreach (array_slice($digest['domains'], 0, 10) as $domain): ?>
+                <tr>
+                    <td><?= htmlspecialchars($domain['domain'] ?? '') ?></td>
+                    <td><?= number_format((int) ($domain['total_volume'] ?? 0)) ?></td>
+                    <td><?= isset($domain['pass_rate']) ? htmlspecialchars((string) $domain['pass_rate']) . '%' : 'n/a' ?></td>
+                </tr>
+            <?php endforeach; ?>
         </tbody>
     </table>
 <?php endif; ?>
@@ -65,13 +65,13 @@
             </tr>
         </thead>
         <tbody>
-        <?php foreach ($digest['threats'] as $threat): ?>
-            <tr>
-                <td><?= htmlspecialchars($threat['source_ip'] ?? '') ?></td>
-                <td><?= number_format((int) ($threat['threat_volume'] ?? 0)) ?></td>
-                <td><?= number_format((int) ($threat['affected_domains'] ?? 0)) ?></td>
-            </tr>
-        <?php endforeach; ?>
+            <?php foreach ($digest['threats'] as $threat): ?>
+                <tr>
+                    <td><?= htmlspecialchars($threat['source_ip'] ?? '') ?></td>
+                    <td><?= number_format((int) ($threat['threat_volume'] ?? 0)) ?></td>
+                    <td><?= number_format((int) ($threat['affected_domains'] ?? 0)) ?></td>
+                </tr>
+            <?php endforeach; ?>
         </tbody>
     </table>
 <?php endif; ?>

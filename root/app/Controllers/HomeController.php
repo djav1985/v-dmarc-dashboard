@@ -38,6 +38,5 @@ class HomeController extends Controller
         }
         header('Location: /home');
         exit;
-
     }
 }

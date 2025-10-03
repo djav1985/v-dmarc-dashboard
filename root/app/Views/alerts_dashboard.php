@@ -13,78 +13,97 @@
 
 require 'partials/header.php';
 
-function getSeverityClass($severity) {
+function getSeverityClass($severity)
+{
     switch ($severity) {
-        case 'critical': return 'label-error';
-        case 'high': return 'label-warning';
-        case 'medium': return 'label-primary';
-        case 'low': return 'label-secondary';
-        default: return 'label-secondary';
+        case 'critical':
+            return 'label-error';
+        case 'high':
+            return 'label-warning';
+        case 'medium':
+            return 'label-primary';
+        case 'low':
+            return 'label-secondary';
+        default:
+            return 'label-secondary';
     }
 }
 
-function getIncidentStatusClass($status) {
+function getIncidentStatusClass($status)
+{
     switch ($status) {
-        case 'open': return 'label-error';
-        case 'acknowledged': return 'label-warning';
-        case 'resolved': return 'label-success';
-        default: return 'label-secondary';
+        case 'open':
+            return 'label-error';
+        case 'acknowledged':
+            return 'label-warning';
+        case 'resolved':
+            return 'label-success';
+        default:
+            return 'label-secondary';
     }
 }
 ?>
 
 <style>
-.alert-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-.stat-card {
-    text-align: center;
-    padding: 1.5rem;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-.stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-.incident-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #f1f3f4;
-    background: rgba(220, 53, 69, 0.05);
-}
-.incident-item:last-child {
-    border-bottom: none;
-}
-.rule-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #f1f3f4;
-}
-.rule-item:last-child {
-    border-bottom: none;
-}
+    .alert-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .incident-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f3f4;
+        background: rgba(220, 53, 69, 0.05);
+    }
+
+    .incident-item:last-child {
+        border-bottom: none;
+    }
+
+    .rule-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .rule-item:last-child {
+        border-bottom: none;
+    }
 </style>
 
 <div class="columns">
@@ -142,7 +161,7 @@ function getIncidentStatusClass($status) {
                 </h4>
                 <a href="/alerts?action=incidents" class="btn btn-link btn-sm">View All</a>
             </div>
-            
+
             <?php if (empty($this->data['incidents'])): ?>
                 <div class="empty">
                     <div class="empty-icon">
@@ -162,7 +181,8 @@ function getIncidentStatusClass($status) {
                         <div class="text-right">
                             <span class="label <?= getSeverityClass($incident['severity']) ?>"><?= ucfirst($incident['severity']) ?></span>
                             <br><span class="label <?= getIncidentStatusClass($incident['status']) ?>"><?= ucfirst($incident['status']) ?></span>
-                            <br><form method="POST" action="/alerts" style="display: inline; margin-top: 0.5rem;">
+                            <br>
+                            <form method="POST" action="/alerts" style="display: inline; margin-top: 0.5rem;">
                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                 <input type="hidden" name="action" value="acknowledge_incident">
                                 <input type="hidden" name="incident_id" value="<?= $incident['id'] ?>">
@@ -176,7 +196,7 @@ function getIncidentStatusClass($status) {
             <?php endif; ?>
         </div>
     </div>
-    
+
     <!-- Alert Rules Summary -->
     <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="alert-card">
@@ -187,7 +207,7 @@ function getIncidentStatusClass($status) {
                 </h4>
                 <a href="/alerts?action=rules" class="btn btn-link btn-sm">Manage</a>
             </div>
-            
+
             <?php if (empty($this->data['rules'])): ?>
                 <div class="empty">
                     <p class="empty-title">No Rules</p>

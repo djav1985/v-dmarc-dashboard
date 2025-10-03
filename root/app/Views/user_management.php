@@ -16,7 +16,7 @@
         <form method="POST" action="/user-management">
             <input type="hidden" name="action" value="create_user">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-            
+
             <div class="columns">
                 <div class="column col-12 col-md-6">
                     <div class="form-group">
@@ -32,7 +32,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="columns">
                 <div class="column col-12 col-md-4">
                     <div class="form-group">
@@ -101,47 +101,47 @@
                 </thead>
                 <tbody>
                     <?php foreach ($users as $user) : ?>
-                    <tr>
-                        <td><?= htmlspecialchars($user['username']) ?></td>
-                        <td>
-                            <?php
-                            $name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-                            echo htmlspecialchars($name ?: '-');
-                            ?>
-                        </td>
-                        <td><?= htmlspecialchars($user['email'] ?? '-') ?></td>
-                        <td>
-                            <span class="badge badge-primary">
-                                <?= htmlspecialchars($roles[$user['role']] ?? $user['role']) ?>
-                            </span>
-                        </td>
-                        <td>
-                            <?php if ($user['is_active']) : ?>
-                                <span class="badge badge-success">Active</span>
-                            <?php else : ?>
-                                <span class="badge badge-secondary">Inactive</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($user['last_login']) : ?>
-                                <small><?= date('M j, Y H:i', strtotime($user['last_login'])) ?></small>
-                            <?php else : ?>
-                                <small class="text-gray">Never</small>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-primary" onclick="editUser('<?= htmlspecialchars($user['username']) ?>')">
-                                    <i class="icon icon-edit"></i>
-                                </button>
-                                <?php if ($user['username'] !== ($_SESSION['username'] ?? '')) : ?>
-                                <button class="btn btn-sm btn-error" onclick="deleteUser('<?= htmlspecialchars($user['username']) ?>')">
-                                    <i class="icon icon-delete"></i>
-                                </button>
+                        <tr>
+                            <td><?= htmlspecialchars($user['username']) ?></td>
+                            <td>
+                                <?php
+                                $name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+                                echo htmlspecialchars($name ?: '-');
+                                ?>
+                            </td>
+                            <td><?= htmlspecialchars($user['email'] ?? '-') ?></td>
+                            <td>
+                                <span class="badge badge-primary">
+                                    <?= htmlspecialchars($roles[$user['role']] ?? $user['role']) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($user['is_active']) : ?>
+                                    <span class="badge badge-success">Active</span>
+                                <?php else : ?>
+                                    <span class="badge badge-secondary">Inactive</span>
                                 <?php endif; ?>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td>
+                                <?php if ($user['last_login']) : ?>
+                                    <small><?= date('M j, Y H:i', strtotime($user['last_login'])) ?></small>
+                                <?php else : ?>
+                                    <small class="text-gray">Never</small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" onclick="editUser('<?= htmlspecialchars($user['username']) ?>')">
+                                        <i class="icon icon-edit"></i>
+                                    </button>
+                                    <?php if ($user['username'] !== ($_SESSION['username'] ?? '')) : ?>
+                                        <button class="btn btn-sm btn-error" onclick="deleteUser('<?= htmlspecialchars($user['username']) ?>')">
+                                            <i class="icon icon-delete"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -162,7 +162,7 @@
                 <input type="hidden" name="action" value="update_user">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="username" id="edit-username">
-                
+
                 <div class="form-group">
                     <label class="form-label">Role</label>
                     <select class="form-select" name="role" id="edit-role">
@@ -173,13 +173,13 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">
                         <input type="checkbox" name="is_active" id="edit-active" value="1"> Active
                     </label>
                 </div>
-                
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Update User</button>
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
@@ -190,29 +190,29 @@
 </div>
 
 <script>
-function editUser(username) {
-    document.getElementById('edit-username').value = username;
-    document.getElementById('edit-user-modal').classList.add('active');
-}
+    function editUser(username) {
+        document.getElementById('edit-username').value = username;
+        document.getElementById('edit-user-modal').classList.add('active');
+    }
 
-function closeEditModal() {
-    document.getElementById('edit-user-modal').classList.remove('active');
-}
+    function closeEditModal() {
+        document.getElementById('edit-user-modal').classList.remove('active');
+    }
 
-function deleteUser(username) {
-    if (confirm('Are you sure you want to delete user "' + username + '"? This action cannot be undone.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/user-management';
-        form.innerHTML = `
+    function deleteUser(username) {
+        if (confirm('Are you sure you want to delete user "' + username + '"? This action cannot be undone.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/user-management';
+            form.innerHTML = `
             <input type="hidden" name="action" value="delete_user">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <input type="hidden" name="username" value="${username}">
         `;
-        document.body.appendChild(form);
-        form.submit();
+            document.body.appendChild(form);
+            form.submit();
+        }
     }
-}
 </script>
 
 <?php require_once __DIR__ . '/partials/footer.php'; ?>

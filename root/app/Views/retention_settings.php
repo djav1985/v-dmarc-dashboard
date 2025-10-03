@@ -38,8 +38,8 @@ $settings = $this->data['settings'] ?? [];
                             <div class="form-group">
                                 <label class="form-label" for="aggregate_retention">Aggregate reports</label>
                                 <input type="number" min="0" class="form-input" id="aggregate_retention" name="aggregate_reports_retention_days"
-                                       value="<?= htmlspecialchars($settings['aggregate_reports_retention_days'] ?? '') ?>"
-                                       placeholder="e.g. 180">
+                                    value="<?= htmlspecialchars($settings['aggregate_reports_retention_days'] ?? '') ?>"
+                                    placeholder="e.g. 180">
                                 <small class="form-input-hint">Applies to RUA summaries and record details.</small>
                             </div>
                         </div>
@@ -47,8 +47,8 @@ $settings = $this->data['settings'] ?? [];
                             <div class="form-group">
                                 <label class="form-label" for="forensic_retention">Forensic reports</label>
                                 <input type="number" min="0" class="form-input" id="forensic_retention" name="forensic_reports_retention_days"
-                                       value="<?= htmlspecialchars($settings['forensic_reports_retention_days'] ?? '') ?>"
-                                       placeholder="e.g. 90">
+                                    value="<?= htmlspecialchars($settings['forensic_reports_retention_days'] ?? '') ?>"
+                                    placeholder="e.g. 90">
                                 <small class="form-input-hint">Removes detailed failure evidence after the window expires.</small>
                             </div>
                         </div>
@@ -56,8 +56,8 @@ $settings = $this->data['settings'] ?? [];
                             <div class="form-group">
                                 <label class="form-label" for="tls_retention">TLS reports</label>
                                 <input type="number" min="0" class="form-input" id="tls_retention" name="tls_reports_retention_days"
-                                       value="<?= htmlspecialchars($settings['tls_reports_retention_days'] ?? '') ?>"
-                                       placeholder="e.g. 60">
+                                    value="<?= htmlspecialchars($settings['tls_reports_retention_days'] ?? '') ?>"
+                                    placeholder="e.g. 60">
                                 <small class="form-input-hint">Controls SMTP TLS aggregate retention.</small>
                             </div>
                         </div>

@@ -22,6 +22,7 @@ use Doctrine\DBAL\Result;
 use Exception;
 use InvalidArgumentException;
 use App\Core\ErrorManager;
+
 class DatabaseManager
 {
     private static ?DatabaseManager $instance = null;

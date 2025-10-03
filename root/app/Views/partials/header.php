@@ -22,6 +22,7 @@ $brandingVars = $branding->getBrandingVars();
 
 <!DOCTYPE html>
 <html lang="en-US">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,25 +36,26 @@ $brandingVars = $branding->getBrandingVars();
     <script src="/assets/js/header-scripts.js"></script>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <title><?= htmlspecialchars($brandingVars['app_name']) ?></title>
-    
+
     <!-- Custom branding CSS -->
     <style>
         <?= $branding->getCustomCSS() ?>
     </style>
 </head>
+
 <body>
     <header class="navbar">
         <div class="container grid-lg header-inner">
             <section class="navbar-section navbar-branding">
                 <button class="btn btn-link btn-action navbar-toggle" type="button" aria-label="Toggle navigation"
-                        aria-controls="navbarCollapsible" aria-expanded="false">
+                    aria-controls="navbarCollapsible" aria-expanded="false">
                     <i class="icon icon-menu"></i>
                 </button>
                 <a class="navbar-brand" href="/home">
                     <?php if (!empty($brandingVars['app_logo_url'])): ?>
                         <img src="<?= htmlspecialchars($brandingVars['app_logo_url']) ?>"
-                             alt="<?= htmlspecialchars($brandingVars['app_name']) ?>"
-                             style="height: 32px; margin-right: 0.5rem;">
+                            alt="<?= htmlspecialchars($brandingVars['app_name']) ?>"
+                            style="height: 32px; margin-right: 0.5rem;">
                     <?php else: ?>
                         <i class="icon icon-mail mr-1 text-primary"></i>
                     <?php endif; ?>
@@ -69,72 +71,72 @@ $brandingVars = $branding->getBrandingVars();
                         </a>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
-                        <a class="nav-item" href="/reports">
-                            <i class="icon icon-list"></i> Reports
-                        </a>
+                            <a class="nav-item" href="/reports">
+                                <i class="icon icon-list"></i> Reports
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_RETENTION)): ?>
-                        <a class="nav-item" href="/retention-settings">
-                            <i class="icon icon-time"></i> Retention
-                        </a>
+                            <a class="nav-item" href="/retention-settings">
+                                <i class="icon icon-time"></i> Retention
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_ANALYTICS)): ?>
-                        <a class="nav-item" href="/analytics">
-                            <i class="icon icon-bookmark"></i> Analytics
-                        </a>
+                            <a class="nav-item" href="/analytics">
+                                <i class="icon icon-bookmark"></i> Analytics
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_GROUPS)): ?>
-                        <a class="nav-item" href="/domain-groups">
-                            <i class="icon icon-people"></i> Groups
-                        </a>
+                            <a class="nav-item" href="/domain-groups">
+                                <i class="icon icon-people"></i> Groups
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_ALERTS)): ?>
-                        <a class="nav-item" href="/alerts">
-                            <i class="icon icon-flag"></i> Alerts
-                        </a>
-                        <a class="nav-item" href="/email-digests">
-                            <i class="icon icon-mail"></i> Digests
-                        </a>
+                            <a class="nav-item" href="/alerts">
+                                <i class="icon icon-flag"></i> Alerts
+                            </a>
+                            <a class="nav-item" href="/email-digests">
+                                <i class="icon icon-mail"></i> Digests
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_REPORTS)): ?>
-                        <a class="nav-item" href="/reports-management">
-                            <i class="icon icon-docs"></i> PDF Reports
-                        </a>
+                            <a class="nav-item" href="/reports-management">
+                                <i class="icon icon-docs"></i> PDF Reports
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_FORENSIC_REPORTS)): ?>
-                        <a class="nav-item" href="/forensic-reports">
-                            <i class="icon icon-flag"></i> Forensics
-                        </a>
+                            <a class="nav-item" href="/forensic-reports">
+                                <i class="icon icon-flag"></i> Forensics
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_VIEW_TLS_REPORTS)): ?>
-                        <a class="nav-item" href="/tls-reports">
-                            <i class="icon icon-signal"></i> TLS Reports
-                        </a>
+                            <a class="nav-item" href="/tls-reports">
+                                <i class="icon icon-signal"></i> TLS Reports
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_UPLOAD_REPORTS)): ?>
-                        <a class="nav-item" href="/upload">
-                            <i class="icon icon-upload"></i> Upload
-                        </a>
-                        <a class="nav-item" href="/imap">
-                            <i class="icon icon-mail"></i> IMAP
-                        </a>
+                            <a class="nav-item" href="/upload">
+                                <i class="icon icon-upload"></i> Upload
+                            </a>
+                            <a class="nav-item" href="/imap">
+                                <i class="icon icon-mail"></i> IMAP
+                            </a>
                         <?php endif; ?>
 
                         <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_SECURITY)): ?>
-                        <a class="nav-item" href="/audit-logs">
-                            <i class="icon icon-activity"></i> Audit Logs
-                        </a>
-                        <a class="nav-item" href="/blacklist">
-                            <i class="icon icon-shield"></i> Blacklist
-                        </a>
+                            <a class="nav-item" href="/audit-logs">
+                                <i class="icon icon-activity"></i> Audit Logs
+                            </a>
+                            <a class="nav-item" href="/blacklist">
+                                <i class="icon icon-shield"></i> Blacklist
+                            </a>
                         <?php endif; ?>
                     </div>
                 </section>
@@ -159,19 +161,19 @@ $brandingVars = $branding->getBrandingVars();
                                 </a>
                             </li>
                             <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_USERS)): ?>
-                            <li class="menu-item">
-                                <a href="/user-management" class="btn btn-link btn-sm">
-                                    <i class="icon icon-people"></i> User Management
-                                </a>
-                            </li>
+                                <li class="menu-item">
+                                    <a href="/user-management" class="btn btn-link btn-sm">
+                                        <i class="icon icon-people"></i> User Management
+                                    </a>
+                                </li>
                             <?php endif; ?>
 
                             <?php if ($rbac->hasPermission(RBACManager::PERM_MANAGE_SETTINGS)): ?>
-                            <li class="menu-item">
-                                <a href="/branding" class="btn btn-link btn-sm">
-                                    <i class="icon icon-photo"></i> Branding
-                                </a>
-                            </li>
+                                <li class="menu-item">
+                                    <a href="/branding" class="btn btn-link btn-sm">
+                                        <i class="icon icon-photo"></i> Branding
+                                    </a>
+                                </li>
                             <?php endif; ?>
 
                             <li class="divider"></li>
@@ -189,7 +191,7 @@ $brandingVars = $branding->getBrandingVars();
             </div>
         </div>
     </header>
-    
+
     <!-- Message Display Area -->
     <div class="container grid-lg">
         <?php
@@ -200,5 +202,5 @@ $brandingVars = $branding->getBrandingVars();
             </div>
         <?php endforeach; ?>
     </div>
-    
-    <main class="container grid-lg"><?php 
+
+    <main class="container grid-lg"><?php

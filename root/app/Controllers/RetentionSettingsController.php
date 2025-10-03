@@ -10,6 +10,11 @@ use App\Utilities\DataRetention;
 
 class RetentionSettingsController extends Controller
 {
+    /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
     public function handleRequest(): void
     {
         RBACManager::getInstance()->requirePermission(RBACManager::PERM_MANAGE_RETENTION);

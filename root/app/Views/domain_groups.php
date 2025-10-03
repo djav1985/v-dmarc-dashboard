@@ -15,45 +15,50 @@ require 'partials/header.php';
 ?>
 
 <style>
-.group-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.domain-tag {
-    display: inline-block;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    padding: 0.25rem 0.5rem;
-    margin: 0.25rem;
-    font-size: 0.875rem;
-}
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-.stat-item {
-    text-align: center;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 6px;
-}
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #495057;
-}
-.stat-label {
-    font-size: 0.875rem;
-    color: #6c757d;
-    margin-top: 0.25rem;
-}
+    .group-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .domain-tag {
+        display: inline-block;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        margin: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
 </style>
 
 <div class="columns">
@@ -113,12 +118,12 @@ require 'partials/header.php';
                             </ul>
                         </div>
                     </div>
-                    
+
                     <!-- Group Domains -->
                     <div class="mt-2">
-                        <?php 
+                        <?php
                         $groupDomains = \App\Models\DomainGroup::getGroupDomains($group['id']);
-                        if (!empty($groupDomains)): 
+                        if (!empty($groupDomains)):
                         ?>
                             <strong>Domains:</strong>
                             <div class="mt-1">
@@ -143,7 +148,7 @@ require 'partials/header.php';
                     </div>
 
                     <!-- Group Analytics -->
-                    <?php 
+                    <?php
                     $analytics = null;
                     foreach ($this->data['group_analytics'] as $ga) {
                         if ($ga['id'] == $group['id']) {
@@ -151,7 +156,7 @@ require 'partials/header.php';
                             break;
                         }
                     }
-                    if ($analytics && $analytics['total_volume'] > 0): 
+                    if ($analytics && $analytics['total_volume'] > 0):
                     ?>
                         <div class="stats-grid">
                             <div class="stat-item">
@@ -172,7 +177,7 @@ require 'partials/header.php';
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-    
+
     <!-- Unassigned Domains Sidebar -->
     <div class="column col-12 col-lg-4 mt-2 mt-lg-0">
         <div class="card">
@@ -209,19 +214,19 @@ require 'partials/header.php';
             <form method="POST" action="/domain-groups">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="action" value="create_group">
-                
+
                 <div class="form-group">
                     <label class="form-label" for="group_name">Group Name</label>
-                    <input type="text" class="form-input" id="group_name" name="group_name" required 
-                           placeholder="e.g., Corporate, Marketing, Development">
+                    <input type="text" class="form-input" id="group_name" name="group_name" required
+                        placeholder="e.g., Corporate, Marketing, Development">
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="group_description">Description (Optional)</label>
                     <textarea class="form-input" id="group_description" name="group_description" rows="3"
-                              placeholder="Brief description of this group's purpose"></textarea>
+                        placeholder="Brief description of this group's purpose"></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Create Group</button>
                     <a href="#close" class="btn btn-link">Cancel</a>
@@ -244,7 +249,7 @@ require 'partials/header.php';
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                 <input type="hidden" name="action" value="assign_domain">
                 <input type="hidden" id="assign_group_id" name="group_id" value="">
-                
+
                 <div class="form-group">
                     <label class="form-label" for="assign_domain_id">Select Domain</label>
                     <select class="form-select" id="assign_domain_id" name="domain_id" required>
@@ -254,7 +259,7 @@ require 'partials/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="assign_group_select">Select Group</label>
                     <select class="form-select" id="assign_group_select" name="group_id_select" onchange="updateGroupId(this.value)">
@@ -264,7 +269,7 @@ require 'partials/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Assign Domain</button>
                     <a href="#close" class="btn btn-link">Cancel</a>
@@ -275,42 +280,42 @@ require 'partials/header.php';
 </div>
 
 <script>
-function showAssignModal(groupId = 0, groupName = '', domainId = 0) {
-    const modal = document.getElementById('assign-domain-modal');
-    const groupIdField = document.getElementById('assign_group_id');
-    const groupSelect = document.getElementById('assign_group_select');
-    const domainSelect = document.getElementById('assign_domain_id');
-    
-    // Set group if specified
-    if (groupId > 0) {
-        groupIdField.value = groupId;
-        groupSelect.value = groupId;
-        groupSelect.disabled = true;
-    } else {
-        groupIdField.value = '';
-        groupSelect.value = '';
-        groupSelect.disabled = false;
-    }
-    
-    // Set domain if specified
-    if (domainId > 0) {
-        domainSelect.value = domainId;
-    }
-    
-    modal.classList.add('active');
-}
+    function showAssignModal(groupId = 0, groupName = '', domainId = 0) {
+        const modal = document.getElementById('assign-domain-modal');
+        const groupIdField = document.getElementById('assign_group_id');
+        const groupSelect = document.getElementById('assign_group_select');
+        const domainSelect = document.getElementById('assign_domain_id');
 
-function updateGroupId(groupId) {
-    document.getElementById('assign_group_id').value = groupId;
-}
+        // Set group if specified
+        if (groupId > 0) {
+            groupIdField.value = groupId;
+            groupSelect.value = groupId;
+            groupSelect.disabled = true;
+        } else {
+            groupIdField.value = '';
+            groupSelect.value = '';
+            groupSelect.disabled = false;
+        }
 
-// Close modals when clicking close links
-document.addEventListener('click', function(e) {
-    if (e.target.getAttribute('href') === '#close') {
-        e.preventDefault();
-        e.target.closest('.modal').classList.remove('active');
+        // Set domain if specified
+        if (domainId > 0) {
+            domainSelect.value = domainId;
+        }
+
+        modal.classList.add('active');
     }
-});
+
+    function updateGroupId(groupId) {
+        document.getElementById('assign_group_id').value = groupId;
+    }
+
+    // Close modals when clicking close links
+    document.addEventListener('click', function(e) {
+        if (e.target.getAttribute('href') === '#close') {
+            e.preventDefault();
+            e.target.closest('.modal').classList.remove('active');
+        }
+    });
 </script>
 
 <?php require 'partials/footer.php'; ?>

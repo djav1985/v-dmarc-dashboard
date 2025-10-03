@@ -5,6 +5,11 @@
     <file>unit</file>
     <exclude-pattern>root/vendor/</exclude-pattern>
     <rule ref="PSR12"/>
+
+    <!-- Globally ignore line length warnings -->
+    <rule ref="Generic.Files.LineLength">
+        <exclude name="Generic.Files.LineLength.TooLong"/>
+    </rule>
     
     <!-- Allow mixed declarations and side effects in test files -->
     <rule ref="PSR1.Files.SideEffects">

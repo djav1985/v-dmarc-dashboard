@@ -18,6 +18,11 @@ use App\Utilities\ReportExport;
 class ReportsController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+    /**
      * Display reports listing with filters and sorting
      */
     public function handleRequest(): void

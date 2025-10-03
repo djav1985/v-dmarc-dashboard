@@ -190,29 +190,116 @@ if (!function_exists('renderSection')) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title><?= htmlspecialchars($reportTitle) ?></title>
     <style>
-        body { font-family: 'DejaVu Sans', Arial, sans-serif; color: #1f2933; margin: 0; padding: 32px; }
-        h1 { margin-top: 0; font-size: 28px; color: #1b2a4b; }
-        h2 { border-bottom: 2px solid #dfe3ea; padding-bottom: 6px; margin-top: 32px; color: #33415c; }
-        h3 { margin-top: 24px; color: #3d5a80; }
-        .meta { margin-top: 8px; color: #52606d; font-size: 14px; }
-        .kv-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        .kv-table th { text-align: left; width: 35%; padding: 6px; background: #f0f4f8; }
-        .kv-table td { padding: 6px; border-bottom: 1px solid #e4e7eb; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-        .data-table th { background: #d9e2ec; text-align: left; padding: 6px; }
-        .data-table td { border-bottom: 1px solid #e4e7eb; padding: 6px; }
-        .empty { margin: 12px 0; color: #9aa5b1; font-style: italic; }
-        .badge { display: inline-block; padding: 2px 6px; background: #243b53; color: #fff; border-radius: 4px; font-size: 10px; margin-top: 4px; }
-        .recommendations { list-style: none; padding-left: 0; }
-        .recommendations li { margin-bottom: 12px; }
-        .description { margin-top: 4px; }
-        .unknown { background: #f7fafc; padding: 12px; border-radius: 6px; font-size: 12px; }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            color: #1f2933;
+            margin: 0;
+            padding: 32px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 28px;
+            color: #1b2a4b;
+        }
+
+        h2 {
+            border-bottom: 2px solid #dfe3ea;
+            padding-bottom: 6px;
+            margin-top: 32px;
+            color: #33415c;
+        }
+
+        h3 {
+            margin-top: 24px;
+            color: #3d5a80;
+        }
+
+        .meta {
+            margin-top: 8px;
+            color: #52606d;
+            font-size: 14px;
+        }
+
+        .kv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .kv-table th {
+            text-align: left;
+            width: 35%;
+            padding: 6px;
+            background: #f0f4f8;
+        }
+
+        .kv-table td {
+            padding: 6px;
+            border-bottom: 1px solid #e4e7eb;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: #d9e2ec;
+            text-align: left;
+            padding: 6px;
+        }
+
+        .data-table td {
+            border-bottom: 1px solid #e4e7eb;
+            padding: 6px;
+        }
+
+        .empty {
+            margin: 12px 0;
+            color: #9aa5b1;
+            font-style: italic;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #243b53;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .recommendations {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .recommendations li {
+            margin-bottom: 12px;
+        }
+
+        .description {
+            margin-top: 4px;
+        }
+
+        .unknown {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
     </style>
 </head>
+
 <body>
     <h1><?= htmlspecialchars($reportTitle) ?></h1>
     <div class="meta">
@@ -222,8 +309,8 @@ if (!function_exists('renderSection')) {
             <strong>Filters:</strong>
             <?php if (!empty($filters['domain'])): ?>Domain = <?= htmlspecialchars((string) $filters['domain']) ?><?php endif; ?>
             <?php if (!empty($filters['group'])): ?> Group ID = <?= htmlspecialchars((string) $filters['group']) ?><?php endif; ?><br />
-        <?php endif; ?>
-        <strong>Generated At:</strong> <?= date('Y-m-d H:i:s') ?>
+            <?php endif; ?>
+            <strong>Generated At:</strong> <?= date('Y-m-d H:i:s') ?>
     </div>
 
     <?php foreach ($sections as $key => $data): ?>
@@ -231,4 +318,5 @@ if (!function_exists('renderSection')) {
         <?= renderSection((string) $key, is_array($data) ? $data : []) ?>
     <?php endforeach; ?>
 </body>
+
 </html>

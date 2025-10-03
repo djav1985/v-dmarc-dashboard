@@ -31,7 +31,7 @@ class ImapIngestionService
         $port = defined('IMAP_PORT') ? IMAP_PORT : 143;
         $ssl = defined('IMAP_SSL') ? IMAP_SSL : false;
         $mailbox = defined('IMAP_MAILBOX') ? IMAP_MAILBOX : 'INBOX';
-        $validateCertConfig = defined('IMAP_VALIDATE_CERT') ? IMAP_VALIDATE_CERT : true;
+        $validateCertConfig = defined('IMAP_VALIDATE_CERT') ? constant('IMAP_VALIDATE_CERT') : true;
 
         $sslEnabled = is_bool($ssl)
             ? $ssl

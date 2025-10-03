@@ -14,21 +14,23 @@
 require 'partials/header.php';
 
 // Helper functions
-function formatAuthResult($result, $total = null) {
+function formatAuthResult($result, $total = null)
+{
     if ($total && $total > 0) {
         $percentage = round(($result / $total) * 100);
         $class = $percentage >= 80 ? 'success' : ($percentage >= 50 ? 'warning' : 'error');
         return "<span class=\"label label-$class\">$result ($percentage%)</span>";
     }
-    
+
     $class = $result === 'pass' ? 'success' : ($result === 'fail' ? 'error' : 'warning');
     return "<span class=\"label label-$class\">$result</span>";
 }
 
-function formatDisposition($disposition) {
+function formatDisposition($disposition)
+{
     $classes = [
         'none' => 'success',
-        'quarantine' => 'warning', 
+        'quarantine' => 'warning',
         'reject' => 'error'
     ];
     $class = $classes[$disposition] ?? 'secondary';
@@ -36,7 +38,8 @@ function formatDisposition($disposition) {
     return "<span class=\"label label-$class\">$display</span>";
 }
 
-function formatIPAddress($ip) {
+function formatIPAddress($ip)
+{
     // Basic validation for IPv4/IPv6
     if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
         return "<code class=\"text-primary\">$ip</code>";
@@ -46,21 +49,24 @@ function formatIPAddress($ip) {
     return "<code>$ip</code>";
 }
 
-function formatRegistry(?string $registry): string {
+function formatRegistry(?string $registry): string
+{
     if (!$registry) {
         return '<span class="text-gray">Unknown registry</span>';
     }
     return '<span class="chip chip-sm">' . htmlspecialchars(strtoupper($registry)) . '</span>';
 }
 
-function formatDnsblStatus(array $intel): string {
+function formatDnsblStatus(array $intel): string
+{
     $listed = !empty($intel['dnsbl_listed']);
     $class = $listed ? 'label label-error' : 'label label-success';
     $text = $listed ? 'Spamhaus listing' : 'Spamhaus clear';
     return '<span class="' . $class . '">' . $text . '</span>';
 }
 
-function formatReputationScore($score): string {
+function formatReputationScore($score): string
+{
     if ($score === null || $score === '') {
         return '<span class="chip">Score: n/a</span>';
     }
@@ -69,7 +75,8 @@ function formatReputationScore($score): string {
     return '<span class="' . $class . '">Score ' . $score . '</span>';
 }
 
-function renderPolicyChips(array $report): string {
+function renderPolicyChips(array $report): string
+{
     $policies = [
         'p' => $report['policy_p'] ?? null,
         'sp' => $report['policy_sp'] ?? null,
@@ -100,7 +107,8 @@ function renderPolicyChips(array $report): string {
     return !empty($chips) ? implode('', $chips) : '<span class="text-gray">No published policy details</span>';
 }
 
-function renderReasonList(array $reasons): string {
+function renderReasonList(array $reasons): string
+{
     if (empty($reasons)) {
         return '<span class="text-gray">No details provided</span>';
     }
@@ -113,8 +121,8 @@ function renderReasonList(array $reasons): string {
 
         $type = isset($reason['type']) && $reason['type'] !== ''
             ? '<span class="label label-secondary label-rounded text-uppercase mr-1">'
-                . htmlspecialchars((string) $reason['type'], ENT_QUOTES, 'UTF-8')
-                . '</span>'
+            . htmlspecialchars((string) $reason['type'], ENT_QUOTES, 'UTF-8')
+            . '</span>'
             : '';
 
         $comment = isset($reason['comment']) && $reason['comment'] !== ''
@@ -135,7 +143,8 @@ function renderReasonList(array $reasons): string {
     return '<ul class="reason-list mb-0">' . implode('', $items) . '</ul>';
 }
 
-function renderAuthResults(array $authResults): string {
+function renderAuthResults(array $authResults): string
+{
     if (empty($authResults)) {
         return '<span class="text-gray">No authentication details</span>';
     }
@@ -182,7 +191,8 @@ function renderAuthResults(array $authResults): string {
     return !empty($segments) ? implode('', $segments) : '<span class="text-gray">No authentication details</span>';
 }
 
-function renderRdapContacts(array $contacts): string {
+function renderRdapContacts(array $contacts): string
+{
     if (empty($contacts)) {
         return '<span class="text-gray">No published contacts</span>';
     }
@@ -214,95 +224,115 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
 ?>
 
 <style>
-.summary-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-.stat-box {
-    text-align: center;
-    padding: 1rem;
-    background: rgba(255,255,255,0.1);
-    border-radius: 6px;
-    margin-bottom: 1rem;
-}
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-.stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-.policy-summary {
-    margin-top: 0.75rem;
-}
-.policy-summary .chip {
-    margin-bottom: 0.25rem;
-}
-.reason-list {
-    list-style: none;
-    padding-left: 0;
-}
-.reason-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.35rem;
-}
-.reason-list li:last-child {
-    margin-bottom: 0;
-}
-.auth-block {
-    margin-bottom: 0.5rem;
-}
-.auth-block:last-child {
-    margin-bottom: 0;
-}
-.auth-block .chip {
-    display: inline-block;
-    margin-bottom: 0.25rem;
-}
-.ip-group {
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-.ip-header {
-    background: #f8f9fa;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e9ecef;
-    font-weight: 600;
-}
-.record-row {
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid #f1f3f4;
-}
-.record-row:last-child {
-    border-bottom: none;
-}
-.ip-insights {
-    background: #f5f7fb;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e9ecef;
-}
-.ip-insights .tile {
-    margin-bottom: 0.5rem;
-}
-.contact-list {
-    list-style: none;
-    padding-left: 0;
-}
-.contact-list .menu-item {
-    padding: 0.15rem 0;
-}
-.dnsbl-notes div {
-    line-height: 1.2;
-}
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-box {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .policy-summary {
+        margin-top: 0.75rem;
+    }
+
+    .policy-summary .chip {
+        margin-bottom: 0.25rem;
+    }
+
+    .reason-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .reason-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .reason-list li:last-child {
+        margin-bottom: 0;
+    }
+
+    .auth-block {
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-block:last-child {
+        margin-bottom: 0;
+    }
+
+    .auth-block .chip {
+        display: inline-block;
+        margin-bottom: 0.25rem;
+    }
+
+    .ip-group {
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .ip-header {
+        background: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+    }
+
+    .record-row {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .record-row:last-child {
+        border-bottom: none;
+    }
+
+    .ip-insights {
+        background: #f5f7fb;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .ip-insights .tile {
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .contact-list .menu-item {
+        padding: 0.15rem 0;
+    }
+
+    .dnsbl-notes div {
+        line-height: 1.2;
+    }
 </style>
 
 <div class="columns">
@@ -395,14 +425,14 @@ $intelMap = $this->data['ip_intelligence'] ?? [];
 </div>
 
 <?php
-    $summary = $this->data['summary'];
-    $totalVolume = max(0, (int) ($summary['total_volume'] ?? 0));
-    $reasonVolume = (int) ($summary['policy_evaluated_reason_volume'] ?? 0);
-    $overrideVolume = (int) ($summary['policy_override_volume'] ?? 0);
-    $authVolume = (int) ($summary['auth_results_volume'] ?? 0);
-    $reasonPercent = $totalVolume > 0 ? (int) round(($reasonVolume / $totalVolume) * 100) : 0;
-    $overridePercent = $totalVolume > 0 ? (int) round(($overrideVolume / $totalVolume) * 100) : 0;
-    $authPercent = $totalVolume > 0 ? (int) round(($authVolume / $totalVolume) * 100) : 0;
+$summary = $this->data['summary'];
+$totalVolume = max(0, (int) ($summary['total_volume'] ?? 0));
+$reasonVolume = (int) ($summary['policy_evaluated_reason_volume'] ?? 0);
+$overrideVolume = (int) ($summary['policy_override_volume'] ?? 0);
+$authVolume = (int) ($summary['auth_results_volume'] ?? 0);
+$reasonPercent = $totalVolume > 0 ? (int) round(($reasonVolume / $totalVolume) * 100) : 0;
+$overridePercent = $totalVolume > 0 ? (int) round(($overrideVolume / $totalVolume) * 100) : 0;
+$authPercent = $totalVolume > 0 ? (int) round(($authVolume / $totalVolume) * 100) : 0;
 ?>
 
 <div class="columns mb-2">

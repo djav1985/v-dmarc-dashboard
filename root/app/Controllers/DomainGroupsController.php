@@ -15,6 +15,14 @@ use App\Models\Domain;
 class DomainGroupsController extends Controller
 {
     /**
+     * Data passed to views
+     * @var array
+     */
+    protected array $data = [];
+
+    // ...existing methods, all indented 4 spaces inside the class...
+    // ...existing methods...
+    /**
      * Display domain groups management interface
      */
     public function handleRequest(): void

@@ -176,36 +176,45 @@ function enforcement_badge(?string $level): string
     .filter-card {
         border-radius: 8px;
     }
+
     .filter-card .card-body {
         background: #f8f9fa;
     }
+
     .filter-card .form-group {
         margin-bottom: 0.75rem;
     }
+
     .saved-filter-card .tile {
         border: 1px solid #e6e6e6;
         border-radius: 6px;
         padding: 0.75rem;
         margin-bottom: 0.75rem;
     }
+
     .saved-filter-card .tile.active-filter {
         border-color: #3b82f6;
         box-shadow: 0 0 0 1px #3b82f6 inset;
     }
+
     .saved-filter-card .tile-actions form {
         display: inline-block;
         margin-right: 0.5rem;
     }
+
     .saved-filter-card .tile-actions form:last-child {
         margin-right: 0;
     }
+
     .table-metrics .chip {
         margin: 0.1rem;
     }
+
     .export-actions form {
         display: inline-block;
         margin-left: 0.5rem;
     }
+
     .export-actions button {
         display: inline-flex;
         align-items: center;
@@ -676,7 +685,8 @@ $activeFilterSummary = describe_filter($currentFilters);
             <div class="d-flex justify-content-center mt-2">
                 <ul class="pagination">
                     <?php if ($currentPage > 1): ?>
-                        <?php $prevParams = $paginationBase; $prevParams['page'] = $currentPage - 1; ?>
+                        <?php $prevParams = $paginationBase;
+                        $prevParams['page'] = $currentPage - 1; ?>
                         <li class="page-item">
                             <a class="page-link" href="/reports?<?= http_build_query($prevParams) ?>">Previous</a>
                         </li>
@@ -695,7 +705,8 @@ $activeFilterSummary = describe_filter($currentFilters);
                     <?php endfor; ?>
 
                     <?php if ($currentPage < $totalPages): ?>
-                        <?php $nextParams = $paginationBase; $nextParams['page'] = $currentPage + 1; ?>
+                        <?php $nextParams = $paginationBase;
+                        $nextParams['page'] = $currentPage + 1; ?>
                         <li class="page-item">
                             <a class="page-link" href="/reports?<?= http_build_query($nextParams) ?>">Next</a>
                         </li>
