@@ -12,6 +12,12 @@
  * Description: A basic PHP framework
  */
 
+if (defined('APP_CONFIG_INITIALIZED')) {
+    return;
+}
+
+define('APP_CONFIG_INITIALIZED', true);
+
 // Session timeout limit in seconds (default: 30 minutes)
 define('SESSION_TIMEOUT_LIMIT', 1800);
 

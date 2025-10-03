@@ -14,13 +14,13 @@ During development you can still run the tooling-defined Composer install from t
 
 ### Database Installation
 
-After configuring the database constants in `root/config.php`, run the installer to create the required tables:
+Fresh deployments no longer require a manual migration step. The first web request (or CLI invocation of the installer) automatically provisions the schema defined in `root/install/install.sql`, adjusting the statements for the active driver (MySQL or SQLite).
+
+If you prefer running the installer explicitly—for example in CI pipelines—use the bundled script after configuring `root/config.php`:
 
 ```bash
 php root/install/install.php
 ```
-
-The script will stop with a helpful message if any required credentials are missing, ensuring the connection details are correct before attempting to load `install/install.sql` into your database.
 
 For demo purposes you can populate the bundled SQLite configuration by generating a fresh database from the consolidated schema and seed data:
 
@@ -28,11 +28,7 @@ For demo purposes you can populate the bundled SQLite configuration by generatin
 bash root/setup_demo_db.sh
 ```
 
-The script recreates `root/demo.db` on demand so the repository no longer needs to ship the binary database itself.
-
-### Upgrading Existing Databases
-
-Existing deployments should compare their database schema with the consolidated `root/install/install.sql` and apply any missing DDL statements (for example, the IP intelligence metadata columns) to stay aligned with the authoritative definition. Recent changes introduce ownership/enforcement metadata on the `domains` table and the `saved_report_filters` store—run the forward migrations in `root/app/Database/Migrations/202407010001_add_domain_metadata.php` and `202407010002_create_saved_report_filters.php` (or apply the equivalent DDL) before upgrading the application code.
+The script recreates `root/demo.db` on demand so the repository no longer needs to ship the binary database itself. In all cases `install/install.sql` is the single source of truth for table definitions and indexes.
 
 ## Running the Application
 
@@ -83,8 +79,9 @@ Recurring deliveries are managed through the new schedule editor on the reports 
 cadence, recipients, and last-run status, and the hourly cron task dispatches due jobs by calling
 `App\Services\PdfReportScheduler::processDueSchedules()`. Email notifications reuse the framework’s PHPMailer templates.
 
-After pulling the latest code, apply the schema changes in `root/app/Database/Migrations/202406010001_create_pdf_report_schedules.php`
-and `root/app/Database/Migrations/202406010002_update_pdf_report_generations.php` so the new tables and columns are available.
+Ensure your database reflects the latest definitions in `root/install/install.sql` so scheduled PDF runs have access to the
+`pdf_report_schedules` table, the `schedule_id` link on `pdf_report_generations`, and the supporting indexes. Fresh installations
+and the CLI installer handle these structures automatically.
 
 ## Timezone Configuration
 

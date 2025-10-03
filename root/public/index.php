@@ -18,6 +18,9 @@ require_once '../vendor/autoload.php';
 use App\Core\Router;
 use App\Core\ErrorManager;
 use App\Core\SessionManager;
+use App\Core\Installer;
+
+Installer::ensureInstalled();
 
 $secureFlag = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 session_set_cookie_params([
