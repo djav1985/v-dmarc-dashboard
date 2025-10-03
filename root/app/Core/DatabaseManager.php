@@ -442,8 +442,10 @@ class DatabaseManager
             return (string) $params['driver'];
         }
 
+        // getName() is deprecated; fallback to class name of the platform
         try {
-            return self::$dbh->getDatabasePlatform()->getName();
+            $platform = self::$dbh->getDatabasePlatform();
+            return (new \ReflectionClass($platform))->getShortName();
         } catch (\Throwable) {
             return '';
         }
