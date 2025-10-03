@@ -286,25 +286,28 @@ CREATE TABLE pdf_report_generations (
     file_path TEXT,
     file_size INTEGER,
     generated_by TEXT,
+    schedule_id INTEGER,
     generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     download_count INTEGER DEFAULT 0,
     FOREIGN KEY (template_id) REFERENCES pdf_report_templates(id) ON DELETE CASCADE,
     FOREIGN KEY (group_filter) REFERENCES domain_groups(id) ON DELETE SET NULL
 );
 
+CREATE INDEX idx_pdf_report_generations_schedule ON pdf_report_generations(schedule_id);
+
 CREATE TABLE pdf_report_schedules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     template_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
+    title TEXT,
     frequency TEXT NOT NULL,
     recipients TEXT NOT NULL,
     domain_filter TEXT,
     group_filter INTEGER,
-    parameters TEXT DEFAULT '{}',
+    parameters TEXT,
     enabled INTEGER DEFAULT 1,
-    next_run_at DATETIME,
     last_run_at DATETIME,
+    next_run_at DATETIME,
     last_status TEXT,
     last_error TEXT,
     created_by TEXT,
@@ -316,6 +319,9 @@ CREATE TABLE pdf_report_schedules (
     FOREIGN KEY (last_generation_id) REFERENCES pdf_report_generations(id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES users(username) ON DELETE SET NULL
 );
+
+CREATE INDEX idx_pdf_report_schedules_due ON pdf_report_schedules(enabled, next_run_at);
+CREATE INDEX idx_pdf_report_schedules_status ON pdf_report_schedules(enabled, last_status);
 
 CREATE TABLE policy_simulations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
